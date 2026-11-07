@@ -129,3 +129,12 @@ def test_runner_parses_real_elements_and_scripts(tmp_path, capsys):
     checks.write_text(json.dumps([{"id": "markup", "steps": [], "observe": "#display", "expect": "A&B"}]))
     assert check_revival(html, checks) == 0
     assert "Total: 1/1 passed" in capsys.readouterr().out
+
+
+def test_cli_accepts_every_builder_command():
+    import revive.build as b
+    for name in ("codex", "claude", "glm", "muse"):
+        with patch("sys.argv", ["build.py", "--sheet", "s", "--selectors", "x", "--out", "o", "--builder", name]), \
+             patch.object(b, "build", return_value="ok") as built:
+            b.main()
+        assert built.call_args.args[-1] == name

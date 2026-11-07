@@ -14,7 +14,7 @@ python revive/check_revival.py runs/app1/revival/index.html
 python -m pytest -q revive eval
 ```
 
-Builders: `codex`, `claude`, or `glm`. The chosen CLI must already be installed
+Builders: `codex`, `claude`, `glm`, or `muse` (no tools, prompt by file). The chosen CLI must already be installed
 and authenticated, with working backend connectivity and writable CLI state.
 There are no direct API calls in this builder.
 
@@ -29,5 +29,7 @@ updates, rather than full browser layout or DOM behavior. Runtime errors are
 reported as failed checks. The command exits 1 for mismatches and 2 when it
 cannot run. It requires Linux, libseccomp and Node with `--permission` support
 (verified here with Node 24). Node permissions restrict filesystem access and
-process creation; a seccomp filter blocks network socket syscalls. Evaluation
-fails closed if these sandbox facilities are unavailable.
+process creation; a seccomp filter blocks network socket syscalls. On Linux,
+evaluation fails closed if libseccomp is unavailable. On Windows there is no
+seccomp and the evaluator runs with Node permissions only (network not blocked):
+score untrusted revivals on the Linux box, not on a Windows laptop.

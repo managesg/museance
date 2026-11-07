@@ -117,7 +117,7 @@ def main():
     parser.add_argument("--sheet", required=True)
     parser.add_argument("--selectors", required=True)
     parser.add_argument("--out", required=True)
-    parser.add_argument("--builder", choices=["codex", "claude", "glm"], required=True)
+    parser.add_argument("--builder", choices=["codex", "claude", "glm", "muse"], required=True)
     args = parser.parse_args()
     try:
         print(build(args.sheet, args.selectors, args.out, args.builder))
