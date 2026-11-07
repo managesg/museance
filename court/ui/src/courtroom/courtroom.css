@@ -137,7 +137,7 @@
   padding: var(--space-4) var(--space-5) var(--space-5);
   background: linear-gradient(var(--wood-light), var(--wood) 70%);
   color: var(--wax);
-  border-radius: 10px 10px 4px 4px;
+  border-radius: 0 0 4px 4px; /* square top: the brass rail runs straight, no tapering into rounded corners */
   border-top: 6px solid var(--brass);
   box-shadow: 0 16px 28px rgb(43 33 28 / 0.4);
   text-align: center;
