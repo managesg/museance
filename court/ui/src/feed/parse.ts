@@ -10,7 +10,7 @@ export function parseCase(text: string): CaseFile {
   const out: Record<string, unknown> = {};
   const counts: Record<string, number | null> = {};
   let key = '';
-  for (const line of text.split('\n')) {
+  for (const line of text.split(/\r?\n/)) { // a Windows checkout (core.autocrlf) has CRLF; `.` in the regex below does not match \r
     if (!line.trim()) continue;
     if (line.startsWith('  - ')) {
       const prev = out[key];
@@ -34,7 +34,7 @@ export function parseCase(text: string): CaseFile {
 
 /** One JSON object per line; a half-written or blank line is skipped. */
 export const jsonLines = (text: string | null): unknown[] =>
-  (text ?? '').split('\n').flatMap((line) => {
+  (text ?? '').split(/\r?\n/).flatMap((line) => {
     try {
       return line.trim() ? [JSON.parse(line) as unknown] : [];
     } catch {

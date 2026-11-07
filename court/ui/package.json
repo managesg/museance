@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "test": "vitest run",
     "feed": "node server/feed.ts",
+    "seed": "node server/seed-runs.ts",
     "lint": "oxlint",
     "preview": "vite preview"
   },
