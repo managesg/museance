@@ -101,7 +101,7 @@
 .cr-verdict__why { margin: 6px 0 0; font-size: 17px; }
 .cr-verdict__ai { margin: 8px 0 0; font-size: 15px; color: var(--fg-2); }
 .cr-verdict__evidence { margin: 8px 0 0; padding: 8px 10px; background: var(--mist); border-radius: var(--radius-sm); font-size: 14px; color: var(--fg-2); }
-.cr-verdict__note { margin: 6px 0 0; font-size: 14px; color: var(--fg-2); }
+.cr-verdict__note { margin: 8px 0 0; padding: 8px 10px; background: var(--aqua-200); border-radius: var(--radius-sm); font-size: 15px; color: var(--ink); }
 /* A fixed slot, so the buttons below never move when a narrator arrives. */
 .cr-narrator { display: flex; align-items: center; gap: 10px; min-height: 52px; margin-top: 10px; }
 .cr-narrator__who { flex: 0 0 auto; width: 44px; height: 44px; }

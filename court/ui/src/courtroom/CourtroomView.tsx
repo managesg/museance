@@ -113,6 +113,23 @@ function markObserved(frame: HTMLIFrameElement | null, sel: string, tone: 'same'
   }
 }
 
+// Text an app draws with CSS (content: '…') is on screen but not in the page text the court reads.
+function drawnText(frame: HTMLIFrameElement | null, sel: string): string | null {
+  try {
+    const doc = frame?.contentDocument;
+    const el = doc?.querySelector(sel);
+    const win = doc?.defaultView;
+    if (!el || !win) return null;
+    for (const pseudo of ['::before', '::after']) {
+      const m = /^["'](.+)["']$/.exec(win.getComputedStyle(el, pseudo).content ?? '');
+      if (m) return m[1];
+    }
+  } catch {
+    // Cross-origin or a bad selector: nothing to report.
+  }
+  return null;
+}
+
 function Stand({ side, label, src, base, out, tone, frameRef, recording }: {
   side: 'original' | 'revival'; label: string; src: string; base: number; out: string | null; tone: 'same' | 'diff' | 'unsure' | null;
   frameRef: (el: HTMLIFrameElement | null) => void; recording: boolean;
@@ -293,6 +310,14 @@ export function CourtroomView() {
       live(revival, claim.test.steps, claim.test.observe),
     ]);
     const res = witnessResult(claim, statusOf(claim), verdictOf(claim.id), { original: o, revival: r });
+    // Same on screen, different page text: say why, so DIFFERENT never looks like a mistake.
+    const drawnO = drawnText(original, claim.test.observe);
+    const drawnR = drawnText(revival, claim.test.observe);
+    const cssSide = !shown(o) && drawnO && drawnO === shown(r) ? 'original' : !shown(r) && drawnR && drawnR === shown(o) ? 'revival' : null;
+    if (res.word === 'DIFFERENT' && cssSide) {
+      const other = cssSide === 'original' ? 'revival' : 'original';
+      res.note = `They look the same on screen, but the ${cssSide} draws “${cssSide === 'original' ? drawnO : drawnR}” with CSS, so its page text is empty, while the ${other} writes it as real text. The court compares page text, so this counts as a difference in the rebuild.`;
+    }
     // Practice cases were hand-written: say "the claim", never "the AI".
     if (b?.source === 'fixture' && res.ai) res.ai = res.ai.replace("The AI's claim", 'The claim').replace('The AI claimed', 'The claim said').replace('The AI admitted', 'The claim admitted');
     setOuts({ original: o, revival: r });
@@ -451,6 +476,7 @@ export function CourtroomView() {
               <>
                 <p className="cr-verdict__word">{result.word === 'DIFFERENT' ? <Explain term="mismatch">DIFFERENT</Explain> : result.word}</p>
                 <p className="cr-verdict__why">{result.why}</p>
+                {result.note && <p className="cr-verdict__note">{result.note}</p>}
                 {result.ai && <p className="cr-verdict__ai">{result.ai}</p>}
                 {evidence.length > 0 && (
                   <p className="cr-verdict__evidence">
@@ -458,7 +484,6 @@ export function CourtroomView() {
                     <span className="cr-mono">{evidence[0].id}</span> {evidence[0].text}
                   </p>
                 )}
-                {result.note && <p className="cr-verdict__note">{result.note}</p>}
               </>
             )}
             <div className="cr-narrator" aria-hidden={!result || !!busy || recording}>
