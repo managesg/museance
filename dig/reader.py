@@ -17,7 +17,7 @@ Prefer specific, checkable behaviors (exact numbers and text). Never invent cita
 
 
 def read(evidence, chat=llm.chat, provider=None):
-    provider = provider or llm.first_provider("SUBQ", "META", "ASI1")
+    provider = provider or llm.first_provider("META", "ASI1")  # SubQ Snap is a decision model, no chat; it scores claims in medium.py
     pile = [{k: e[k] for k in ("id", "tier", "kind", "source", "text", "path") if k in e} for e in evidence]
     lines = llm.parse_json(chat(provider, SYSTEM, json.dumps(pile, ensure_ascii=False)))
     ids, out = {e["id"] for e in evidence}, []
@@ -34,7 +34,7 @@ def read(evidence, chat=llm.chat, provider=None):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("app")
-    p.add_argument("--provider", choices=["SUBQ", "META", "ASI1"])
+    p.add_argument("--provider", choices=["META", "ASI1"])
     a = p.parse_args()
     run = ROOT / "runs" / a.app
     ev = json.loads((run / "evidence.json").read_text(encoding="utf-8"))
