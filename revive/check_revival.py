@@ -1,4 +1,5 @@
 """Evaluate the fixed regression set against a revival; never load the original."""
+import sys
 import argparse
 import ctypes
 import ctypes.util
@@ -106,7 +107,8 @@ def check_revival(html_path, checks_path=ROOT / "eval/regression/app1-fixture.js
     command = ["node", "--permission", *(f"--allow-fs-read={p}" for p in (runner, checks_path)),
                "--disable-proto=throw", "--max-old-space-size=128", str(runner), str(checks_path)]
     result = subprocess.run(command, input=json.dumps(document), capture_output=True, text=True,
-                            timeout=60, preexec_fn=deny_network)
+                            timeout=60, **({} if sys.platform == "win32" else {"preexec_fn": deny_network}))
+    # shortcut: no seccomp on Windows, so the network is not blocked there; score untrusted revivals on Linux (the box).
     if result.returncode:
         raise RuntimeError(f"Node evaluator exited {result.returncode}: {result.stderr[-3000:]}")
     observations = json.loads(result.stdout)
