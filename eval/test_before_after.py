@@ -20,6 +20,12 @@ def test_versions_chain_and_missing_stay_null():
     assert "not recorded" in render(rows) and json.dumps(rows)
 
 
+def test_builder_source_carried():
+    rows = build_app("x", REP, OLD, HEAD, 60, 60, [("muse", "repairs.jsonl"), None])
+    assert (rows[0]["repair_builder"], rows[0]["repair_builder_source"]) == ("muse", "repairs.jsonl")
+    assert (rows[1]["repair_builder"], rows[1]["repair_builder_source"]) == (None, None)
+
+
 def test_stored_regression_file_ignored_when_it_disagrees_with_recorded_score():
     rows = build_app("x", REP, HEAD, HEAD, None, None, [None, None])  # HEAD passes 3 but v1 recorded 2
     assert rows[0]["regression_passed"] == 2 and rows[0]["traps_flagged"] is None

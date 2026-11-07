@@ -65,7 +65,7 @@ def test_patched(env):
     tmp_path, html, go, prompts = env
     event = go(f"Here:\n```html\n{GOOD_PATCH}```")
     assert event == {"type": "repair", "claim_id": "c03", "from_sha256": sha(OLD), "to_sha256": sha(GOOD_PATCH),
-                     "decision": "patched", "reason": event["reason"]}
+                     "decision": "patched", "reason": event["reason"], "builder": "fake"}
     assert (tmp_path / "revival.v2.html").read_text() == GOOD_PATCH
     assert html.read_text() == OLD
     assert log(tmp_path) == [event]
@@ -161,6 +161,7 @@ def test_repair_cases_decisions():
     stat = lambda reg, fs, mm: {"regression": reg, "false_strikes": fs, "mismatches": mm, "fidelity": 0}
     run_ = lambda after: repair_cases("t", attacks, verdicts, old, lambda p: new, lambda h: after if h.strip() == new else stat(19, 0, 5))[1]["decision"]
     assert run_(stat(19, 0, 1)) == "patched"
+    assert repair_cases("t", attacks, verdicts, old, lambda p: new, lambda h: stat(19, 0, 1) if h.strip() == new else stat(19, 0, 5), "muse")[1]["builder"] == "muse"
     assert run_(stat(18, 0, 1)) == "rollback"
     assert run_(stat(19, 1, 1)) == "rollback"
     assert run_(stat(19, 0, 5)) == "unsworn"

@@ -78,7 +78,7 @@ def default_probe(html, t):
     return row["passed"], row["got"]
 
 
-def repair(claim, verdict, html, ask, score, probe=default_probe):
+def repair(claim, verdict, html, ask, score, probe=default_probe, builder=None):
     """Pure core. ask(prompt) -> reply text; score(html) -> int; probe(html, target) -> (ok, observed).
     Returns (html_to_keep, event). The event is the ledger line; decisions other than patched mean UNSWORN."""
     if verdict.get("flaky") or verdict.get("match"):
@@ -89,7 +89,7 @@ def repair(claim, verdict, html, ask, score, probe=default_probe):
     def out(decision, reason, new=None):
         keep = new if decision == "patched" else html
         return keep, {"type": "repair", "claim_id": claim["id"], "from_sha256": before,
-                      "to_sha256": sha256(keep), "decision": decision, "reason": reason}
+                      "to_sha256": sha256(keep), "decision": decision, "reason": reason, "builder": builder}
 
     try:
         new = extract_html(ask(make_prompt(claim, verdict, html)))
@@ -141,7 +141,7 @@ def make_cases_prompt(cases, html):
     )
 
 
-def repair_cases(app, attacks, verdicts, html, ask, verify):
+def repair_cases(app, attacks, verdicts, html, ask, verify, builder=None):
     """Repair from every diverging attack verdict at once. verify(html) -> {regression, false_strikes, mismatches, ...}.
     patched only if mismatches fell and regression / false strikes did not get worse; else rollback (old html kept)."""
     cases = diverging(attacks, verdicts)
@@ -150,7 +150,7 @@ def repair_cases(app, attacks, verdicts, html, ask, verify):
     def out(decision, reason, new=None, b=None, a=None):
         keep = new if decision == "patched" else html
         ev = {"type": "repair", "claim_id": f"attacks:{app}", "from_sha256": before, "to_sha256": sha256(keep),
-              "decision": decision, "reason": reason, "cases": len(cases)}
+              "decision": decision, "reason": reason, "cases": len(cases), "builder": builder}
         if b and a:
             ev.update({k: [b[k], a[k]] for k in ("regression", "false_strikes", "mismatches", "fidelity")})
         return keep, ev
@@ -180,7 +180,7 @@ def run(claim, verdict, html_path, builder, out_path=None, log_path=None, checks
     html_path = Path(html_path)
     html = html_path.read_text(encoding="utf-8")
     ask = ask or (lambda prompt: run_builder(builder, prompt))
-    keep, event = repair(claim, verdict, html, ask, default_score(checks))
+    keep, event = repair(claim, verdict, html, ask, default_score(checks), builder=builder)
     if event["decision"] == "patched":
         out_path = Path(out_path or html_path.with_name("revival.v2.html"))
         out_path.write_text(keep, encoding="utf-8")
@@ -219,7 +219,7 @@ def main():
         attacks, verdicts = load(a.attacks), load(a.verdicts)
         score = lambda h: _box(verify, h, a.attacks, a.claims)
         try:
-            keep, event = repair_cases(attacks[0]["app"], attacks, verdicts, html, lambda p: run_builder(a.builder, p), score)
+            keep, event = repair_cases(attacks[0]["app"], attacks, verdicts, html, lambda p: run_builder(a.builder, p), score, a.builder)
         except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as exc:
             ap.exit(1, f"Repair failed: {exc}\n")
         if event["decision"] == "patched":

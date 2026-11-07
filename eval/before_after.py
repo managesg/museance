@@ -32,6 +32,11 @@ def _counts(rows):
                 false_strikes=sum(not x["passed"] for x in good))
 
 
+def _bs(b):
+    """builders entry: a name, or (name, source commit/file)."""
+    return b if isinstance(b, tuple) else (b, None)
+
+
 def build_app(app, repairs, reg_old, reg_head, fid_old, fid_head, builders):
     """repairs: jsonl dicts in order; reg_old/reg_head: regression row lists (old may be None); fid_*: case fidelity or None."""
     n, rows = len(repairs), []
@@ -43,9 +48,9 @@ def build_app(app, repairs, reg_old, reg_head, fid_old, fid_head, builders):
         row = dict(app=app, version=f"v{i + 1}", sha256=r["from_sha256"] if out_r else r["to_sha256"], **sizes,
                    regression_passed=_pair(r, "regression")[side], attack_mismatches=_pair(r, "mismatches")[side],
                    traps_flagged=None, false_strikes=_pair(r, "false_strikes")[side], fidelity=_pair(r, "fidelity")[side],
-                   repair_claim=None, repair_decision=None, repair_builder=None, repair_reason=None, repair_to=None)
+                   repair_claim=None, repair_decision=None, repair_builder=None, repair_builder_source=None, repair_reason=None, repair_to=None)
         if out_r:
-            row.update(repair_claim=out_r.get("claim_id"), repair_decision=out_r.get("decision"), repair_builder=builders[i],
+            row.update(repair_claim=out_r.get("claim_id"), repair_decision=out_r.get("decision"), repair_builder=_bs(builders[i])[0], repair_builder_source=_bs(builders[i])[1],
                        repair_reason=out_r.get("reason"), repair_to=f"v{i + 2}")
         # a stored regression file counts for a version only when its pass count agrees with what the repair recorded
         rr = reg_head if i == n else reg_old if i == 0 else None
@@ -70,12 +75,16 @@ def gather(repo, app):
     cases = pathlib.Path(repo) / "cases"
     rp = f"cases/{app}/repairs.jsonl"
     repairs = [json.loads(l) for l in (cases / app / "repairs.jsonl").read_text(encoding="utf-8").splitlines() if l.strip()]
-    subject = {}  # to_sha256 -> subject of the first commit whose repairs.jsonl has it
+    subject = {}  # to_sha256 -> (subject, short sha) of the first commit whose repairs.jsonl has it
     for rev in _git(repo, "log", "--reverse", "--format=%H", "--", rp).split():
         for l in _git(repo, "show", f"{rev}:{rp}").splitlines():
             if l.strip():
-                subject.setdefault(json.loads(l)["to_sha256"], _git(repo, "log", "-1", "--format=%s", rev).lower())
-    builders = [next((b for b in BUILDERS if re.search(rf"\b{b}\b", subject.get(r["to_sha256"], ""))), None) for r in repairs]
+                subject.setdefault(json.loads(l)["to_sha256"], (_git(repo, "log", "-1", "--format=%s", rev).lower(), rev[:7]))
+    builders = []  # (builder, source) per repair: the event's own builder field, else a builder named in the commit subject
+    for r in repairs:
+        subj, sha = subject.get(r["to_sha256"], ("", None))
+        b = r.get("builder") or next((b for b in BUILDERS if re.search(rf"\b{b}\b", subj)), None)
+        builders.append((b, "repairs.jsonl" if r.get("builder") else sha if b else None))
     regp = f"cases/{app}/regression-result.json"
     reg_head = json.loads((cases / app / "regression-result.json").read_text(encoding="utf-8"))
     want, reg_old, rev_old = _pair(repairs[0], "regression")[0], None, None
@@ -106,16 +115,20 @@ def render(rows):
            "## JSON shape (`cases/before_after.json`)", "",
            "`{\"rows\": [ ... ]}`: one flat row per app and revival version. Keys: `app`, `version` (v1 = first revival), `sha256`, "
            "`regression_passed`, `regression_total`, `attack_mismatches`, `traps_flagged`, `traps_of`, `false_strikes`, `false_strikes_of`, "
-           "`fidelity`, `repair_claim`, `repair_decision`, `repair_builder`, `repair_reason`, `repair_to` (the repair that produced the next "
+           "`fidelity`, `repair_claim`, `repair_decision`, `repair_builder`, `repair_builder_source` (commit or file that proves the builder), `repair_reason`, `repair_to` (the repair that produced the next "
            "version; null on the last version), `not_recorded` (keys that are null because no committed file has them).", "",
            "`traps_flagged` = trap behaviors where the revival diverged from the original, i.e. traps the court caught. Fewer after repair "
-           "means the revival now matches the original on them, not that the court got worse.", ""]
+           "means the revival now matches the original on them, not that the court got worse.", "",
+           "Fidelity differs by source: todo v1 shows 35 because it is read from `repairs.jsonl`, which scores attacks only; the todo case file "
+           "at 9a5877c shows 36 because it scores claims plus attacks.", ""]
     for app in dict.fromkeys(r["app"] for r in rows):
         out += [f"## {app}", "", "| Version | Regression | Attack mismatches | Traps flagged | False strikes | Fidelity | Repair that produced the next version |",
                 "|---|---|---|---|---|---|---|"]
         for r in (x for x in rows if x["app"] == app):
             rep = "final" if not r["repair_to"] else (f"{r['repair_claim']} -> {r['repair_to']} ({r['repair_decision']}), builder "
-                                                      f"{_v(r['repair_builder'])}: {r['repair_reason']}")
+                                                      f"{_v(r['repair_builder'])}"
+                                                      f"{' (' + r['repair_builder_source'] + ')' if r['repair_builder_source'] else ''}"
+                                                      f": {r['repair_reason']}")
             out.append(f"| {r['version']} | {_of(r['regression_passed'], r['regression_total'])} | {_v(r['attack_mismatches'])} | "
                        f"{_of(r['traps_flagged'], r['traps_of'])} | {_of(r['false_strikes'], r['false_strikes_of'])} | {_v(r['fidelity'])} | {rep} |")
         out.append("")
