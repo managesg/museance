@@ -20,13 +20,16 @@ Not measured yet: none.
 
 ## todo
 
-Source: `cases/todo/regression-result.json`, `cases/todo/original-regression-result.json`
+Source: `cases/todo.case.yml`, `cases/todo/regression-result.json`
 
 | Metric | Value | How measured |
 |---|---|---|
 | Regression | 19/20 | Revival behaviors that match the original on the regression set (good + trap), passed/total from check_revival. |
 | False strikes | 0/12 | Good behaviors (the original's known-correct ones) the revival got wrong, out of all good behaviors. |
 | Traps caught | 1/8 | Trap behaviors where the revival diverged from the original, out of all traps. |
-| Original false strikes | 0/12 | The original app run through the same court runner as its own revival; good behaviors it fails, out of all good behaviors (should be 0). |
+| Fidelity | 36 | 100 * matched / (matched + mismatched) over court verdicts, flaky excluded. |
+| Brier | 0.014 (n=8) | Mean over claims of (confidence - claim_true)^2; n is claims minus unsworn. |
+| Credibility | 1000 -> 1010 | Starts at 1000; STRUCK loses bond, LOCKED gains round(bond * (1 - confidence)). |
+| Repairs | not measured yet | Count of decisions (patched, rollback, unsworn) in the repair log; patched = narrow fix kept, rollback = fix dropped the regression score, unsworn = builder could not fix. |
 
-Not measured yet: Fidelity, Brier, Credibility, Repairs (no claims or case file for this app yet).
+Not measured yet: Repairs.
