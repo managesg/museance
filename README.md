@@ -4,6 +4,41 @@
 
 The dead app gets a lawyer, not a fan.
 
+## What it is
+
+SÉANCE is a fidelity court for resurrected software: a dead app is revived from its observed behavior, then tried in an automated court.
+A Skeptic attacks the revival without seeing the claims, the court rules deterministically (no model in the verdict), and `eval/` scores every ruling.
+The stage UI in `court/ui/` plays the trial; the demo app is the archived `themaxsandelin/todo`.
+
+## Quick start
+
+```sh
+make check                          # validate fixtures against contracts (same as: python eval/check_fixtures.py)
+python eval/p4_fixture.py           # skeptic, revival check, score, case file
+python -m pytest -q eval revive dig # lane tests
+python -m court.court --app app1 --claims fixtures/claims.json --attacks fixtures/attacks.json     --original http://localhost:8001 --revival http://localhost:8002 --out runs/app1   # the court (needs Playwright)
+```
+
+Serve the apps first: `make serve-fixture` (port 8001), `python -m http.server 8011 -d apps/todo/original`. Stage UI: see `court/ui/RUNBOOK.md`.
+
+## Repo map
+
+| Folder | Lane | What |
+| --- | --- | --- |
+| `court/` | P1 | Court engine: serves apps, runs claims and attacks on original + revival, shrinker, Bailiff, ledger |
+| `apps/` | P1 | Vendored dead apps (oracles) |
+| `dig/` | P2 | Evidence piles, reader, behavior sheets |
+| `agents/` | P2 | LLM client and the Medium |
+| `court/ui/` | P3 | React stage UI, cast, live feed |
+| `revive/` | P4 | Builds and repairs the revival from a behavior sheet |
+| `eval/` | P4 | Skeptic, seal, scoring, regression |
+| `cases/` | P4 | Case files, commits, metrics |
+| `contracts/`, `fixtures/` | shared | JSON schemas and fixture data (`CONTRACTS.md`) |
+
+## Built today
+
+All code in this repo was written on 2026-11-07 at the AIE Code Summit Hackathon. Third-party apps, libraries and assets are listed in `CREDITS.md`.
+
 Start with `AGENTS.md` (lanes, rules, reporting) and `CONTRACTS.md` (data between lanes). `make check` validates the fixtures; `make serve-fixture` serves the fixture app on port 8001.
 
 ## P4: Revival, Skeptic, Scoring
