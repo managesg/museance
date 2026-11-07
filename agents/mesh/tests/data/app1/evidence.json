@@ -1,0 +1,38 @@
+[
+ {
+  "id": "e001",
+  "app": "app1",
+  "tier": "A",
+  "kind": "page",
+  "source": "http://localhost:8001",
+  "license": "MIT",
+  "text": "Running original build of fixture-calc (fixtures/app1), served locally as the Tier A oracle. The Medium does not see its source."
+ },
+ {
+  "id": "e002",
+  "app": "app1",
+  "tier": "C",
+  "kind": "doc",
+  "source": "fixtures/app1 README (written today for lane testing)",
+  "license": "MIT",
+  "text": "fixture-calc is a four-function pocket calculator. The display starts at 0. Typing digits appends them, and a leading 0 is replaced. Supports +, x and / with an = key. Results are truncated to two decimals. C clears everything back to 0."
+ },
+ {
+  "id": "e003",
+  "app": "app1",
+  "tier": "C",
+  "kind": "issue",
+  "source": "fixture issue #1 (written today for lane testing)",
+  "license": "MIT",
+  "text": "Dividing by zero shows Error on the display instead of a number."
+ },
+ {
+  "id": "e004",
+  "app": "app1",
+  "tier": "C",
+  "kind": "issue",
+  "source": "fixture issue #2 (written today for lane testing)",
+  "license": "MIT",
+  "text": "Pressing an operator twice in a row, like 7 + + 8 =, seems to use the second press only. Not sure, could not reproduce every time."
+ }
+]

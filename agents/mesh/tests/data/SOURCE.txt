@@ -1,0 +1,4 @@
+Copied into a temporary runs/app1/ by conftest.py (kept out of a runs/ folder: the repo .gitignore drops those).
+app1/evidence.json: python dig/pile.py app1 output (dig/piles/app1/pile.json, e001-e004), copied here.
+app1/sheet.json: the fixture claims (fixtures/claims.json c01-c05) as a behavior sheet citing that evidence,
+written by hand for the mesh tests. c05 cites nothing, so the Medium labels it FABRICATED.

@@ -1,0 +1,10 @@
+{
+ "app": "app1",
+ "lines": [
+  {"id": "c01", "screen": "add", "text": "7 + 8 shows 15", "label": "SEEN", "citations": ["e001", "e002"], "conflicts": []},
+  {"id": "c02", "screen": "multiply", "text": "7 x 8 shows 56", "label": "SEEN", "citations": ["e002"], "conflicts": []},
+  {"id": "c03", "screen": "divide", "text": "1 / 8 rounds to 0.13", "label": "GUESSED", "citations": ["e002"], "conflicts": []},
+  {"id": "c04", "screen": "clear", "text": "C returns to 0", "label": "SEEN", "citations": ["e002"], "conflicts": []},
+  {"id": "c05", "screen": "divide", "text": "dividing by zero shows Error", "label": "GUESSED", "citations": [], "conflicts": []}
+ ]
+}
