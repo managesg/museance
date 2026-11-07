@@ -1,6 +1,6 @@
 """P4 fixture pipeline: skeptic attacks -> revival check -> score -> case file -> one summary block.
 
-python eval/p4_fixture.py [--revival runs/app1/revival/index.html] [--write-case]
+python eval/p4_fixture.py [--revival revive/out/app1/index.html] [--write-case]
 
 The case file goes to runs/<app>/ (gitignored); --write-case updates the committed cases/ file.
 """
@@ -28,7 +28,7 @@ def regression_run(revival):
     return f"{sum(x['passed'] for x in rows)}/{len(rows)}", rows
 
 
-def run(app="app1", revival=ROOT / "runs/app1/revival/index.html", attacks_out=None, case_out=None, write_case=False):
+def run(app="app1", revival=ROOT / "revive/out/app1/index.html", attacks_out=None, case_out=None, write_case=False):
     attacks_out = pathlib.Path(attacks_out or ROOT / f"runs/{app}/attacks.json")
     case_out = pathlib.Path(case_out or ROOT / ("cases" if write_case else f"runs/{app}") / f"{app}-fixture.case.yml")
     attacks = generate(app, load(ROOT / f"eval/regression/{app}-selectors.json"))
@@ -52,7 +52,7 @@ def run(app="app1", revival=ROOT / "runs/app1/revival/index.html", attacks_out=N
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("--app", default="app1")
-    p.add_argument("--revival", default=str(ROOT / "runs/app1/revival/index.html"))
+    p.add_argument("--revival", default=str(ROOT / "revive/out/app1/index.html"))
     p.add_argument("--write-case", action="store_true", help="update the tracked cases/ file")
     a = p.parse_args()
     run(a.app, a.revival, write_case=a.write_case)
