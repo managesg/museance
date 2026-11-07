@@ -18,8 +18,10 @@ You never see the app's source. You get the sheet and the app's selectors (the c
 Return ONLY a JSON array. One object per behavior you are willing to bet on:
 {"line": behavior id, "screen": ..., "text": the claim, "test": {"steps": [...], "observe": css selector, "expect": exact visible text},
  "confidence": 0..1 probability the original app really does this}
+"expect" is the exact innerText of "observe" after the steps: list items joined by a newline ("Walk dog
+Buy milk"), "" when empty. Never a list or a count. To tell "no item" from "an item with blank text", observe the item selector (e.g. "#todo li"): with no item the court reads an error, not "". The item selector reads only the FIRST item, so to check several items or their order observe the list ("#todo").
 Step grammar: "click:<selector>", "type:<selector>:<text>", "key:<KeyName>", "wait:<ms>". Use only the given selectors.
-Be calibrated: GUESSED behaviors and behaviors with conflicts get lower confidence. Skip behaviors you cannot test."""
+Write one claim for every behavior the selectors can test, including the completed list, ordering and edge cases. Be calibrated: GUESSED behaviors and behaviors with conflicts get lower confidence. Skip behaviors you cannot test."""
 
 
 def _selectors(sel):
@@ -47,15 +49,20 @@ def cards(app, sheet, evidence, selectors, chat=llm.chat, provider="ASI1", decid
     known, tier_of = _selectors(selectors), {e["id"]: e["tier"] for e in evidence}
     lines = {l["id"]: l for l in sheet["lines"]}
     user = json.dumps({"selectors": selectors, "sheet": sheet["lines"]}, ensure_ascii=False)
-    out, dropped = [], []
+    out, dropped, tests = [], [], {}
     for c in llm.parse_json(chat(provider, SYSTEM, user)):
         t, line = c.get("test") or {}, lines.get(c.get("line"), {})
         steps, observe = t.get("steps") or [], t.get("observe")
-        ok = steps and observe in known and all(
+        ok = isinstance(steps, list) and observe in known and all(
             (m := STEP.match(s)) and (m["c"] or m["t"] or "") in known | {""} for s in steps)
         if not ok or "expect" not in t or not c.get("text"):
             dropped.append(c.get("text") or c)
             continue
+        key = json.dumps([steps, observe, str(t["expect"])])
+        if key in tests:  # same test as an earlier claim: it cannot tell the two claims apart
+            dropped.append(f"{c['text']} (same test as {tests[key]})")
+            continue
+        tests[key] = f"c{len(out) + 1:02d}"
         ev = [e for e in line.get("citations", []) if e in tier_of]
         conf = min(1.0, max(0.0, float(c.get("confidence", 0.5))))
         claim = {"id": f"c{len(out) + 1:02d}", "app": app, "screen": str(c.get("screen") or line.get("screen") or "main"),
