@@ -1,0 +1,190 @@
+[
+ {
+  "id": "c01",
+  "app": "todo",
+  "screen": "add",
+  "text": "Typing 'Buy milk' into #item and clicking #add adds 'Buy milk' to the #todo list.",
+  "test": {
+   "steps": [
+    "type:#item:Buy milk",
+    "click:#add"
+   ],
+   "observe": "#todo",
+   "expect": "Buy milk"
+  },
+  "tier": "B",
+  "label": "SEEN",
+  "evidence": [
+   "e043"
+  ],
+  "confidence": 0.9984,
+  "bond": 249,
+  "medium_confidence": 0.95,
+  "commit": "60c6f00f07f4037f446381d62e27067f698c0df1895d0333449d2400cecf7e85"
+ },
+ {
+  "id": "c02",
+  "app": "todo",
+  "screen": "add",
+  "text": "Typing 'Walk dog' into #item and pressing Enter adds 'Walk dog' to the #todo list.",
+  "test": {
+   "steps": [
+    "type:#item:Walk dog",
+    "key:Enter"
+   ],
+   "observe": "#todo",
+   "expect": "Walk dog"
+  },
+  "tier": "B",
+  "label": "SEEN",
+  "evidence": [
+   "e044"
+  ],
+  "confidence": 0.9935,
+  "bond": 247,
+  "medium_confidence": 0.9,
+  "commit": "c55decc498edcdfa762a2b9a4c4c017390d705b7100c811e54b22bd8c6bcd164"
+ },
+ {
+  "id": "c03",
+  "app": "todo",
+  "screen": "add",
+  "text": "Newly added items appear at the top of #todo: adding 'Buy milk' then 'Walk dog' renders ['Walk dog', 'Buy milk'].",
+  "test": {
+   "steps": [
+    "type:#item:Buy milk",
+    "click:#add",
+    "type:#item:Walk dog",
+    "click:#add"
+   ],
+   "observe": "#todo",
+   "expect": "Walk dog\nBuy milk"
+  },
+  "tier": "B",
+  "label": "SEEN",
+  "evidence": [
+   "e045"
+  ],
+  "confidence": 0.9937,
+  "bond": 247,
+  "medium_confidence": 0.85,
+  "commit": "294a725f93cdc6cc5e21a30f199e50a6e3fb1d46312e4a46809ecbb2bd2abe17"
+ },
+ {
+  "id": "c04",
+  "app": "todo",
+  "screen": "todo",
+  "text": "Clicking .complete on a #todo item moves it to #completed: with only 'Buy milk' in #todo, after clicking #todo li .complete the #completed list shows 'Buy milk'.",
+  "test": {
+   "steps": [
+    "type:#item:Buy milk",
+    "click:#add",
+    "click:#todo li .complete"
+   ],
+   "observe": "#completed",
+   "expect": "Buy milk"
+  },
+  "tier": "B",
+  "label": "SEEN",
+  "evidence": [
+   "e046"
+  ],
+  "confidence": 0.999,
+  "bond": 250,
+  "medium_confidence": 0.9,
+  "commit": "ec6c70f019f61c7c6e58ba7821086a06ab629edaf51551eb0d2ade0de16d467c"
+ },
+ {
+  "id": "c05",
+  "app": "todo",
+  "screen": "todo",
+  "text": "Clicking .remove on the first #todo item deletes it: with ['Walk dog', 'Buy milk'] in #todo, clicking #todo li .remove leaves #todo showing 'Buy milk'.",
+  "test": {
+   "steps": [
+    "type:#item:Walk dog",
+    "click:#add",
+    "type:#item:Buy milk",
+    "click:#add",
+    "click:#todo li .remove"
+   ],
+   "observe": "#todo",
+   "expect": "Buy milk"
+  },
+  "tier": "B",
+  "label": "SEEN",
+  "evidence": [
+   "e047"
+  ],
+  "confidence": 0.2574,
+  "bond": 17,
+  "medium_confidence": 0.85,
+  "commit": "b480f5384cb673942b127767acee15a84c6ee2a69257f8be78a8e2355b789539"
+ },
+ {
+  "id": "c06",
+  "app": "todo",
+  "screen": "add",
+  "text": "Clicking #add with an empty #item input adds no item; #todo remains empty.",
+  "test": {
+   "steps": [
+    "click:#add"
+   ],
+   "observe": "#todo",
+   "expect": ""
+  },
+  "tier": "B",
+  "label": "SEEN",
+  "evidence": [
+   "e048"
+  ],
+  "confidence": 0.9796,
+  "bond": 240,
+  "medium_confidence": 0.6,
+  "commit": "055249a0b2d06b91ff6f78563989127d6f91dad4efd5b72d33cc4a9d7ce562e9"
+ },
+ {
+  "id": "c07",
+  "app": "todo",
+  "screen": "add",
+  "text": "Pressing NumpadEnter in #item adds the todo item the same as the main Enter key.",
+  "test": {
+   "steps": [
+    "type:#item:Numpad test",
+    "key:NumpadEnter"
+   ],
+   "observe": "#todo",
+   "expect": "Numpad test"
+  },
+  "tier": "C",
+  "label": "GUESSED",
+  "evidence": [
+   "e036"
+  ],
+  "confidence": 0.2204,
+  "bond": 12,
+  "medium_confidence": 0.5,
+  "commit": "8adb7fdc24b3775fee31d53b847bd09253c84a2fe0178867b3f2c2deb3049ba1"
+ },
+ {
+  "id": "c08",
+  "app": "todo",
+  "screen": "todo",
+  "text": "The app starts with an empty state: #todo and #completed show 0 items.",
+  "test": {
+   "steps": [
+    "wait:500"
+   ],
+   "observe": "#todo",
+   "expect": ""
+  },
+  "tier": "B",
+  "label": "SEEN",
+  "evidence": [
+   "e042"
+  ],
+  "confidence": 0.5763,
+  "bond": 83,
+  "medium_confidence": 0.9,
+  "commit": "5133c3fc727eae49138ccd1134b73085f2cd7d1a18333301b72be241a7869d86"
+ }
+]

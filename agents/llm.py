@@ -44,6 +44,24 @@ def chat(p, system, user):
     return text
 
 
+def decide(state, instructions, true, false):
+    """SubQ Snap decisions API: probability (0-1) that `instructions` is answered yes for `state`. Cached like chat()."""
+    _load_env()
+    body = {"model": os.environ.get("SUBQ_MODEL") or "subq-snap-1.1", "state": state,
+            "questions": {"q": {"type": "noul", "instructions": instructions, "criteria": {"true": true, "false": false}}}}
+    key = hashlib.sha256(json.dumps(["SNAP", body], sort_keys=True).encode()).hexdigest()[:24]
+    hit = CACHE / f"{key}.txt"
+    if not hit.exists():
+        base = (os.environ.get("SUBQ_BASE_URL") or "https://api.subq.ai/v1").rstrip("/")
+        req = urllib.request.Request(base + "/systemone", json.dumps(body).encode(),
+                                     {"Content-Type": "application/json", "Authorization": f"Bearer {os.environ['SUBQ_API_KEY']}"})
+        with urllib.request.urlopen(req, timeout=60) as r:
+            p = json.load(r)["answers"]["q"]["noul"]
+        CACHE.mkdir(parents=True, exist_ok=True)
+        hit.write_text(str(p), encoding="utf-8")
+    return float(hit.read_text(encoding="utf-8"))
+
+
 def first_provider(*ps):
     for p in ps:
         if configured(p):
