@@ -1,0 +1,86 @@
+.set-backdrop {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.set-plate {
+  font-family: var(--font-stamp, 'Alfa Slab One', serif);
+  font-size: 24px;
+  letter-spacing: 0.1em;
+  fill: var(--ink);
+}
+
+/* Flames sway from the wick; --tension (0..1, set inline) shortens the cycle. */
+.set-flame {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: set-flicker calc(1.5s - 1s * var(--tension, 0)) ease-in-out infinite alternate;
+}
+
+.set-glow {
+  animation: set-glow calc(2.4s - 1.4s * var(--tension, 0)) ease-in-out infinite alternate;
+}
+
+.set-halo {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: set-breathe 4.2s ease-in-out infinite alternate;
+}
+
+.set-halo-warm,
+.set-halo-red,
+.set-ball-core,
+.set-ball-fever {
+  transition: opacity 600ms ease-out;
+}
+
+.set-halo-warm {
+  opacity: calc(0.95 - 0.75 * var(--tension, 0));
+}
+
+.set-halo-red {
+  opacity: var(--tension, 0);
+}
+
+.set-ball-core {
+  opacity: calc(0.6 + 0.4 * var(--tension, 0));
+}
+
+.set-ball-fever {
+  opacity: calc(0.85 * var(--tension, 0));
+}
+
+@keyframes set-flicker {
+  0% { transform: scale(1, 1) skewX(0deg); }
+  25% { transform: scale(0.94, 1.07) skewX(-3deg); }
+  50% { transform: scale(1.05, 0.95) skewX(2deg); }
+  75% { transform: scale(0.97, 1.09) skewX(-1.5deg); }
+  100% { transform: scale(1.02, 0.97) skewX(3deg); }
+}
+
+@keyframes set-glow {
+  from { opacity: 0.7; }
+  to { opacity: 1; }
+}
+
+@keyframes set-breathe {
+  from { transform: scale(0.96); }
+  to { transform: scale(1.04); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .set-flame,
+  .set-halo {
+    animation: none;
+  }
+
+  .set-glow {
+    animation-duration: 3s;
+  }
+}

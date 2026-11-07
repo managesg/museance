@@ -1,0 +1,54 @@
+/* Page chrome: the wall color letterboxes the 16:9 stage, and the browser's own surfaces wear the palette. */
+:root {
+  /* An OS dark mode must not repaint form controls on the projector. */
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background: var(--wall-deep);
+  color: var(--paper);
+  font-family: var(--font-ui);
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  caret-color: var(--crimson);
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--brass);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--brass-deep) transparent;
+}
+
+:focus-visible {
+  outline: 3px solid var(--brass);
+  outline-offset: 3px;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Safety net for motion a component did not calm itself; 0.01ms (not 0) so end events still fire. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

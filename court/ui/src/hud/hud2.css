@@ -1,0 +1,522 @@
+/* Ledger tape, dig ticker and reader sheet. The weights used here load here so each piece renders on its own. */
+@import '@fontsource/alfa-slab-one/400.css';
+@import '@fontsource/courier-prime/400.css';
+@import '@fontsource/courier-prime/700.css';
+@import '@fontsource/atkinson-hyperlegible/400.css';
+@import '@fontsource/atkinson-hyperlegible/700.css';
+
+.hud-tape,
+.hud-dig,
+.hud-sheet {
+  --hud-doc: var(--font-doc, 'Courier Prime'), monospace;
+  --hud-ui: var(--font-ui, 'Atkinson Hyperlegible'), sans-serif;
+  --hud-stamp: var(--font-stamp, 'Alfa Slab One'), serif;
+  position: relative;
+  isolation: isolate;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  color: var(--ink);
+  font-family: var(--hud-ui);
+  font-size: 20px;
+  line-height: 1.2;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+
+:is(.hud-tape, .hud-dig, .hud-sheet) *,
+:is(.hud-tape, .hud-dig, .hud-sheet) *::before,
+:is(.hud-tape, .hud-dig, .hud-sheet) *::after {
+  box-sizing: border-box;
+}
+
+/* Zero specificity, so the class rules below can set margins and padding on these elements. */
+:where(.hud-tape, .hud-dig, .hud-sheet) :where(ol, p, h2) {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ---- arrivals: a row opens from nothing so its neighbours glide, then its content flickers in ---- */
+
+.hud-tape__row,
+.hud-dig__row,
+.hud-sheet__line {
+  display: grid;
+  grid-template-rows: 1fr;
+  animation: hud2-open 420ms var(--ease-out-quart, cubic-bezier(0.25, 1, 0.5, 1)) both;
+}
+
+/* No padding on these: anything that is not content would stop the row closing all the way. */
+.hud-tape__inner,
+.hud-dig__inner,
+.hud-sheet__inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Bottom-anchored, so a new tape entry or slip slides out from under whatever sits above it. */
+.hud-tape__inner,
+.hud-dig__inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.hud-tape__entry,
+.hud-dig__tag,
+.hud-dig__num,
+.hud-sheet__tag,
+.hud-sheet__body {
+  animation: hud2-flicker var(--dur-flicker, 480ms) 110ms ease-out both;
+}
+
+@keyframes hud2-open {
+  from {
+    grid-template-rows: 0fr;
+  }
+}
+
+@keyframes hud2-flicker {
+  0% {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+  30% {
+    opacity: 0.85;
+  }
+  45% {
+    opacity: 0.35;
+  }
+  70% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes hud2-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---- ledger tape: print head on top, take-up roll below, the record feeding down between them ---- */
+
+.hud-tape__paper,
+.hud-tape__head,
+.hud-tape__roll {
+  position: absolute;
+  display: block;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.hud-tape__paper {
+  z-index: -1;
+  top: 20px;
+  bottom: 8px;
+  left: 10px;
+  width: calc(100% - 20px);
+  height: calc(100% - 28px);
+}
+
+.hud-tape__head {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 34px;
+}
+
+.hud-tape__roll {
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 22px;
+}
+
+.hud-tape__plate {
+  position: absolute;
+  top: 0;
+  left: calc(50% - 80px);
+  width: 160px;
+  height: 34px;
+  overflow: visible;
+  pointer-events: none;
+  fill: var(--ink);
+  font-family: var(--hud-stamp);
+  font-size: 20px;
+  letter-spacing: 0.16em;
+}
+
+/* The feed's clipped edges sit under the head and the roll, so lines vanish into the machine. */
+.hud-tape__feed {
+  position: absolute;
+  top: 31px;
+  bottom: 13px;
+  left: 12px;
+  right: 12px;
+  overflow: hidden;
+}
+
+.hud-tape__entry {
+  position: relative;
+  flex: none;
+  height: 52px;
+  padding: 4px 4px 4px 28px;
+  font-family: var(--hud-doc);
+  line-height: 22px;
+  white-space: nowrap;
+}
+
+/* Exactly the entry's height, so each row's half links meet the next row's at the seam. */
+.hud-tape__chain {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 24px;
+  height: 52px;
+  overflow: visible;
+}
+
+.hud-tape__ring {
+  fill: var(--brass);
+  fill-rule: evenodd;
+  stroke: var(--ink);
+  stroke-width: 2px;
+}
+
+.hud-tape__hook {
+  fill: var(--brass-deep);
+  stroke: var(--ink);
+  stroke-width: 2px;
+  stroke-linejoin: round;
+}
+
+.hud-tape__hook--broken {
+  fill: var(--crimson);
+}
+
+.hud-tape__what,
+.hud-tape__hash {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hud-tape__what b {
+  font-weight: 700;
+}
+
+/* Ink on a brass swipe: brass type on paper would not read from the back of the room. */
+.hud-tape__hash mark {
+  padding: 0 2px;
+  background: var(--brass);
+  border-radius: 4px 3px 5px 3px;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.hud-tape__arrow {
+  width: 22px;
+  height: 14px;
+  margin: 0 4px;
+  vertical-align: -1px;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.2px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---- dig ticker: evidence tags turn up in the soil, newest on top ---- */
+
+.hud-dig {
+  --hud-soil: color-mix(in oklab, var(--wood) 58%, var(--ink));
+  --hud-smoke-ink: color-mix(in oklab, var(--smoke), var(--ink) 40%);
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px 0;
+  background-color: var(--hud-soil);
+}
+
+.hud-dig__soil {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hud-dig__count {
+  display: flex;
+  flex: none;
+  align-items: baseline;
+  gap: 10px;
+  height: 54px;
+  color: var(--paper);
+}
+
+.hud-dig__num {
+  font-family: var(--hud-stamp);
+  font-size: 46px;
+  line-height: 1.05;
+}
+
+.hud-dig__unit {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.hud-dig__list {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.hud-dig__tag {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  flex: none;
+  grid-template-columns: 34px minmax(0, 1fr);
+  grid-template-rows: 30px 24px;
+  column-gap: 10px;
+  align-items: center;
+  height: 66px;
+  margin-bottom: 8px;
+  padding: 6px 14px 6px 12px;
+}
+
+.hud-dig__edge {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.hud-dig__tag > .hud-tier {
+  grid-row: 1 / 3;
+}
+
+.hud-dig__source {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  font-weight: 700;
+}
+
+.hud-dig__source > span,
+.hud-dig__excerpt {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.hud-dig__excerpt {
+  font-family: var(--hud-doc);
+  line-height: 24px;
+}
+
+.hud-kind {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  overflow: visible;
+}
+
+.hud-kind__ink {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.2px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Tier badges speak the claim cards' language: A solid, B outline, C striped, D dashed and ghostly. */
+.hud-tier {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  overflow: visible;
+}
+
+.hud-tier__disc {
+  stroke: var(--ink);
+  stroke-width: 2.6px;
+  stroke-linejoin: round;
+}
+
+.hud-tier--a .hud-tier__disc { fill: var(--ink); }
+.hud-tier--b .hud-tier__disc { fill: var(--paper); }
+.hud-tier--d { opacity: 0.85; }
+.hud-tier--d .hud-tier__disc {
+  fill: var(--ghost);
+  stroke: var(--hud-smoke-ink);
+  stroke-dasharray: 4 3.4;
+}
+
+/* user units: 24 in the 36-unit badge lands above 20px on screen */
+.hud-tier__letter {
+  fill: var(--ink);
+  font-family: var(--hud-stamp);
+  font-size: 24px;
+  text-anchor: middle;
+  dominant-baseline: central;
+  paint-order: stroke;
+  stroke: var(--paper);
+  stroke-width: 0;
+}
+
+.hud-tier--a .hud-tier__letter { fill: var(--paper); }
+.hud-tier--c .hud-tier__letter { stroke-width: 6px; stroke-linejoin: round; }
+.hud-tier--d .hud-tier__letter { fill: var(--hud-smoke-ink); }
+
+/* ---- reader sheet: typed line by line, the page feeding up under its heading once it is full ---- */
+
+.hud-sheet {
+  display: flex;
+  flex-direction: column;
+  padding: 14px 18px 10px;
+}
+
+.hud-sheet__paper {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.hud-sheet__title {
+  flex: none;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--ink);
+  color: var(--ink);
+  font-family: var(--hud-stamp);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+}
+
+/* Short sheets sit at the top; once the page is full the newest line stays in view and the oldest feed out. */
+.hud-sheet__feed {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 0;
+  margin-bottom: 4px;
+  overflow: hidden;
+}
+
+.hud-sheet__lines {
+  margin-bottom: auto;
+}
+
+.hud-sheet__inner {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  column-gap: 10px;
+  align-items: baseline;
+}
+
+.hud-sheet__tag {
+  margin: 5px 0;
+  padding: 1px 0 0;
+  border: 2px solid var(--wall-deep);
+  border-radius: 6px 5px 7px 5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.hud-sheet__tag--seen {
+  background: var(--wall-deep);
+  color: var(--paper);
+}
+
+.hud-sheet__body {
+  padding: 5px 0;
+}
+
+.hud-sheet__text {
+  display: -webkit-box;
+  overflow: hidden;
+  font-family: var(--hud-doc);
+  line-height: 24px;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.hud-sheet__conflict {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  color: var(--crimson);
+  font-family: var(--hud-doc);
+  font-weight: 700;
+  line-height: 24px;
+  overflow-wrap: break-word;
+}
+
+.hud-sheet__clash {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  overflow: visible;
+  fill: var(--crimson);
+  stroke: var(--ink);
+  stroke-width: 1.8px;
+  stroke-linejoin: round;
+}
+
+.hud-sheet__count {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 8px;
+  padding-top: 2px;
+  border-top: 2px solid var(--ink);
+  font-size: 22px;
+}
+
+.hud-sheet__num {
+  font-family: var(--hud-stamp);
+  font-size: 40px;
+  line-height: 1.1;
+}
+
+/* ---- reduced motion: rows arrive at full size, content settles by opacity alone ---- */
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-tape__row,
+  .hud-dig__row,
+  .hud-sheet__line {
+    animation: none;
+  }
+
+  .hud-tape__entry,
+  .hud-dig__tag,
+  .hud-dig__num,
+  .hud-sheet__tag,
+  .hud-sheet__body {
+    animation: hud2-fade var(--dur-fade, 220ms) ease-out both;
+  }
+}

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Séance cast gallery</title>
+<style>
+/* Dev-only page. Mirrors the palette in src/styles/tokens.css until that file lands. */
+:root {
+  --ink:#2B211C; --wall:#5E8577; --wall-deep:#4B6E62; --floor:#EBD9BC; --floor-shadow:#CDB690;
+  --paper:#F7F1E3; --paper-deep:#E6DCC6; --wood:#6B3F2A; --wood-light:#8A5638; --terracotta:#C7674B;
+  --terracotta-deep:#A9533C; --brass:#C29A45; --brass-deep:#9C7A30; --wax:#F3EBD6; --flame:#F5A623;
+  --flame-core:#FCE38A; --crimson:#C8352C; --crimson-deep:#9E2620; --slate:#5C7A86; --slate-deep:#47616B;
+  --smoke:#9C8FA8; --penguin:#1F1C1D; --belly:#FBF7EE; --beak:#F0A030; --wig:#E4DDD0; --owl:#6E5848;
+  --owl-cream:#DCCDB4; --ghost:#F4F4F0; --ghost-shade:#D3D9D6; --glitch-a:#3FD0C9; --glitch-b:#E0457B;
+  --font-masthead:'UnifrakturCook', serif; --font-stamp:'Alfa Slab One', serif;
+  --font-doc:'Courier Prime', monospace; --font-ui:'Atkinson Hyperlegible', sans-serif;
+}
+body { margin:0; background:var(--wall-deep); color:var(--paper); font-family:var(--font-ui); }
+main { padding:24px 32px 64px; }
+h1 { font-family:var(--font-masthead); font-size:56px; font-weight:700; margin:0 0 8px; }
+h2 { font-family:var(--font-stamp); font-weight:400; font-size:24px; margin:32px 0 10px; color:var(--wax); }
+.items { display:flex; flex-wrap:wrap; gap:16px; align-items:flex-end; }
+figure { margin:0; background:var(--wall); border-bottom:28px solid var(--floor); border-radius:6px; overflow:hidden; }
+figcaption { font-family:var(--font-doc); font-size:16px; text-align:center; color:var(--paper); background:var(--ink); padding:4px 6px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="module" src="/src/dev/gallery.tsx"></script>
+</body>
+</html>
