@@ -30,6 +30,6 @@ Source: `cases/todo.case.yml`, `cases/todo/regression-result.json`, `cases/todo/
 | Fidelity | 100 | 100 * matched / (matched + mismatched) over court verdicts, flaky excluded. |
 | Brier | 0.071 (n=16) | Mean over claims of (confidence - claim_true)^2; n is claims minus unsworn. |
 | Credibility | 1000 -> 930 | Starts at 1000; STRUCK loses bond, LOCKED gains round(bond * (1 - confidence)). |
-| Repairs | patched 1, rollback 0, unsworn 0 | Count of decisions (patched, rollback, unsworn) in the repair log; patched = narrow fix kept, rollback = fix dropped the regression score, unsworn = builder could not fix. |
+| Repairs | patched 2, rollback 0, unsworn 0 | Count of decisions (patched, rollback, unsworn) in the repair log; patched = narrow fix kept, rollback = fix dropped the regression score, unsworn = builder could not fix. |
 
 Not measured yet: none.
