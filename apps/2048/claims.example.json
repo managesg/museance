@@ -1,0 +1,247 @@
+[
+ {
+  "id": "g01",
+  "app": "2048",
+  "screen": "game",
+  "text": "Sliding left merges two equal tiles into their sum and the score gains the sum",
+  "test": {
+   "steps": [
+    "storage:gameState={\"grid\":{\"size\":4,\"cells\":[[{\"position\":{\"x\":0,\"y\":0},\"value\":2},null,null,null],[{\"position\":{\"x\":1,\"y\":0},\"value\":2},null,null,null],[null,null,null,null],[null,null,null,null]]},\"score\":0,\"over\":false,\"won\":false,\"keepPlaying\":false}",
+    "reload",
+    "key:ArrowLeft"
+   ],
+   "observe": ".score-container",
+   "expect": "4\n+4"
+  },
+  "tier": "A",
+  "label": "SEEN",
+  "evidence": [],
+  "confidence": 0.9,
+  "bond": 100
+ },
+ {
+  "id": "g02",
+  "app": "2048",
+  "screen": "game",
+  "text": "A tile merges at most once per move: [2,2,2,2] moving left gives [4,4], score 8 not 16",
+  "test": {
+   "steps": [
+    "storage:gameState={\"grid\":{\"size\":4,\"cells\":[[{\"position\":{\"x\":0,\"y\":0},\"value\":2},null,null,null],[{\"position\":{\"x\":1,\"y\":0},\"value\":2},null,null,null],[{\"position\":{\"x\":2,\"y\":0},\"value\":2},null,null,null],[{\"position\":{\"x\":3,\"y\":0},\"value\":2},null,null,null]]},\"score\":0,\"over\":false,\"won\":false,\"keepPlaying\":false}",
+    "reload",
+    "key:ArrowLeft"
+   ],
+   "observe": ".score-container",
+   "expect": "8\n+8"
+  },
+  "tier": "A",
+  "label": "SEEN",
+  "evidence": [],
+  "confidence": 0.9,
+  "bond": 100
+ },
+ {
+  "id": "g03",
+  "app": "2048",
+  "screen": "game",
+  "text": "Merge priority goes toward the move direction: [2,2,2] left gives [4,2] so the 2 is at column 2",
+  "test": {
+   "steps": [
+    "storage:gameState={\"grid\":{\"size\":4,\"cells\":[[{\"position\":{\"x\":0,\"y\":0},\"value\":2},null,null,null],[{\"position\":{\"x\":1,\"y\":0},\"value\":2},null,null,null],[{\"position\":{\"x\":2,\"y\":0},\"value\":2},null,null,null],[null,null,null,null]]},\"score\":0,\"over\":false,\"won\":false,\"keepPlaying\":false}",
+    "reload",
+    "key:ArrowLeft"
+   ],
+   "observe": ".tile-position-2-1",
+   "expect": "2"
+  },
+  "tier": "A",
+  "label": "SEEN",
+  "evidence": [],
+  "confidence": 0.9,
+  "bond": 100
+ },
+ {
+  "id": "g04",
+  "app": "2048",
+  "screen": "game",
+  "text": "Merge priority goes toward the move direction: [2,2,2] right gives [2,4] so the merged 4 is at column 4",
+  "test": {
+   "steps": [
+    "storage:gameState={\"grid\":{\"size\":4,\"cells\":[[null,null,null,null],[{\"position\":{\"x\":1,\"y\":0},\"value\":2},null,null,null],[{\"position\":{\"x\":2,\"y\":0},\"value\":2},null,null,null],[{\"position\":{\"x\":3,\"y\":0},\"value\":2},null,null,null]]},\"score\":0,\"over\":false,\"won\":false,\"keepPlaying\":false}",
+    "reload",
+    "key:ArrowRight"
+   ],
+   "observe": ".tile-merged.tile-position-4-1",
+   "expect": "4"
+  },
+  "tier": "A",
+  "label": "SEEN",
+  "evidence": [],
+  "confidence": 0.9,
+  "bond": 100
+ },
+ {
+  "id": "g05",
+  "app": "2048",
+  "screen": "game",
+  "text": "A move that changes nothing spawns no tile and leaves the score unchanged",
+  "test": {
+   "steps": [
+    "storage:gameState={\"grid\":{\"size\":4,\"cells\":[[{\"position\":{\"x\":0,\"y\":0},\"value\":2},null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null]]},\"score\":6,\"over\":false,\"won\":false,\"keepPlaying\":false}",
+    "reload",
+    "key:ArrowLeft"
+   ],
+   "observe": ".tile-container",
+   "expect": "2"
+  },
+  "tier": "A",
+  "label": "SEEN",
+  "evidence": [],
+  "confidence": 0.9,
+  "bond": 100
+ },
+ {
+  "id": "g06",
+  "app": "2048",
+  "screen": "game",
+  "text": "Best score rises to the score when the score exceeds it",
+  "test": {
+   "steps": [
+    "storage:bestScore=2",
+    "storage:gameState={\"grid\":{\"size\":4,\"cells\":[[{\"position\":{\"x\":0,\"y\":0},\"value\":2},null,null,null],[{\"position\":{\"x\":1,\"y\":0},\"value\":2},null,null,null],[null,null,null,null],[null,null,null,null]]},\"score\":0,\"over\":false,\"won\":false,\"keepPlaying\":false}",
+    "reload",
+    "key:ArrowLeft"
+   ],
+   "observe": ".best-container",
+   "expect": "4"
+  },
+  "tier": "A",
+  "label": "SEEN",
+  "evidence": [],
+  "confidence": 0.9,
+  "bond": 100
+ },
+ {
+  "id": "g07",
+  "app": "2048",
+  "screen": "game",
+  "text": "Best score is not lowered when the score is below it",
+  "test": {
+   "steps": [
+    "storage:bestScore=100",
+    "storage:gameState={\"grid\":{\"size\":4,\"cells\":[[{\"position\":{\"x\":0,\"y\":0},\"value\":2},null,null,null],[{\"position\":{\"x\":1,\"y\":0},\"value\":2},null,null,null],[null,null,null,null],[null,null,null,null]]},\"score\":0,\"over\":false,\"won\":false,\"keepPlaying\":false}",
+    "reload",
+    "key:ArrowLeft"
+   ],
+   "observe": ".best-container",
+   "expect": "100"
+  },
+  "tier": "A",
+  "label": "SEEN",
+  "evidence": [],
+  "confidence": 0.9,
+  "bond": 100
+ },
+ {
+  "id": "g08",
+  "app": "2048",
+  "screen": "game",
+  "text": "Creating a 2048 tile shows the win message",
+  "test": {
+   "steps": [
+    "storage:gameState={\"grid\":{\"size\":4,\"cells\":[[{\"position\":{\"x\":0,\"y\":0},\"value\":1024},null,null,null],[{\"position\":{\"x\":1,\"y\":0},\"value\":1024},null,null,null],[null,null,null,null],[null,null,null,null]]},\"score\":0,\"over\":false,\"won\":false,\"keepPlaying\":false}",
+    "reload",
+    "key:ArrowLeft"
+   ],
+   "observe": ".game-message.game-won",
+   "expect": "You win!\n\nKeep going Try again"
+  },
+  "tier": "A",
+  "label": "SEEN",
+  "evidence": [],
+  "confidence": 0.9,
+  "bond": 100
+ },
+ {
+  "id": "g09",
+  "app": "2048",
+  "screen": "game",
+  "text": "When the board is full after a move and no merges remain the game over message appears",
+  "test": {
+   "steps": [
+    "storage:gameState={\"grid\":{\"size\":4,\"cells\":[[null,{\"position\":{\"x\":0,\"y\":1},\"value\":16},{\"position\":{\"x\":0,\"y\":2},\"value\":8},{\"position\":{\"x\":0,\"y\":3},\"value\":16}],[{\"position\":{\"x\":1,\"y\":0},\"value\":8},{\"position\":{\"x\":1,\"y\":1},\"value\":32},{\"position\":{\"x\":1,\"y\":2},\"value\":16},{\"position\":{\"x\":1,\"y\":3},\"value\":32}],[{\"position\":{\"x\":2,\"y\":0},\"value\":16},{\"position\":{\"x\":2,\"y\":1},\"value\":64},{\"position\":{\"x\":2,\"y\":2},\"value\":32},{\"position\":{\"x\":2,\"y\":3},\"value\":64}],[{\"position\":{\"x\":3,\"y\":0},\"value\":32},{\"position\":{\"x\":3,\"y\":1},\"value\":128},{\"position\":{\"x\":3,\"y\":2},\"value\":64},{\"position\":{\"x\":3,\"y\":3},\"value\":128}]]},\"score\":0,\"over\":false,\"won\":false,\"keepPlaying\":false}",
+    "reload",
+    "key:ArrowLeft"
+   ],
+   "observe": ".game-message.game-over",
+   "expect": "Game over!\n\nTry again"
+  },
+  "tier": "A",
+  "label": "SEEN",
+  "evidence": [],
+  "confidence": 0.9,
+  "bond": 100
+ },
+ {
+  "id": "g10",
+  "app": "2048",
+  "screen": "game",
+  "text": "New Game resets the score to 0",
+  "test": {
+   "steps": [
+    "storage:bestScore=100",
+    "storage:gameState={\"grid\":{\"size\":4,\"cells\":[[{\"position\":{\"x\":0,\"y\":0},\"value\":2},{\"position\":{\"x\":0,\"y\":1},\"value\":8},null,null],[{\"position\":{\"x\":1,\"y\":0},\"value\":2},null,null,null],[null,null,null,null],[null,null,null,null]]},\"score\":100,\"over\":false,\"won\":false,\"keepPlaying\":false}",
+    "reload",
+    "click:.restart-button"
+   ],
+   "observe": ".score-container",
+   "expect": "0"
+  },
+  "tier": "A",
+  "label": "SEEN",
+  "evidence": [],
+  "confidence": 0.9,
+  "bond": 100
+ },
+ {
+  "id": "g11",
+  "app": "2048",
+  "screen": "game",
+  "text": "WASD maps like arrows: d moves right and merges",
+  "test": {
+   "steps": [
+    "storage:gameState={\"grid\":{\"size\":4,\"cells\":[[{\"position\":{\"x\":0,\"y\":0},\"value\":2},null,null,null],[{\"position\":{\"x\":1,\"y\":0},\"value\":2},null,null,null],[null,null,null,null],[null,null,null,null]]},\"score\":0,\"over\":false,\"won\":false,\"keepPlaying\":false}",
+    "reload",
+    "key:d"
+   ],
+   "observe": ".tile-merged.tile-position-4-1",
+   "expect": "4"
+  },
+  "tier": "A",
+  "label": "SEEN",
+  "evidence": [],
+  "confidence": 0.9,
+  "bond": 100
+ },
+ {
+  "id": "g12",
+  "app": "2048",
+  "screen": "game",
+  "text": "After winning, Keep going lets play continue past 2048 (moves work again, score stays)",
+  "test": {
+   "steps": [
+    "storage:gameState={\"grid\":{\"size\":4,\"cells\":[[{\"position\":{\"x\":0,\"y\":0},\"value\":1024},null,null,null],[{\"position\":{\"x\":1,\"y\":0},\"value\":1024},null,null,null],[null,null,null,null],[null,null,null,null]]},\"score\":0,\"over\":false,\"won\":false,\"keepPlaying\":false}",
+    "reload",
+    "key:ArrowLeft",
+    "click:.keep-playing-button",
+    "key:ArrowRight"
+   ],
+   "observe": ".score-container",
+   "expect": "2048"
+  },
+  "tier": "A",
+  "label": "SEEN",
+  "evidence": [],
+  "confidence": 0.9,
+  "bond": 100
+ }
+]
