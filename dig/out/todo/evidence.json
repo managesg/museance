@@ -1,0 +1,511 @@
+[
+ {
+  "id": "e001",
+  "app": "todo",
+  "tier": "C",
+  "kind": "page",
+  "source": "https://github.com/themaxsandelin/todo",
+  "license": "MIT",
+  "text": "A simple todo list app built in HTML, CSS and JavaScript (created 2016-06-27, archived: True)"
+ },
+ {
+  "id": "e002",
+  "app": "todo",
+  "tier": "C",
+  "kind": "doc",
+  "source": "https://github.com/themaxsandelin/todo#readme",
+  "license": "MIT",
+  "text": "# To-do\nA simple todo list app built in HTML, CSS and JavaScript.\n\nIf you want to learn how to build this yourself you can check out the YouTube video that walks through the whole process here:\n- [Learn to code a to-do list app in JavaScript - Part 1](https://www.youtube.com/watch?v=2wCpkOk2uCg)\n- [Learn to code a to-do list app in JavaScript - Part 2](https://www.youtube.com/watch?v=bGLZ2pwCaiI)\n\n## License\n[MIT](LICENSE.md) © [Max Sandelin](https://instagram.com/themaxsandelin)"
+ },
+ {
+  "id": "e003",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/42",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #42 (closed): refresh bug fix\nHello,\r\n\r\nFirst of all, thank you for the todo project you've developed. As a JavaScript beginner, I've found it incredibly beneficial. However, during testing, I encountered a bug related to handling todos with identical content in the data source. Specifically, when attempting to delete a todo item, the absence of a mapping between components and records can lead to a disorder upon refresh. Here's how the bug can be reproduced:\r\n\r\nInitially, we add eight todo items in the following order: aa, bb, cc, dd, aa, bb, cc, dd. At this point, the todoList records are as follows: {\"todo\":[\"aa\",\"bb\",\"cc\",\"dd\",\"aa\",\"bb\",\"cc\",\"dd\"],\"completed\":[]}\r\n\r\nIf we try to delete (or complete) the fifth record (aa), the page directly manipulates the DOM to remove the item. Consequently, the todo records on the page from bottom to top become aa, bb, cc, dd, bb, cc, dd. Although this seems correct, the actual todoList records become {\"todo\":[\"bb\",\"cc\",\"dd\",\"aa\",\"bb\",\"cc\",\"dd\"],\"completed\":[]}.\r\n\r\nThis discrepancy occurs because the operation data.todo.splice(data.todo.indexOf(value), 1) deletes the first instance of aa, not the fifth one. If we refresh the webpage at this point, the page will re-render the todos in the following order from bottom to top: bb, cc, dd, aa, bb, cc, dd, which is not what we expected (aa, bb, cc, dd, bb, cc, dd).\r\n\r\nTo address this issue, I've made a simple modification by adding an id to each todo item, resulting in a structure like: {\"todo\":[{\"id\":0,\"value\":\"aa\"},{\"id\":1,\"value\":\"bb\"},{\"id\":2,\"value\":\"cc\"},{\"id\":3,\"value\":\"dd\"},{\"id\":4,\"value\":\"aa\"},{\"id\":5,\"value\":\"bb\"},{\"id\":6,\"value\":\"cc\"},{\"id\":7,\"value\":\"dd\"}],\"completed\":[]}\r\n\r\nI've also associated each todo's id with its DOM component. This way, when a component is clicked for deletion, we can retrieve the id from the component, find the corresponding record in todoList, and delete it accurately.\r\n\r\nThis is the description of the PR I wish to submit. Thank you."
+ },
+ {
+  "id": "e004",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/41",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #41 (open): Disappear animation & Item counter"
+ },
+ {
+  "id": "e005",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/40",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #40 (open): Time tracker for tasks"
+ },
+ {
+  "id": "e006",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/39",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #39 (open): Fix empty tasks"
+ },
+ {
+  "id": "e007",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/issues/38",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "Issue #38 (open): Bug: Empty tasks can be created\n![image](https://github.com/themaxsandelin/todo/assets/48922607/d8e25266-1799-46c7-9937-b88d462e880b)"
+ },
+ {
+  "id": "e008",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/37",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #37 (closed): Added Some Noticable Changes\n-Changed The Overall Layout To Dark mode\r\n-Changed Button With More Stylish Code\r\n-Changed User Input Field With More Stylish Code"
+ },
+ {
+  "id": "e009",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/36",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #36 (closed): Delete LICENSE.md"
+ },
+ {
+  "id": "e010",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/issues/35",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "Issue #35 (closed): Yo\nAhlsa"
+ },
+ {
+  "id": "e011",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/34",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #34 (closed): Delete README.md"
+ },
+ {
+  "id": "e012",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/33",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #33 (closed): Delete README.md"
+ },
+ {
+  "id": "e013",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/32",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #32 (closed): Deno"
+ },
+ {
+  "id": "e014",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/31",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #31 (closed): Jojo"
+ },
+ {
+  "id": "e015",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/30",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #30 (closed): Create SECURITY.md\nAlv jajaja"
+ },
+ {
+  "id": "e016",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/29",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #29 (open): This is my first time making a pull request on git\nI was looking to try making a contribution to a open source project for the first time, I wanted to do something simple so the only change made was making the Readme more formal. No need to accept it just wanted to try making a pull request.\r\n \r\nHave a nice day,\r\n-Maksim J."
+ },
+ {
+  "id": "e017",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/28",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #28 (open): Updated README.md file\nUpdated README.md file\r\n\r\nAdded few details in it to give a good outlook for the visitors. I hope it helps.\r\n\r\nThanks for the opportunity."
+ },
+ {
+  "id": "e018",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/27",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #27 (closed): changed how the todo look and removed the border radius on the header\nThings i changed:\r\n-how the todo looks on the page\r\n-added box shadow to give it a settled look\r\n-removed the border radius on the header"
+ },
+ {
+  "id": "e019",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/26",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #26 (closed): Intiated Node js and Express"
+ },
+ {
+  "id": "e020",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/issues/24",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "Issue #24 (open): Marker in mobile version\nHi!\r\n\r\nI've been using your app and found a small bug. In the mobile version, when completing a task and returning it back to the list, the completed task marker remains.\r\n\r\n![image_2022-03-18_11-34-17](https://user-images.githubusercontent.com/73419198/158965632-e5441e5b-7f0e-4e10-8254-34b90617d3b0.png)"
+ },
+ {
+  "id": "e021",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/23",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #23 (open): Api"
+ },
+ {
+  "id": "e022",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/22",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #22 (closed): Taehee"
+ },
+ {
+  "id": "e023",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/issues/21",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "Issue #21 (closed): test\nyaa"
+ },
+ {
+  "id": "e024",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/19",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #19 (closed): fix: removed extra blank between sections"
+ },
+ {
+  "id": "e025",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/18",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #18 (closed): API up and running success"
+ },
+ {
+  "id": "e026",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/17",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #17 (closed): initiating API Work"
+ },
+ {
+  "id": "e027",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/16",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #16 (closed): Api"
+ },
+ {
+  "id": "e028",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/15",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #15 (closed): learning pull request"
+ },
+ {
+  "id": "e029",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/13",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #13 (closed): changing var to let"
+ },
+ {
+  "id": "e030",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/12",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #12 (closed): Api000001\n1234654000100101"
+ },
+ {
+  "id": "e031",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/11",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #11 (closed): Added ability to edit tasks and tips for task buttons.\nThe ability to edit tasks can be useful, for example, to correct grammatical errors.\r\nTask button tips improve usability for new users."
+ },
+ {
+  "id": "e032",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/10",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #10 (closed): Api"
+ },
+ {
+  "id": "e033",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/issues/9",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "Issue #9 (closed): Responsive\nHi Max,\r\n\r\nLove your tutorial. I was really hoping that you could update the app code to be responsive so it could be used on mobile devices. That would be a great 3rd part to the tutorial!"
+ },
+ {
+  "id": "e034",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/8",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #8 (closed): Add files via upload\nUpdate: Enabled tracking calories by checking the items\r\n\r\nI am doing a project for a Software Managment Class, I am supposed to do a pull request and add another feature to your todo list. The only issue that I can't fix is reading the gender value on the input screen."
+ },
+ {
+  "id": "e035",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/7",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #7 (closed): Test\ntest comment"
+ },
+ {
+  "id": "e036",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/6",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #6 (closed): Make it work with Numpad-Enter"
+ },
+ {
+  "id": "e037",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/5",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #5 (closed): added word-break\nlong words are looking not that great.\r\n\r\nbut now the words looks great again!\r\n\r\ni made ur app great again"
+ },
+ {
+  "id": "e038",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/4",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #4 (closed): General improvments\n- updating messages and imroving code"
+ },
+ {
+  "id": "e039",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/pull/3",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "PR #3 (closed): Add Viewport meta tag\nThank you for this amazing tutorial, with this meta tag the application will display nicer in mobile devices."
+ },
+ {
+  "id": "e040",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/issues/2",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "Issue #2 (closed): Store the todo list on the server\nHello i really like your feature, is it possible to store the content of the todo list on the server?\r\n\r\n- i open the list with my mac\r\n- entered something, closed it here\r\n- opened it on my iPhone it was empty\r\n\r\n-same like opening first as desktop-app on the iPhone and then opened in safari on the iPhone.\r\n\r\nMit freundlichen Grüßen\r\nChris"
+ },
+ {
+  "id": "e041",
+  "app": "todo",
+  "tier": "C",
+  "kind": "issue",
+  "source": "https://github.com/themaxsandelin/todo/issues/1",
+  "license": "public GitHub issue, quoted as evidence",
+  "text": "Issue #1 (closed): Format code\nLooks like https://github.com/themaxsandelin/todo/blob/master/resources/js/main.js uses a mix of tabs and spaces"
+ },
+ {
+  "id": "e042",
+  "app": "todo",
+  "tier": "B",
+  "kind": "screenshot",
+  "source": "our screenshot of the original, scene '01-empty'",
+  "license": "ours",
+  "text": "Screenshot after steps []. Seen on screen: #todo has 0 items, its visible text is ''; #completed has 0 items, its visible text is ''",
+  "path": "dig/piles/todo/shots/01-empty.png"
+ },
+ {
+  "id": "e043",
+  "app": "todo",
+  "tier": "B",
+  "kind": "screenshot",
+  "source": "our screenshot of the original, scene '02-add-click'",
+  "license": "ours",
+  "text": "Screenshot after steps ['type:#item:Buy milk', 'click:#add']. Seen on screen: #todo has 1 items, its visible text is 'Buy milk'; #completed has 0 items, its visible text is ''",
+  "path": "dig/piles/todo/shots/02-add-click.png"
+ },
+ {
+  "id": "e044",
+  "app": "todo",
+  "tier": "B",
+  "kind": "screenshot",
+  "source": "our screenshot of the original, scene '03-add-enter'",
+  "license": "ours",
+  "text": "Screenshot after steps ['type:#item:Walk dog', 'key:Enter']. Seen on screen: #todo has 1 items, its visible text is 'Walk dog'; #completed has 0 items, its visible text is ''",
+  "path": "dig/piles/todo/shots/03-add-enter.png"
+ },
+ {
+  "id": "e045",
+  "app": "todo",
+  "tier": "B",
+  "kind": "screenshot",
+  "source": "our screenshot of the original, scene '04-two-items'",
+  "license": "ours",
+  "text": "Screenshot after steps ['type:#item:Buy milk', 'click:#add', 'type:#item:Walk dog', 'click:#add']. Seen on screen: #todo has 2 items, its visible text is 'Walk dog\\nBuy milk'; #completed has 0 items, its visible text is ''",
+  "path": "dig/piles/todo/shots/04-two-items.png"
+ },
+ {
+  "id": "e046",
+  "app": "todo",
+  "tier": "B",
+  "kind": "screenshot",
+  "source": "our screenshot of the original, scene '05-complete'",
+  "license": "ours",
+  "text": "Screenshot after steps ['type:#item:Buy milk', 'click:#add', 'click:#todo li .complete']. Seen on screen: #todo has 0 items, its visible text is ''; #completed has 1 items, its visible text is 'Buy milk'",
+  "path": "dig/piles/todo/shots/05-complete.png"
+ },
+ {
+  "id": "e047",
+  "app": "todo",
+  "tier": "B",
+  "kind": "screenshot",
+  "source": "our screenshot of the original, scene '06-remove'",
+  "license": "ours",
+  "text": "Screenshot after steps ['type:#item:Buy milk', 'click:#add', 'type:#item:Walk dog', 'click:#add', 'click:#todo li .remove']. Seen on screen: #todo has 1 items, its visible text is 'Buy milk'; #completed has 0 items, its visible text is ''",
+  "path": "dig/piles/todo/shots/06-remove.png"
+ },
+ {
+  "id": "e048",
+  "app": "todo",
+  "tier": "B",
+  "kind": "screenshot",
+  "source": "our screenshot of the original, scene '07-empty-add'",
+  "license": "ours",
+  "text": "Screenshot after steps ['click:#add']. Seen on screen: #todo has 0 items, its visible text is ''; #completed has 0 items, its visible text is ''",
+  "path": "dig/piles/todo/shots/07-empty-add.png"
+ },
+ {
+  "id": "e049",
+  "app": "todo",
+  "tier": "B",
+  "kind": "screenshot",
+  "source": "our screenshot of the original, scene '08-uncomplete'",
+  "license": "ours",
+  "text": "Screenshot after steps ['type:#item:Buy milk', 'click:#add', 'click:#todo li .complete', 'click:#completed li .complete']. Seen on screen: #todo has 1 items, its visible text is 'Buy milk'; #completed has 0 items, its visible text is ''",
+  "path": "dig/piles/todo/shots/08-uncomplete.png"
+ },
+ {
+  "id": "e050",
+  "app": "todo",
+  "tier": "B",
+  "kind": "screenshot",
+  "source": "our screenshot of the original, scene '09-remove-completed'",
+  "license": "ours",
+  "text": "Screenshot after steps ['type:#item:Buy milk', 'click:#add', 'click:#todo li .complete', 'click:#completed li .remove']. Seen on screen: #todo has 0 items, its visible text is ''; #completed has 0 items, its visible text is ''",
+  "path": "dig/piles/todo/shots/09-remove-completed.png"
+ },
+ {
+  "id": "e051",
+  "app": "todo",
+  "tier": "B",
+  "kind": "screenshot",
+  "source": "our screenshot of the original, scene '10-duplicates'",
+  "license": "ours",
+  "text": "Screenshot after steps ['type:#item:Buy milk', 'click:#add', 'type:#item:Buy milk', 'click:#add']. Seen on screen: #todo has 2 items, its visible text is 'Buy milk\\nBuy milk'; #completed has 0 items, its visible text is ''",
+  "path": "dig/piles/todo/shots/10-duplicates.png"
+ },
+ {
+  "id": "e052",
+  "app": "todo",
+  "tier": "B",
+  "kind": "screenshot",
+  "source": "our screenshot of the original, scene '11-whitespace'",
+  "license": "ours",
+  "text": "Screenshot after steps ['type:#item:   ', 'click:#add']. Seen on screen: #todo has 1 items, its visible text is ''; #completed has 0 items, its visible text is ''",
+  "path": "dig/piles/todo/shots/11-whitespace.png"
+ },
+ {
+  "id": "e053",
+  "app": "todo",
+  "tier": "B",
+  "kind": "screenshot",
+  "source": "our screenshot of the original, scene '12-long-word'",
+  "license": "ours",
+  "text": "Screenshot after steps ['type:#item:Supercalifragilisticexpialidocious-and-then-some-more-text', 'click:#add']. Seen on screen: #todo has 1 items, its visible text is 'Supercalifragilisticexpialidocious-and-then-some-more-text'; #completed has 0 items, its visible text is ''",
+  "path": "dig/piles/todo/shots/12-long-word.png"
+ },
+ {
+  "id": "e054",
+  "app": "todo",
+  "tier": "B",
+  "kind": "screenshot",
+  "source": "our screenshot of the original, scene '13-complete-top-of-two'",
+  "license": "ours",
+  "text": "Screenshot after steps ['type:#item:Buy milk', 'click:#add', 'type:#item:Walk dog', 'click:#add', 'click:#todo li .complete']. Seen on screen: #todo has 1 items, its visible text is 'Buy milk'; #completed has 1 items, its visible text is 'Walk dog'",
+  "path": "dig/piles/todo/shots/13-complete-top-of-two.png"
+ },
+ {
+  "id": "e055",
+  "app": "todo",
+  "tier": "B",
+  "kind": "screenshot",
+  "source": "our screenshot of the original, scene '14-two-completed'",
+  "license": "ours",
+  "text": "Screenshot after steps ['type:#item:Buy milk', 'click:#add', 'click:#todo li .complete', 'type:#item:Walk dog', 'click:#add', 'click:#todo li .complete']. Seen on screen: #todo has 0 items, its visible text is ''; #completed has 2 items, its visible text is 'Walk dog\\nBuy milk'",
+  "path": "dig/piles/todo/shots/14-two-completed.png"
+ }
+]

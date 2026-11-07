@@ -1,0 +1,27 @@
+app: "todo"
+fidelity: 36
+brier: 0.014
+credibility_start: 1000
+credibility_end: 1010
+locked:
+  - "main: Typing an activity and clicking the add button shows it in the todo list. [A]"
+  - "main: Pressing Enter in the activity field adds the item to the todo list. [A]"
+  - "main: Clicking add with an empty field adds nothing. [A]"
+  - "main: Pressing Enter with an empty field adds nothing. [A]"
+  - "main: Clicking the complete button moves the item into the completed list. [A]"
+  - "main: Completing the only item leaves the todo list empty. [A]"
+  - "main: Clicking the remove button deletes the item from the todo list. [A]"
+  - "main: Clicking complete on a completed item moves it back to the todo list. [A]"
+struck: []
+fabricated: []
+unsworn: []
+counts:
+  claims: 8
+  locked: 8
+  struck: 0
+  fabricated: 0
+  unsworn: 0
+  false_strikes: 0
+  false_strikes_of: 12
+  traps_caught: 1
+  traps_of: 8

@@ -1,0 +1,1190 @@
+[
+ {
+  "ref": "todo-c1",
+  "kind": "claim",
+  "original": "Buy milk",
+  "revival": "Buy milk",
+  "claim_true": true,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "todo-c2",
+  "kind": "claim",
+  "original": "Walk dog",
+  "revival": "Walk dog",
+  "claim_true": true,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "todo-c3",
+  "kind": "claim",
+  "original": "",
+  "revival": "You have nothing to-do!",
+  "claim_true": true,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "todo-c4",
+  "kind": "claim",
+  "original": "",
+  "revival": "You have nothing to-do!",
+  "claim_true": true,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "todo-c5",
+  "kind": "claim",
+  "original": "Buy milk",
+  "revival": "Buy milk",
+  "claim_true": true,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "todo-c6",
+  "kind": "claim",
+  "original": "",
+  "revival": "You have nothing to-do!",
+  "claim_true": true,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": [
+   "type:#item:Buy milk",
+   "click:#add",
+   "click:#todo .complete"
+  ]
+ },
+ {
+  "ref": "todo-c7",
+  "kind": "claim",
+  "original": "",
+  "revival": "You have nothing to-do!",
+  "claim_true": true,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": [
+   "type:#item:Buy milk",
+   "click:#add",
+   "click:#todo .remove"
+  ]
+ },
+ {
+  "ref": "todo-c8",
+  "kind": "claim",
+  "original": "Buy milk",
+  "revival": "Buy milk",
+  "claim_true": true,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a001",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have nothing to-do!",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a002",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have nothing to-do!",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a003",
+  "kind": "attack",
+  "original": "",
+  "revival": "",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a004",
+  "kind": "attack",
+  "original": "a b",
+  "revival": "a    b",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a005",
+  "kind": "attack",
+  "original": "0",
+  "revival": "0",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a006",
+  "kind": "attack",
+  "original": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "revival": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a007",
+  "kind": "attack",
+  "original": "<b>bold</b><script>1</script>",
+  "revival": "<b>bold</b><script>1</script>",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a008",
+  "kind": "attack",
+  "original": "&amp; &lt; &#65;",
+  "revival": "&amp; &lt; &#65;",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a009",
+  "kind": "attack",
+  "original": "a:b:c: 10:30",
+  "revival": "a:b:c: 10:30",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a010",
+  "kind": "attack",
+  "original": "ñ ☕ 日本 😀",
+  "revival": "ñ ☕ 日本 😀",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a011",
+  "kind": "attack",
+  "original": "A\nA",
+  "revival": "A\nA",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a012",
+  "kind": "attack",
+  "original": "B\nA",
+  "revival": "B\nA",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a013",
+  "kind": "attack",
+  "original": "A",
+  "revival": "A",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a014",
+  "kind": "attack",
+  "original": "A",
+  "revival": "A",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a015",
+  "kind": "attack",
+  "original": "A",
+  "revival": "A",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a016",
+  "kind": "attack",
+  "original": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+  "revival": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a017",
+  "kind": "attack",
+  "original": "11\n10\n9\n8\n7\n6\n5\n4\n3\n2\n1\n0",
+  "revival": "11\n10\n9\n8\n7\n6\n5\n4\n3\n2\n1\n0",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a018",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have nothing to-do!",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete"
+  ]
+ },
+ {
+  "ref": "a019",
+  "kind": "attack",
+  "original": "A",
+  "revival": "A",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a020",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have nothing to-do!",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .complete",
+   "click:#todo li .complete",
+   "click:#completed li .complete",
+   "click:#todo li .complete"
+  ]
+ },
+ {
+  "ref": "a021",
+  "kind": "attack",
+  "original": "A",
+  "revival": "A",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a022",
+  "kind": "attack",
+  "original": "B\nA",
+  "revival": "B\nA",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a023",
+  "kind": "attack",
+  "original": "A",
+  "revival": "A",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a024",
+  "kind": "attack",
+  "original": "A\nA",
+  "revival": "A\nA",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a025",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have nothing to-do!",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a026",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have nothing to-do!",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .remove"
+  ]
+ },
+ {
+  "ref": "a027",
+  "kind": "attack",
+  "original": "B",
+  "revival": "B",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a028",
+  "kind": "attack",
+  "original": "A",
+  "revival": "A",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a029",
+  "kind": "attack",
+  "original": "A",
+  "revival": "A",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a030",
+  "kind": "attack",
+  "original": "B",
+  "revival": "B",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a031",
+  "kind": "attack",
+  "original": "A",
+  "revival": "A",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a032",
+  "kind": "attack",
+  "original": "A",
+  "revival": "A",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a033",
+  "kind": "attack",
+  "original": "A",
+  "revival": "A",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a034",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have nothing to-do!",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": [
+   "type:#item:   ",
+   "click:#add",
+   "click:#todo li .remove"
+  ]
+ },
+ {
+  "ref": "a035",
+  "kind": "attack",
+  "original": "ERROR:step 3 click:#todo li .remove: TimeoutError",
+  "revival": "ERROR:step 3 click:#todo li .remove: TimeoutError",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a036",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a037",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a038",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a039",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a040",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a041",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a042",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a043",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a044",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a045",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a046",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a047",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a048",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a049",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a050",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a051",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a052",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a053",
+  "kind": "attack",
+  "original": "A",
+  "revival": "A",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a054",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .complete"
+  ]
+ },
+ {
+  "ref": "a055",
+  "kind": "attack",
+  "original": "A",
+  "revival": "A",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a056",
+  "kind": "attack",
+  "original": "B\nC",
+  "revival": "B\nC",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a057",
+  "kind": "attack",
+  "original": "C",
+  "revival": "C",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a058",
+  "kind": "attack",
+  "original": "A",
+  "revival": "A",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a059",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .complete"
+  ]
+ },
+ {
+  "ref": "a060",
+  "kind": "attack",
+  "original": "a b",
+  "revival": "a    b",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a061",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a062",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a063",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a064",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": [
+   "type:#item:B",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .remove"
+  ]
+ },
+ {
+  "ref": "a065",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .remove"
+  ]
+ },
+ {
+  "ref": "a066",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a067",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .remove"
+  ]
+ },
+ {
+  "ref": "a068",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": [
+   "type:#item:C",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .remove"
+  ]
+ },
+ {
+  "ref": "a069",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a070",
+  "kind": "attack",
+  "original": "ERROR:step 3 click:#todo li .remove: TimeoutError",
+  "revival": "ERROR:step 3 click:#todo li .remove: TimeoutError",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a071",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have nothing to-do!\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a072",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have nothing to-do!\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a073",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a074",
+  "kind": "attack",
+  "original": "a b",
+  "revival": "a    b\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a075",
+  "kind": "attack",
+  "original": "0",
+  "revival": "0\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a076",
+  "kind": "attack",
+  "original": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "revival": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a077",
+  "kind": "attack",
+  "original": "<b>bold</b><script>1</script>",
+  "revival": "<b>bold</b><script>1</script>\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a078",
+  "kind": "attack",
+  "original": "&amp; &lt; &#65;",
+  "revival": "&amp; &lt; &#65;\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a079",
+  "kind": "attack",
+  "original": "a:b:c: 10:30",
+  "revival": "a:b:c: 10:30\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a080",
+  "kind": "attack",
+  "original": "ñ ☕ 日本 😀",
+  "revival": "ñ ☕ 日本 😀\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a081",
+  "kind": "attack",
+  "original": "A\nA",
+  "revival": "A\nA\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a082",
+  "kind": "attack",
+  "original": "B\nA",
+  "revival": "B\nA\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a083",
+  "kind": "attack",
+  "original": "A",
+  "revival": "A\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a084",
+  "kind": "attack",
+  "original": "A",
+  "revival": "A\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a085",
+  "kind": "attack",
+  "original": "A",
+  "revival": "A\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a086",
+  "kind": "attack",
+  "original": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+  "revival": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a087",
+  "kind": "attack",
+  "original": "11\n10\n9\n8\n7\n6\n5\n4\n3\n2\n1\n0",
+  "revival": "11\n10\n9\n8\n7\n6\n5\n4\n3\n2\n1\n0\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a088",
+  "kind": "attack",
+  "original": "A",
+  "revival": "You have nothing to-do!\nA",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a089",
+  "kind": "attack",
+  "original": "A",
+  "revival": "A\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a090",
+  "kind": "attack",
+  "original": "A",
+  "revival": "You have nothing to-do!\nA",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a091",
+  "kind": "attack",
+  "original": "A\nB\nC",
+  "revival": "A\nB\nC",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a092",
+  "kind": "attack",
+  "original": "B\nA\nC",
+  "revival": "B\nA\nC",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a093",
+  "kind": "attack",
+  "original": "A\nA",
+  "revival": "A\nA",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a094",
+  "kind": "attack",
+  "original": "A\nA",
+  "revival": "A\nA\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a095",
+  "kind": "attack",
+  "original": "a b",
+  "revival": "You have nothing to-do!\na    b",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a096",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have nothing to-do!\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a097",
+  "kind": "attack",
+  "original": "B",
+  "revival": "B\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a098",
+  "kind": "attack",
+  "original": "A",
+  "revival": "A\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a099",
+  "kind": "attack",
+  "original": "A",
+  "revival": "A\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a100",
+  "kind": "attack",
+  "original": "B",
+  "revival": "B\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a101",
+  "kind": "attack",
+  "original": "A",
+  "revival": "A\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a102",
+  "kind": "attack",
+  "original": "A",
+  "revival": "A\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a103",
+  "kind": "attack",
+  "original": "A",
+  "revival": "A\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a104",
+  "kind": "attack",
+  "original": "",
+  "revival": "You have nothing to-do!\nYou have yet to complete any tasks.",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "a105",
+  "kind": "attack",
+  "original": "ERROR:step 3 click:#todo li .remove: TimeoutError",
+  "revival": "ERROR:step 3 click:#todo li .remove: TimeoutError",
+  "claim_true": null,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ }
+]

@@ -1,0 +1,246 @@
+{
+ "verdicts": [
+  {
+   "ref": "c01",
+   "kind": "claim",
+   "original": "Buy milk",
+   "revival": "Buy milk",
+   "claim_true": true,
+   "match": true,
+   "flaky": false,
+   "shrunk_steps": []
+  },
+  {
+   "ref": "c02",
+   "kind": "claim",
+   "original": "Walk dog",
+   "revival": "Walk dog",
+   "claim_true": true,
+   "match": true,
+   "flaky": false,
+   "shrunk_steps": []
+  },
+  {
+   "ref": "c03",
+   "kind": "claim",
+   "original": "Walk dog\nBuy milk",
+   "revival": "Walk dog\nBuy milk",
+   "claim_true": true,
+   "match": true,
+   "flaky": false,
+   "shrunk_steps": []
+  },
+  {
+   "ref": "c04",
+   "kind": "claim",
+   "original": "Buy milk\nBuy milk",
+   "revival": "Buy milk\nBuy milk",
+   "claim_true": true,
+   "match": true,
+   "flaky": false,
+   "shrunk_steps": []
+  },
+  {
+   "ref": "c05",
+   "kind": "claim",
+   "original": "",
+   "revival": "",
+   "claim_true": true,
+   "match": true,
+   "flaky": false,
+   "shrunk_steps": []
+  },
+  {
+   "ref": "c06",
+   "kind": "claim",
+   "original": "",
+   "revival": "",
+   "claim_true": true,
+   "match": true,
+   "flaky": false,
+   "shrunk_steps": []
+  },
+  {
+   "ref": "c07",
+   "kind": "claim",
+   "original": "ERROR:observe #todo li: TimeoutError",
+   "revival": "ERROR:observe #todo li: TimeoutError",
+   "claim_true": false,
+   "match": true,
+   "flaky": false,
+   "shrunk_steps": []
+  },
+  {
+   "ref": "c08",
+   "kind": "claim",
+   "original": "Supercalifragilisticexpialidocious-and-then-some-more-text",
+   "revival": "Supercalifragilisticexpialidocious-and-then-some-more-text",
+   "claim_true": true,
+   "match": true,
+   "flaky": false,
+   "shrunk_steps": []
+  },
+  {
+   "ref": "c09",
+   "kind": "claim",
+   "original": "Walk dog",
+   "revival": "Walk dog",
+   "claim_true": true,
+   "match": true,
+   "flaky": false,
+   "shrunk_steps": []
+  },
+  {
+   "ref": "c10",
+   "kind": "claim",
+   "original": "Buy milk",
+   "revival": "Buy milk",
+   "claim_true": true,
+   "match": true,
+   "flaky": false,
+   "shrunk_steps": []
+  },
+  {
+   "ref": "c11",
+   "kind": "claim",
+   "original": "Walk dog",
+   "revival": "Walk dog",
+   "claim_true": true,
+   "match": true,
+   "flaky": false,
+   "shrunk_steps": []
+  },
+  {
+   "ref": "c12",
+   "kind": "claim",
+   "original": "Buy milk",
+   "revival": "Buy milk",
+   "claim_true": true,
+   "match": true,
+   "flaky": false,
+   "shrunk_steps": []
+  },
+  {
+   "ref": "c13",
+   "kind": "claim",
+   "original": "Buy milk",
+   "revival": "Buy milk",
+   "claim_true": true,
+   "match": true,
+   "flaky": false,
+   "shrunk_steps": []
+  },
+  {
+   "ref": "c14",
+   "kind": "claim",
+   "original": "",
+   "revival": "",
+   "claim_true": true,
+   "match": true,
+   "flaky": false,
+   "shrunk_steps": []
+  },
+  {
+   "ref": "c15",
+   "kind": "claim",
+   "original": "Walk dog\nBuy milk",
+   "revival": "Walk dog\nBuy milk",
+   "claim_true": true,
+   "match": true,
+   "flaky": false,
+   "shrunk_steps": []
+  },
+  {
+   "ref": "c16",
+   "kind": "claim",
+   "original": "",
+   "revival": "",
+   "claim_true": true,
+   "match": true,
+   "flaky": false,
+   "shrunk_steps": []
+  }
+ ],
+ "locks": [
+  {
+   "claim_id": "c01",
+   "status": "LOCKED",
+   "reason": "original shows 'Buy milk' as claimed"
+  },
+  {
+   "claim_id": "c02",
+   "status": "LOCKED",
+   "reason": "original shows 'Walk dog' as claimed"
+  },
+  {
+   "claim_id": "c03",
+   "status": "LOCKED",
+   "reason": "original shows 'Walk dog\\nBuy milk' as claimed"
+  },
+  {
+   "claim_id": "c04",
+   "status": "LOCKED",
+   "reason": "original shows 'Buy milk\\nBuy milk' as claimed"
+  },
+  {
+   "claim_id": "c05",
+   "status": "LOCKED",
+   "reason": "original shows '' as claimed"
+  },
+  {
+   "claim_id": "c06",
+   "status": "LOCKED",
+   "reason": "original shows '' as claimed"
+  },
+  {
+   "claim_id": "c07",
+   "status": "STRUCK",
+   "reason": "claimed '', original shows 'ERROR:observe #todo li: TimeoutError'"
+  },
+  {
+   "claim_id": "c08",
+   "status": "LOCKED",
+   "reason": "original shows 'Supercalifragilisticexpialidocious-and-then-some-more-text' as claimed"
+  },
+  {
+   "claim_id": "c09",
+   "status": "LOCKED",
+   "reason": "original shows 'Walk dog' as claimed"
+  },
+  {
+   "claim_id": "c10",
+   "status": "LOCKED",
+   "reason": "original shows 'Buy milk' as claimed"
+  },
+  {
+   "claim_id": "c11",
+   "status": "LOCKED",
+   "reason": "original shows 'Walk dog' as claimed"
+  },
+  {
+   "claim_id": "c12",
+   "status": "LOCKED",
+   "reason": "original shows 'Buy milk' as claimed"
+  },
+  {
+   "claim_id": "c13",
+   "status": "LOCKED",
+   "reason": "original shows 'Buy milk' as claimed"
+  },
+  {
+   "claim_id": "c14",
+   "status": "LOCKED",
+   "reason": "original shows '' as claimed"
+  },
+  {
+   "claim_id": "c15",
+   "status": "LOCKED",
+   "reason": "original shows 'Walk dog\\nBuy milk' as claimed"
+  },
+  {
+   "claim_id": "c16",
+   "status": "LOCKED",
+   "reason": "original shows '' as claimed"
+  }
+ ]
+}

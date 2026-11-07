@@ -1,0 +1,42 @@
+[
+ {
+  "claim_id": "todo-c1",
+  "status": "LOCKED",
+  "reason": "original shows 'Buy milk' as claimed"
+ },
+ {
+  "claim_id": "todo-c2",
+  "status": "LOCKED",
+  "reason": "original shows 'Walk dog' as claimed"
+ },
+ {
+  "claim_id": "todo-c3",
+  "status": "LOCKED",
+  "reason": "original shows '' as claimed"
+ },
+ {
+  "claim_id": "todo-c4",
+  "status": "LOCKED",
+  "reason": "original shows '' as claimed"
+ },
+ {
+  "claim_id": "todo-c5",
+  "status": "LOCKED",
+  "reason": "original shows 'Buy milk' as claimed"
+ },
+ {
+  "claim_id": "todo-c6",
+  "status": "LOCKED",
+  "reason": "original shows '' as claimed"
+ },
+ {
+  "claim_id": "todo-c7",
+  "status": "LOCKED",
+  "reason": "original shows '' as claimed"
+ },
+ {
+  "claim_id": "todo-c8",
+  "status": "LOCKED",
+  "reason": "original shows 'Buy milk' as claimed"
+ }
+]
