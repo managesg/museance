@@ -1,0 +1,158 @@
+[
+ {
+  "id": "todo-c1",
+  "app": "todo",
+  "screen": "main",
+  "text": "Typing an activity and clicking the add button shows it in the todo list.",
+  "test": {
+   "steps": [
+    "type:#item:Buy milk",
+    "click:#add"
+   ],
+   "observe": "#todo",
+   "expect": "Buy milk"
+  },
+  "tier": "A",
+  "label": "SEEN",
+  "evidence": [],
+  "confidence": 0.95,
+  "bond": 10
+ },
+ {
+  "id": "todo-c2",
+  "app": "todo",
+  "screen": "main",
+  "text": "Pressing Enter in the activity field adds the item to the todo list.",
+  "test": {
+   "steps": [
+    "type:#item:Walk dog",
+    "key:Enter"
+   ],
+   "observe": "#todo",
+   "expect": "Walk dog"
+  },
+  "tier": "A",
+  "label": "SEEN",
+  "evidence": [],
+  "confidence": 0.9,
+  "bond": 10
+ },
+ {
+  "id": "todo-c3",
+  "app": "todo",
+  "screen": "main",
+  "text": "Clicking add with an empty field adds nothing.",
+  "test": {
+   "steps": [
+    "click:#add"
+   ],
+   "observe": "#todo",
+   "expect": ""
+  },
+  "tier": "A",
+  "label": "SEEN",
+  "evidence": [],
+  "confidence": 0.9,
+  "bond": 10
+ },
+ {
+  "id": "todo-c4",
+  "app": "todo",
+  "screen": "main",
+  "text": "Pressing Enter with an empty field adds nothing.",
+  "test": {
+   "steps": [
+    "click:#item",
+    "key:Enter"
+   ],
+   "observe": "#todo",
+   "expect": ""
+  },
+  "tier": "A",
+  "label": "SEEN",
+  "evidence": [],
+  "confidence": 0.9,
+  "bond": 10
+ },
+ {
+  "id": "todo-c5",
+  "app": "todo",
+  "screen": "main",
+  "text": "Clicking the complete button moves the item into the completed list.",
+  "test": {
+   "steps": [
+    "type:#item:Buy milk",
+    "click:#add",
+    "click:#todo .complete"
+   ],
+   "observe": "#completed",
+   "expect": "Buy milk"
+  },
+  "tier": "A",
+  "label": "SEEN",
+  "evidence": [],
+  "confidence": 0.9,
+  "bond": 10
+ },
+ {
+  "id": "todo-c6",
+  "app": "todo",
+  "screen": "main",
+  "text": "Completing the only item leaves the todo list empty.",
+  "test": {
+   "steps": [
+    "type:#item:Buy milk",
+    "click:#add",
+    "click:#todo .complete"
+   ],
+   "observe": "#todo",
+   "expect": ""
+  },
+  "tier": "A",
+  "label": "SEEN",
+  "evidence": [],
+  "confidence": 0.85,
+  "bond": 10
+ },
+ {
+  "id": "todo-c7",
+  "app": "todo",
+  "screen": "main",
+  "text": "Clicking the remove button deletes the item from the todo list.",
+  "test": {
+   "steps": [
+    "type:#item:Buy milk",
+    "click:#add",
+    "click:#todo .remove"
+   ],
+   "observe": "#todo",
+   "expect": ""
+  },
+  "tier": "A",
+  "label": "SEEN",
+  "evidence": [],
+  "confidence": 0.9,
+  "bond": 10
+ },
+ {
+  "id": "todo-c8",
+  "app": "todo",
+  "screen": "main",
+  "text": "Clicking complete on a completed item moves it back to the todo list.",
+  "test": {
+   "steps": [
+    "type:#item:Buy milk",
+    "click:#add",
+    "click:#todo .complete",
+    "click:#completed .complete"
+   ],
+   "observe": "#todo",
+   "expect": "Buy milk"
+  },
+  "tier": "A",
+  "label": "SEEN",
+  "evidence": [],
+  "confidence": 0.8,
+  "bond": 10
+ }
+]
