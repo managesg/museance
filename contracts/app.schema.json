@@ -1,0 +1,5 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","title":"app","type":"object",
+ "required":["id","name","license","original"],
+ "properties":{"id":{"type":"string"},"name":{"type":"string"},"license":{"type":"string"},"source":{"type":"string"},
+  "original":{"$ref":"#/$defs/build"},"revival":{"$ref":"#/$defs/build"}},
+ "$defs":{"build":{"type":"object","required":["url"],"properties":{"url":{"type":"string"},"cmd":{"type":"string"},"port":{"type":"integer"}}}}}
