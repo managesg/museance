@@ -164,6 +164,40 @@ def judge(claims, attacks, original_url, revival_url, out_dir, clock=None, bench
     return verdicts, lock_rows
 
 
+STATUSES = ("LOCKED", "STRUCK", "UNSWORN", "FABRICATED")
+
+
+def run_case(app: str, original_url: str, revival_url: str, *, runs="runs", workers=None,
+             bench=None, clock=None) -> dict:
+    """Judge one app's case from runs/<app>/. STABLE SIGNATURE (P2's Fetch uAgent calls it).
+
+    Reads runs/<app>/claims.json (required) and runs/<app>/attacks.json (optional), runs every
+    test twice on the original and the revival, applies the Bailiff, writes verdicts.json,
+    locks.json and appends to ledger.jsonl in runs/<app>/. Returns
+      {"counts": {LOCKED, STRUCK, UNSWORN, FABRICATED}, "struck": [claim ids],
+       "fabricated": [claim ids], "ledger_head": <sha256 of the last ledger event>}
+    """
+    from court.ledger import read as read_ledger
+    case = pathlib.Path(runs) / app
+    claims_path, attacks_path = case / "claims.json", case / "attacks.json"
+    if not claims_path.is_file():
+        raise FileNotFoundError(f"run_case({app!r}): no {claims_path} (P2 writes it, CONTRACTS.md claim shape)")
+    claims = [c for c in _load(claims_path) if c.get("app", app) == app]
+    attacks = [x for x in _load(attacks_path) if x.get("app", app) == app] if attacks_path.is_file() else []
+    _, lock_rows = judge(claims, attacks, original_url, revival_url, case, clock=clock, bench=bench,
+                         workers=default_workers() if workers is None else workers)
+    counts = {s: 0 for s in STATUSES}
+    for r in lock_rows:
+        counts[r["status"]] = counts.get(r["status"], 0) + 1
+    events = read_ledger(case / "ledger.jsonl")
+    return {
+        "counts": counts,
+        "struck": [r["claim_id"] for r in lock_rows if r["status"] == "STRUCK"],
+        "fabricated": [r["claim_id"] for r in lock_rows if r["status"] == "FABRICATED"],
+        "ledger_head": events[-1]["hash"] if events else None,
+    }
+
+
 def _load(path):
     return json.loads(pathlib.Path(path).read_text(encoding="utf-8")) if path else []
 
