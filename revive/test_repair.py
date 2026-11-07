@@ -148,3 +148,19 @@ def test_case_file_cli_regression_result(tmp_path):
     with_reg = subprocess.run(cmd + ["--regression-result", str(reg)], capture_output=True, text=True, check=True).stdout
     assert "  false_strikes: 1\n  false_strikes_of: 1\n  traps_caught: 1\n  traps_of: 1\n" in with_reg
     assert "  false_strikes: null\n" in subprocess.run(cmd, capture_output=True, text=True, check=True).stdout
+
+
+def test_repair_cases_decisions():
+    from revive.repair import diverging, repair_cases
+    attacks = [{"id": "a1", "app": "t", "steps": ["click:#add"], "observe": "#todo"}]
+    verdicts = [{"ref": "a1", "kind": "attack", "original": "", "revival": "empty!", "match": False, "flaky": False,
+                 "shrunk_steps": []}]
+    assert diverging(attacks, verdicts)[0]["wanted"] == ""
+    old = '<html><body><div id="todo">empty!</div></body></html>'
+    new = old.replace("empty!", "")
+    stat = lambda reg, fs, mm: {"regression": reg, "false_strikes": fs, "mismatches": mm, "fidelity": 0}
+    run_ = lambda after: repair_cases("t", attacks, verdicts, old, lambda p: new, lambda h: after if h.strip() == new else stat(19, 0, 5))[1]["decision"]
+    assert run_(stat(19, 0, 1)) == "patched"
+    assert run_(stat(18, 0, 1)) == "rollback"
+    assert run_(stat(19, 1, 1)) == "rollback"
+    assert run_(stat(19, 0, 5)) == "unsworn"
