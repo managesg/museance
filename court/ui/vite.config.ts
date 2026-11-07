@@ -31,6 +31,7 @@ const TYPES: Record<string, string> = {
 const EXHIBITS: Record<string, Record<string, string>> = {
   app1: { original: 'fixtures/app1', revival: 'revive/out/app1' },
   todo: { original: 'apps/todo/original', revival: 'revive/out/todo' },
+  '2048': { original: 'apps/2048/original', revival: 'revive/out/2048' },
 }
 
 const serveExhibits: Connect.NextHandleFunction = async (req, res) => {

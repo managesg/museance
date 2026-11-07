@@ -3,8 +3,8 @@
 
 type Win = Window & typeof globalThis;
 type Step =
-  | { kind: 'click' | 'key' | 'wait'; arg: string }
-  | { kind: 'type'; arg: string; text: string };
+  | { kind: 'click' | 'key' | 'wait' | 'reload'; arg: string }
+  | { kind: 'type' | 'storage'; arg: string; text: string };
 
 const LOAD_TIMEOUT_MS = 10_000;
 const SETTLE_MS = 40;
@@ -24,7 +24,8 @@ const reloading = new WeakMap<HTMLIFrameElement, Promise<void>>();
 const sleep = (ms: number) => new Promise<void>((done) => setTimeout(done, ms));
 
 // Same grammar as court/steps.py: type splits on the first ':' after the selector, so its text may hold ':'.
-function parse(step: string): Step {
+export function parse(step: string): Step {
+  if (step === 'reload') return { kind: 'reload', arg: '' };
   const cut = step.indexOf(':');
   const kind = step.slice(0, cut);
   const arg = step.slice(cut + 1);
@@ -33,6 +34,9 @@ function parse(step: string): Step {
     if (kind === 'wait' && /^\d+$/.test(arg)) return { kind, arg };
     const sep = arg.indexOf(':');
     if (kind === 'type' && sep > 0) return { kind, arg: arg.slice(0, sep), text: arg.slice(sep + 1) };
+    // storage:<key>=<value> seeds the app's localStorage; split on the first '=', so the value may hold '='.
+    const eq = arg.indexOf('=');
+    if (kind === 'storage' && eq > 0) return { kind, arg: arg.slice(0, eq), text: arg.slice(eq + 1) };
   }
   throw new Error(`bad step: ${step}`);
 }
@@ -151,7 +155,11 @@ export async function runSteps(
       if (delay > 0) pressFor(el, Math.min(260, delay * 0.8));
     } else if (step.kind === 'type') type(win, find(doc, step.arg), step.text);
     else if (step.kind === 'key') key(win, doc, step.arg);
-    else await sleep(Number(step.arg));
+    else if (step.kind === 'storage') win.localStorage.setItem(step.arg, step.text);
+    else if (step.kind === 'reload') {
+      await reloadFrame(frame, true);
+      await sleep(100); // apps such as 2048 bind their key handlers on the first animation frame after load
+    } else await sleep(Number(step.arg));
     // Always yield a task between steps so framework renders land before the next press, as with real input.
     await sleep(delay);
   }
@@ -174,9 +182,9 @@ function clearStorage(frame: HTMLIFrameElement) {
   }
 }
 
-/** Reloads the exhibit's page, with its storage cleared, and resolves on its load event. */
-export function reloadFrame(frame: HTMLIFrameElement): Promise<void> {
-  clearStorage(frame);
+/** Reloads the exhibit's page, with its storage cleared unless a seeded reload step keeps it, and resolves on load. */
+export function reloadFrame(frame: HTMLIFrameElement, keepStorage = false): Promise<void> {
+  if (!keepStorage) clearStorage(frame);
   const loaded = nextLoad(frame);
   reloading.set(frame, loaded);
   const settle = () => {
