@@ -292,7 +292,7 @@
   "source": "our screenshot of the original, scene '01-empty'",
   "license": "ours",
   "path": "shots/01-empty.png",
-  "text": "Screenshot after steps []. Seen on screen: #todo: 0 items []; #completed: 0 items []"
+  "text": "Screenshot after steps []. Seen on screen: #todo has 0 items, its visible text is ''; #completed has 0 items, its visible text is ''"
  },
  {
   "tier": "B",
@@ -300,7 +300,7 @@
   "source": "our screenshot of the original, scene '02-add-click'",
   "license": "ours",
   "path": "shots/02-add-click.png",
-  "text": "Screenshot after steps ['type:#item:Buy milk', 'click:#add']. Seen on screen: #todo: 1 items ['Buy milk']; #completed: 0 items []"
+  "text": "Screenshot after steps ['type:#item:Buy milk', 'click:#add']. Seen on screen: #todo has 1 items, its visible text is 'Buy milk'; #completed has 0 items, its visible text is ''"
  },
  {
   "tier": "B",
@@ -308,7 +308,7 @@
   "source": "our screenshot of the original, scene '03-add-enter'",
   "license": "ours",
   "path": "shots/03-add-enter.png",
-  "text": "Screenshot after steps ['type:#item:Walk dog', 'key:Enter']. Seen on screen: #todo: 1 items ['Walk dog']; #completed: 0 items []"
+  "text": "Screenshot after steps ['type:#item:Walk dog', 'key:Enter']. Seen on screen: #todo has 1 items, its visible text is 'Walk dog'; #completed has 0 items, its visible text is ''"
  },
  {
   "tier": "B",
@@ -316,7 +316,7 @@
   "source": "our screenshot of the original, scene '04-two-items'",
   "license": "ours",
   "path": "shots/04-two-items.png",
-  "text": "Screenshot after steps ['type:#item:Buy milk', 'click:#add', 'type:#item:Walk dog', 'click:#add']. Seen on screen: #todo: 2 items ['Walk dog', 'Buy milk']; #completed: 0 items []"
+  "text": "Screenshot after steps ['type:#item:Buy milk', 'click:#add', 'type:#item:Walk dog', 'click:#add']. Seen on screen: #todo has 2 items, its visible text is 'Walk dog\\nBuy milk'; #completed has 0 items, its visible text is ''"
  },
  {
   "tier": "B",
@@ -324,7 +324,7 @@
   "source": "our screenshot of the original, scene '05-complete'",
   "license": "ours",
   "path": "shots/05-complete.png",
-  "text": "Screenshot after steps ['type:#item:Buy milk', 'click:#add', 'click:#todo li .complete']. Seen on screen: #todo: 0 items []; #completed: 1 items ['Buy milk']"
+  "text": "Screenshot after steps ['type:#item:Buy milk', 'click:#add', 'click:#todo li .complete']. Seen on screen: #todo has 0 items, its visible text is ''; #completed has 1 items, its visible text is 'Buy milk'"
  },
  {
   "tier": "B",
@@ -332,7 +332,7 @@
   "source": "our screenshot of the original, scene '06-remove'",
   "license": "ours",
   "path": "shots/06-remove.png",
-  "text": "Screenshot after steps ['type:#item:Buy milk', 'click:#add', 'type:#item:Walk dog', 'click:#add', 'click:#todo li .remove']. Seen on screen: #todo: 1 items ['Buy milk']; #completed: 0 items []"
+  "text": "Screenshot after steps ['type:#item:Buy milk', 'click:#add', 'type:#item:Walk dog', 'click:#add', 'click:#todo li .remove']. Seen on screen: #todo has 1 items, its visible text is 'Buy milk'; #completed has 0 items, its visible text is ''"
  },
  {
   "tier": "B",
@@ -340,6 +340,62 @@
   "source": "our screenshot of the original, scene '07-empty-add'",
   "license": "ours",
   "path": "shots/07-empty-add.png",
-  "text": "Screenshot after steps ['click:#add']. Seen on screen: #todo: 0 items []; #completed: 0 items []"
+  "text": "Screenshot after steps ['click:#add']. Seen on screen: #todo has 0 items, its visible text is ''; #completed has 0 items, its visible text is ''"
+ },
+ {
+  "tier": "B",
+  "kind": "screenshot",
+  "source": "our screenshot of the original, scene '08-uncomplete'",
+  "license": "ours",
+  "path": "shots/08-uncomplete.png",
+  "text": "Screenshot after steps ['type:#item:Buy milk', 'click:#add', 'click:#todo li .complete', 'click:#completed li .complete']. Seen on screen: #todo has 1 items, its visible text is 'Buy milk'; #completed has 0 items, its visible text is ''"
+ },
+ {
+  "tier": "B",
+  "kind": "screenshot",
+  "source": "our screenshot of the original, scene '09-remove-completed'",
+  "license": "ours",
+  "path": "shots/09-remove-completed.png",
+  "text": "Screenshot after steps ['type:#item:Buy milk', 'click:#add', 'click:#todo li .complete', 'click:#completed li .remove']. Seen on screen: #todo has 0 items, its visible text is ''; #completed has 0 items, its visible text is ''"
+ },
+ {
+  "tier": "B",
+  "kind": "screenshot",
+  "source": "our screenshot of the original, scene '10-duplicates'",
+  "license": "ours",
+  "path": "shots/10-duplicates.png",
+  "text": "Screenshot after steps ['type:#item:Buy milk', 'click:#add', 'type:#item:Buy milk', 'click:#add']. Seen on screen: #todo has 2 items, its visible text is 'Buy milk\\nBuy milk'; #completed has 0 items, its visible text is ''"
+ },
+ {
+  "tier": "B",
+  "kind": "screenshot",
+  "source": "our screenshot of the original, scene '11-whitespace'",
+  "license": "ours",
+  "path": "shots/11-whitespace.png",
+  "text": "Screenshot after steps ['type:#item:   ', 'click:#add']. Seen on screen: #todo has 1 items, its visible text is ''; #completed has 0 items, its visible text is ''"
+ },
+ {
+  "tier": "B",
+  "kind": "screenshot",
+  "source": "our screenshot of the original, scene '12-long-word'",
+  "license": "ours",
+  "path": "shots/12-long-word.png",
+  "text": "Screenshot after steps ['type:#item:Supercalifragilisticexpialidocious-and-then-some-more-text', 'click:#add']. Seen on screen: #todo has 1 items, its visible text is 'Supercalifragilisticexpialidocious-and-then-some-more-text'; #completed has 0 items, its visible text is ''"
+ },
+ {
+  "tier": "B",
+  "kind": "screenshot",
+  "source": "our screenshot of the original, scene '13-complete-top-of-two'",
+  "license": "ours",
+  "path": "shots/13-complete-top-of-two.png",
+  "text": "Screenshot after steps ['type:#item:Buy milk', 'click:#add', 'type:#item:Walk dog', 'click:#add', 'click:#todo li .complete']. Seen on screen: #todo has 1 items, its visible text is 'Buy milk'; #completed has 1 items, its visible text is 'Walk dog'"
+ },
+ {
+  "tier": "B",
+  "kind": "screenshot",
+  "source": "our screenshot of the original, scene '14-two-completed'",
+  "license": "ours",
+  "path": "shots/14-two-completed.png",
+  "text": "Screenshot after steps ['type:#item:Buy milk', 'click:#add', 'click:#todo li .complete', 'type:#item:Walk dog', 'click:#add', 'click:#todo li .complete']. Seen on screen: #todo has 0 items, its visible text is ''; #completed has 2 items, its visible text is 'Walk dog\\nBuy milk'"
  }
 ]

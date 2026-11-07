@@ -42,3 +42,12 @@ def test_subq_sets_confidence():
     claims, _ = medium.cards("app1", {"lines": lines}, ev, SEL, chat=lambda *a: CLAIM_REPLY, decide=lambda *a: 0.4)
     assert all(c["confidence"] == 0.4 and c["bond"] == 40 for c in claims)
     assert claims[0]["medium_confidence"] == 0.9 and claims[0]["commit"] == commit_hash(claims[0])
+
+
+def test_duplicate_test_dropped():
+    ev = pile.build("app1", ROOT / "dig/piles/app1")
+    lines = reader.read(ev, chat=lambda *a: SHEET_REPLY, provider="X")
+    two = json.loads(CLAIM_REPLY)[:1] * 2
+    two[1] = {**two[1], "text": "contradicting claim, same test"}
+    claims, dropped = medium.cards("app1", {"lines": lines}, ev, SEL, chat=lambda *a: json.dumps(two))
+    assert len(claims) == 1 and dropped == ["contradicting claim, same test (same test as c01)"]
