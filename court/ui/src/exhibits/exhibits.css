@@ -1,0 +1,420 @@
+/* Exhibit frames on the wall. Layers, bottom to top: back art (wall shadow, mat), the screen (app iframe, CRT, curtain),
+   the parchment sheet, front art (gilt, walnut liner, plate), then magnifier and tag. Numbers are design px of the 500x440 zone. */
+
+.exhibit {
+  /* the app draws this much larger than its own pixels, so the back of the room can read it */
+  --exhibit-zoom: 1.5;
+  --exhibit-boot: 2500ms;
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-ui, 'Atkinson Hyperlegible'), sans-serif;
+}
+
+.exhibit__back,
+.exhibit__front,
+.exhibit__cross {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  user-select: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.exhibit__back { z-index: 0; }
+.exhibit__screen { z-index: 1; }
+.exhibit__sheet { z-index: 2; }
+.exhibit__front { z-index: 3; }
+.exhibit__cross { z-index: 4; }
+.exhibit__tag { z-index: 5; }
+
+.exhibit__plate-title {
+  font-family: var(--font-stamp, 'Alfa Slab One'), serif;
+  font-size: 26px;
+  letter-spacing: 0.1em;
+  fill: var(--ink);
+  text-anchor: middle;
+}
+
+.exhibit__plate-sub {
+  font-family: var(--font-ui, 'Atkinson Hyperlegible'), sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  fill: var(--ink);
+  text-anchor: middle;
+}
+
+/* The window in the mat. Its ink rim is drawn last, over the app, the CRT and the curtain. */
+.exhibit__screen {
+  position: absolute;
+  left: calc(100% * 66 / 500);
+  top: calc(100% * 64 / 440);
+  width: calc(100% * 368 / 500);
+  height: calc(100% * 266 / 440);
+  overflow: hidden;
+  background: var(--ghost);
+}
+
+.exhibit__screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 3px solid var(--ink);
+  pointer-events: none;
+}
+
+.exhibit__app {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: calc(100% / var(--exhibit-zoom));
+  height: calc(100% / var(--exhibit-zoom));
+  border: 0;
+  transform: scale(var(--exhibit-zoom));
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+
+.exhibit--live .exhibit__app {
+  pointer-events: auto;
+}
+
+.exhibit__app:focus-visible {
+  outline: 4px solid var(--brass);
+  outline-offset: -4px;
+}
+
+/* Velvet curtain, closed only while dark. Closing, the valance drops first; opening, it lifts after the panels part. */
+.exhibit__drape,
+.exhibit__valance {
+  position: absolute;
+  transition: transform 900ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.exhibit__drape {
+  top: 0;
+  bottom: 0;
+  width: 52%;
+}
+
+.exhibit__drape--l {
+  left: 0;
+  transform: translateX(-102%);
+}
+
+.exhibit__drape--r {
+  right: 0;
+  transform: translateX(102%);
+}
+
+.exhibit__valance {
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 18%;
+  transform: translateY(-104%);
+  transition-delay: 300ms;
+}
+
+.exhibit--dark .exhibit__drape {
+  transform: none;
+  transition-delay: 200ms;
+}
+
+.exhibit--dark .exhibit__valance {
+  transform: none;
+  transition-delay: 0ms;
+}
+
+.exhibit__drape svg,
+.exhibit__valance svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.exhibit__drape--r svg {
+  scale: -1 1;
+}
+
+/* Booting, the revival's return: a dot, a line, the raster opening, then the app flickering up through scanlines. */
+.exhibit__crt {
+  position: absolute;
+  inset: 0;
+  background: var(--ink);
+  pointer-events: none;
+  animation: exhibit-glass var(--exhibit-boot) linear both;
+}
+
+.exhibit__beam,
+.exhibit__scan {
+  position: absolute;
+  inset: 0;
+}
+
+.exhibit__beam {
+  --spread: 0px;
+  background: var(--ghost);
+  animation: exhibit-beam var(--exhibit-boot) linear both;
+}
+
+.exhibit__beam--halo {
+  --spread: 6px;
+  background: color-mix(in srgb, var(--ghost) 35%, transparent);
+}
+
+.exhibit__scan {
+  background: repeating-linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--ink) 38%, transparent) 0 2px,
+    transparent 2px 5px
+  );
+  animation: exhibit-scan var(--exhibit-boot) linear both;
+}
+
+.exhibit--booting .exhibit__app {
+  animation: exhibit-boot-app var(--exhibit-boot) linear both;
+}
+
+/* Evidence and reading: a parchment laid in the window, over the app. */
+.exhibit__sheet {
+  position: absolute;
+  left: calc(100% * 52 / 500);
+  top: calc(100% * 50 / 440);
+  width: calc(100% * 396 / 500);
+  height: calc(100% * 294 / 440);
+  animation: exhibit-flicker-in 520ms ease-out both;
+}
+
+.exhibit__sheet > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  stroke-linejoin: round;
+}
+
+.exhibit__sheet-body {
+  position: absolute;
+  inset: 26px 30px;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 20px;
+  line-height: 1.3;
+}
+
+/* Cross: a brass magnifier over the observed text, and a tag hung from its handle saying what it shows. */
+.exhibit__lens {
+  transition: transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.exhibit__lens-body {
+  animation: exhibit-lens-in 560ms ease-out both;
+}
+
+.exhibit__tag {
+  --tilt: -5deg;
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+  padding: 6px 18px 8px 40px;
+  border: 4px solid var(--ink);
+  border-radius: 10px 16px 16px 10px;
+  background: var(--paper);
+  color: var(--ink);
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  /* the grommet's centre, 21px in from the corner, sits on the handle's end */
+  translate: -21px -21px;
+  rotate: var(--tilt);
+  transform-origin: 21px 21px;
+  transition:
+    left 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    top 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: exhibit-tag-in 760ms ease-out both;
+}
+
+.exhibit__tag[data-side='left'] {
+  --tilt: 5deg;
+  padding: 6px 40px 8px 18px;
+  border-radius: 16px 10px 10px 16px;
+  translate: calc(-100% + 21px) -21px;
+  transform-origin: calc(100% - 21px) 21px;
+}
+
+.exhibit__tag::before {
+  content: '';
+  position: absolute;
+  top: 9px;
+  left: 9px;
+  width: 10px;
+  height: 10px;
+  border: 3px solid var(--brass-deep);
+  border-radius: 50%;
+  background: var(--ink);
+  outline: 2px solid var(--ink);
+}
+
+.exhibit__tag[data-side='left']::before {
+  right: 9px;
+  left: auto;
+}
+
+.exhibit__tag--match {
+  background: var(--brass);
+}
+
+.exhibit__tag--diverge {
+  background: var(--crimson);
+  color: var(--paper);
+}
+
+.exhibit__tag--diverge::before {
+  border-color: var(--crimson-deep);
+}
+
+.exhibit__tag-verb {
+  font-family: var(--font-ui, 'Atkinson Hyperlegible'), sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.exhibit__tag-value {
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--font-stamp, 'Alfa Slab One'), serif;
+  font-size: 40px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+}
+
+.exhibit__tag[data-size='m'] .exhibit__tag-value {
+  font-size: 30px;
+}
+
+.exhibit__tag[data-size='s'] .exhibit__tag-value {
+  font-size: 22px;
+}
+
+@keyframes exhibit-glass {
+  0%, 58% { opacity: 1; }
+  63% { opacity: 0.45; }
+  66% { opacity: 0.8; }
+  72% { opacity: 0.25; }
+  76% { opacity: 0.5; }
+  88%, 100% { opacity: 0; }
+}
+
+@keyframes exhibit-beam {
+  0%, 14% { opacity: 0; clip-path: inset(calc(50% - 2px) 50%); }
+  18% { opacity: 1; clip-path: inset(calc(50% - 3px - var(--spread)) calc(50% - 4px - var(--spread))); }
+  32% { opacity: 1; clip-path: inset(calc(50% - 2px - var(--spread)) 0); }
+  35% { opacity: 0.55; }
+  38% { opacity: 1; }
+  41% { opacity: 0.7; }
+  44% { opacity: 1; clip-path: inset(calc(50% - 2px - var(--spread)) 0); }
+  52% { opacity: 0.95; clip-path: inset(0); }
+  62%, 100% { opacity: 0; clip-path: inset(0); }
+}
+
+@keyframes exhibit-scan {
+  0%, 46% { opacity: 0; background-position: 0 0; }
+  52% { opacity: 1; }
+  86% { opacity: 0.8; }
+  100% { opacity: 0; background-position: 0 30px; }
+}
+
+@keyframes exhibit-boot-app {
+  0%, 54% { opacity: 0; filter: brightness(1.7) contrast(0.8); }
+  60% { opacity: 0.5; }
+  64% { opacity: 0.15; }
+  70% { opacity: 0.85; }
+  74% { opacity: 0.55; }
+  84% { opacity: 1; filter: brightness(1.2) contrast(0.95); }
+  100% { opacity: 1; filter: none; }
+}
+
+@keyframes exhibit-flicker-in {
+  0% { opacity: 0; transform: scale(0.97); }
+  18% { opacity: 0.7; }
+  28% { opacity: 0.25; }
+  44% { opacity: 0.9; }
+  56% { opacity: 0.55; }
+  100% { opacity: 1; transform: none; }
+}
+
+@keyframes exhibit-lens-in {
+  0% { opacity: 0; transform: scale(1.3); }
+  20% { opacity: 0.75; }
+  32% { opacity: 0.3; }
+  50% { opacity: 1; }
+  100% { opacity: 1; transform: none; }
+}
+
+@keyframes exhibit-tag-in {
+  0% { opacity: 0; rotate: calc(var(--tilt) * -4); }
+  22% { opacity: 0.7; }
+  34% { opacity: 0.3; }
+  52% { opacity: 1; rotate: calc(var(--tilt) * 2.2); }
+  76% { rotate: calc(var(--tilt) * 0.5); }
+  100% { opacity: 1; rotate: var(--tilt); }
+}
+
+@keyframes exhibit-fade-in {
+  from { opacity: 0; }
+}
+
+@keyframes exhibit-fade-out {
+  to { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exhibit .exhibit__drape,
+  .exhibit .exhibit__valance {
+    transform: none;
+    opacity: 0;
+    transition: opacity 300ms ease-out;
+  }
+
+  .exhibit--dark .exhibit__drape,
+  .exhibit--dark .exhibit__valance {
+    opacity: 1;
+  }
+
+  .exhibit__beam,
+  .exhibit__scan {
+    display: none;
+  }
+
+  .exhibit__crt {
+    animation: exhibit-fade-out 600ms ease-out both;
+  }
+
+  .exhibit--booting .exhibit__app,
+  .exhibit__sheet,
+  .exhibit__lens-body,
+  .exhibit__tag {
+    animation: exhibit-fade-in 400ms ease-out both;
+  }
+
+  .exhibit__lens,
+  .exhibit__tag {
+    transition: none;
+  }
+}

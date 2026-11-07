@@ -1,0 +1,640 @@
+/* Claim cards, their stamps and the spread. The weights used here load here so a card renders right on its own. */
+@import '@fontsource/alfa-slab-one/400.css';
+@import '@fontsource/courier-prime/400.css';
+@import '@fontsource/courier-prime/700.css';
+@import '@fontsource/atkinson-hyperlegible/400.css';
+@import '@fontsource/atkinson-hyperlegible/700.css';
+
+.cc {
+  --w: var(--card-w, 152px);
+  --rule-o: 6px;
+  --rule-i: 10px;
+  --pad: 12px;
+  --stamp-face: var(--font-stamp, 'Alfa Slab One'), serif;
+  --doc-face: var(--font-doc, 'Courier Prime'), monospace;
+  --smoke-ink: color-mix(in oklab, var(--smoke), var(--ink) 40%);
+  position: relative;
+  width: var(--w);
+  aspect-ratio: 2 / 3;
+  color: var(--ink);
+  font-family: var(--font-ui, 'Atkinson Hyperlegible'), sans-serif;
+  font-size: 20px;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+.cc,
+.cc *,
+.cc *::before,
+.cc *::after {
+  box-sizing: border-box;
+}
+
+.cc--focus {
+  --w: var(--card-w, 322px);
+  --rule-o: 9px;
+  --rule-i: 14px;
+  --pad: 18px;
+}
+
+/* ---- lift, flip, faces ---- */
+
+.cc__lift {
+  position: absolute;
+  inset: 0;
+  perspective: 1100px;
+  transition: transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.cc[data-status='under-cross'] .cc__lift {
+  transform: translateY(-16px) scale(1.04);
+  animation: cc-rim 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes cc-rim {
+  from {
+    filter: drop-shadow(0 0 2px var(--brass)) drop-shadow(0 0 8px color-mix(in srgb, var(--brass) 70%, transparent));
+  }
+  to {
+    filter: drop-shadow(0 0 3px var(--brass)) drop-shadow(0 0 18px color-mix(in srgb, var(--brass) 90%, transparent));
+  }
+}
+
+/* flat ellipse cast on the table while the card floats */
+.cc__shadow {
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  bottom: -16px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--floor-shadow);
+  mix-blend-mode: multiply;
+  opacity: 0;
+  transform: scale(0.7);
+  transition: opacity 320ms ease-out, transform 320ms ease-out;
+}
+
+.cc--focus .cc__shadow,
+.cc[data-status='under-cross'] .cc__shadow {
+  opacity: 1;
+  transform: none;
+}
+
+.cc__flip {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transition: transform 480ms cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+
+.cc__flip[data-face='back'] {
+  transform: rotateY(180deg);
+}
+
+.cc__face {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: rotateY(0deg);
+}
+
+.cc__face--back {
+  --rule: var(--brass);
+  transform: rotateY(180deg);
+}
+
+/* engraved double rule: a firm outer line, a hairline inside it */
+.cc__face::before,
+.cc__face::after {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  border: 0 solid var(--rule, var(--ink));
+  pointer-events: none;
+}
+
+.cc__face::before {
+  inset: var(--rule-o);
+  border-width: 2px;
+  border-radius: 7px 6px 8px 6px;
+}
+
+.cc__face::after {
+  inset: var(--rule-i);
+  border-width: 1px;
+  border-radius: 4px;
+}
+
+.cc__edge {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.cc__orn {
+  position: absolute;
+  z-index: 1;
+  width: 14px;
+  height: 14px;
+  overflow: visible;
+  fill: var(--brass);
+  stroke: var(--ink);
+  stroke-width: 1.6px;
+  stroke-linejoin: round;
+}
+
+.cc--focus .cc__orn {
+  width: 20px;
+  height: 20px;
+}
+
+.cc__orn--tl { left: var(--rule-i); top: var(--rule-i); translate: -50% -50%; }
+.cc__orn--tr { right: var(--rule-i); top: var(--rule-i); translate: 50% -50%; }
+.cc__orn--bl { left: var(--rule-i); bottom: var(--rule-i); translate: -50% 50%; }
+.cc__orn--br { right: var(--rule-i); bottom: var(--rule-i); translate: 50% 50%; }
+
+/* ---- front ---- */
+
+.cc__body {
+  position: absolute;
+  inset: var(--pad);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.cc__body > * {
+  flex-shrink: 0;
+}
+
+/* a short claim spreads its rows evenly instead of leaving one hole above the stakes */
+.cc--focus .cc__body {
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cc__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.cc__no {
+  font-family: var(--stamp-face);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.cc__screen {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--wall-deep);
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.cc__conf {
+  font-family: var(--stamp-face);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.cc--small .cc__conf {
+  margin: auto 0;
+  align-self: center;
+  font-size: max(36px, calc(var(--w) * 0.3));
+}
+
+/* An ink stamp lands on the big percent; the ruling must read from the back of the room. */
+.cc--small:is([data-status="STRUCK"], [data-status="UNSWORN"], [data-status="FABRICATED"]) .cc__conf {
+  opacity: 0.16;
+}
+
+.cc__bond {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.cc__num {
+  font-family: var(--stamp-face);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.cc__chips {
+  flex: none;
+  width: 24px;
+  height: auto;
+  overflow: visible;
+}
+
+.cc__chips--empty {
+  opacity: 0.4;
+}
+
+.cc__title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--ink);
+}
+
+.cc--focus .cc__head {
+  gap: 10px;
+}
+
+.cc--focus .cc__no {
+  font-size: 24px;
+}
+
+.cc--focus .cc__screen {
+  font-size: 22px;
+}
+
+.cc__label {
+  flex: none;
+  padding: 1px 9px 0;
+  border: 2px solid var(--ink);
+  border-radius: 6px 5px 7px 5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+}
+
+.cc__label--seen {
+  background: var(--wall-deep);
+  color: var(--paper);
+}
+
+.cc__label--guessed {
+  border-color: var(--wall-deep);
+}
+
+.cc__label--fabricated {
+  border-style: dashed;
+  border-color: var(--smoke-ink);
+  color: var(--smoke-ink);
+}
+
+.cc__tier {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  overflow: visible;
+}
+
+.cc--focus .cc__tier {
+  width: 34px;
+  height: 34px;
+}
+
+.cc__disc {
+  stroke: var(--ink);
+  stroke-width: 2.6px;
+  stroke-linejoin: round;
+}
+
+.cc__tier--a .cc__disc { fill: var(--ink); }
+.cc__tier--b .cc__disc { fill: var(--paper); }
+.cc__tier--d { opacity: 0.85; }
+.cc__tier--d .cc__disc {
+  fill: var(--ghost);
+  stroke: var(--smoke-ink);
+  stroke-dasharray: 4 3.4;
+}
+
+/* user units: 24 in the 36-unit badge lands at 20px or more on screen */
+.cc__tier-letter {
+  fill: var(--ink);
+  font-family: var(--stamp-face);
+  font-size: 24px;
+  text-anchor: middle;
+  dominant-baseline: central;
+  paint-order: stroke;
+  stroke: var(--paper);
+  stroke-width: 0;
+}
+
+.cc__tier--a .cc__tier-letter { fill: var(--paper); }
+.cc__tier--c .cc__tier-letter { stroke-width: 6px; stroke-linejoin: round; }
+.cc__tier--d .cc__tier-letter { fill: var(--smoke-ink); }
+
+.cc__text {
+  display: -webkit-box;
+  margin: 0;
+  padding: 7px 10px;
+  overflow: hidden;
+  background: var(--paper-deep);
+  border: 2px solid var(--ink);
+  border-radius: 5px 7px 6px 5px;
+  font-family: var(--doc-face);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.22;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.cc__test {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.cc__key {
+  display: inline-grid;
+  place-items: center;
+  min-width: 32px;
+  height: 36px;
+  padding: 0 6px 4px;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 7px 6px 8px 6px;
+  box-shadow: inset 0 -5px 0 var(--paper-deep); /* the key's lower lip, its one darker shade */
+  color: var(--ink);
+  font-family: var(--doc-face);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.cc__arrow {
+  flex: none;
+  width: 28px;
+  height: 20px;
+}
+
+.cc__expect {
+  min-width: 2.4em;
+  padding: 3px 6px 2px;
+  background: var(--paper-deep);
+  border: 2px solid var(--ink);
+  border-radius: 5px;
+  font-family: var(--doc-face);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: right;
+}
+
+.cc__stakes {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 6px;
+  border-top: 2px solid var(--ink);
+}
+
+.cc__stake {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cc__stake--conf {
+  align-items: flex-end;
+}
+
+.cc--focus .cc__chips { width: 30px; }
+.cc--focus .cc__num { font-size: 36px; }
+.cc--focus .cc__conf { font-size: 56px; line-height: 0.9; }
+
+.cc__cap {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+/* the docket is the least needed block, so an overfull card trims it before the stakes */
+.cc__body > .cc__docket {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-content: start;
+  align-items: baseline;
+  gap: 2px 10px;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+  flex-shrink: 1;
+}
+
+.cc__docket dt {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.cc__docket dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.cc__docket .cc__ids {
+  font-family: var(--doc-face);
+  font-weight: 700;
+}
+
+.cc__docket .cc__alarm {
+  color: var(--crimson);
+}
+
+/* ---- back ---- */
+
+.cc__seal {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 5%;
+  right: 5%;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1.25;
+  translate: 0 -50%;
+}
+
+.cc__wax {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.cc__hex {
+  position: relative;
+  color: var(--paper);
+  font-family: var(--doc-face);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.cc--focus .cc__hex { font-size: 28px; }
+.cc__hex--none { font-family: inherit; font-style: italic; }
+
+/* ---- bets, laid on the table under the card ---- */
+
+.cc__bets {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: -8px;
+  right: -8px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 12px;
+}
+
+.cc__bet {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.cc__tally {
+  padding: 0 6px;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 6px 5px 6px 5px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* ---- stamps on a card ---- */
+
+.cc__stamp {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.cc__stamp > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.cc--small .cc__stamp--ink { top: 36%; left: -15%; width: 130%; }
+.cc--small .cc__stamp--seal { top: 30%; left: 7%; width: 86%; }
+/* on the big card the verdict lands below the claim text; the seal sits on the corner like a notary's,
+   over the tier badge only, so the label and claim stay readable */
+.cc--focus .cc__stamp--ink { top: 55%; left: 4%; width: 92%; }
+.cc--focus .cc__stamp--seal { top: -11%; right: -11%; width: 34%; }
+
+/* ---- the stamp itself ---- */
+
+.cc-stamp {
+  overflow: visible;
+  transform: rotate(-6deg);
+  animation: cc-slam 160ms cubic-bezier(0.55, 0, 1, 0.45) both;
+}
+
+.cc-stamp--ink { mix-blend-mode: multiply; }
+.cc-stamp--struck { color: var(--crimson); }
+.cc-stamp--unsworn { color: var(--slate); }
+.cc-stamp--fabricated { color: color-mix(in oklab, var(--smoke), var(--ink) 40%); }
+
+.cc-stamp__word {
+  font-family: var(--font-stamp, 'Alfa Slab One'), serif;
+}
+
+@keyframes cc-slam {
+  from {
+    opacity: 0;
+    transform: scale(1.6) rotate(-2deg);
+  }
+  40% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(-6deg);
+  }
+}
+
+.cc-stamp__puff {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cc-puff 480ms 150ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+@keyframes cc-puff {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  25% {
+    opacity: 0.95;
+  }
+  to {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) scale(1.25);
+  }
+}
+
+/* ---- the spread ---- */
+
+.cc-spread {
+  position: relative;
+}
+
+.cc-spread__slot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 50% 50%;
+}
+
+/* ---- reduced motion: everything settles by opacity alone ---- */
+
+@media (prefers-reduced-motion: reduce) {
+  .cc-stamp {
+    animation: cc-fade 220ms ease-out both;
+  }
+
+  .cc-stamp__puff {
+    display: none;
+  }
+
+  .cc__lift,
+  .cc__flip,
+  .cc__face,
+  .cc__shadow {
+    transition: opacity 240ms ease-out;
+  }
+
+  .cc__flip,
+  .cc__flip[data-face='back'],
+  .cc__face--back,
+  .cc[data-status='under-cross'] .cc__lift {
+    transform: none;
+  }
+
+  .cc[data-status='under-cross'] .cc__lift {
+    animation: none;
+    filter: drop-shadow(0 0 3px var(--brass)) drop-shadow(0 0 12px color-mix(in srgb, var(--brass) 80%, transparent));
+  }
+
+  .cc__flip[data-face='back'] .cc__face--front,
+  .cc__flip[data-face='front'] .cc__face--back {
+    opacity: 0;
+  }
+}
+
+@keyframes cc-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

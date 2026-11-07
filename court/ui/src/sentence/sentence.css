@@ -1,0 +1,504 @@
+/* The sentencing overlay on the 1920x1080 stage. The weights used here load here so it renders on its own. */
+@import '@fontsource/alfa-slab-one/400.css';
+@import '@fontsource/courier-prime/400.css';
+@import '@fontsource/courier-prime/700.css';
+@import '@fontsource/atkinson-hyperlegible/400.css';
+@import '@fontsource/atkinson-hyperlegible/700.css';
+@import '@fontsource/atkinson-hyperlegible/400-italic.css';
+
+.sn {
+  --sn-stamp: var(--font-stamp, 'Alfa Slab One'), serif;
+  --sn-doc: var(--font-doc, 'Courier Prime'), monospace;
+  --sn-smoke: color-mix(in oklab, var(--smoke), var(--ink) 40%);
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 530px;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 24px 36px;
+  padding: 40px 64px 30px;
+  background: color-mix(in srgb, var(--ink) 78%, transparent);
+  color: var(--ink);
+  font-family: var(--font-ui, 'Atkinson Hyperlegible'), sans-serif;
+  font-size: 22px;
+  line-height: 1.25;
+  letter-spacing: normal;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+  animation: sn-fade 420ms ease-out both;
+}
+
+.sn,
+.sn *,
+.sn *::before,
+.sn *::after {
+  box-sizing: border-box;
+}
+
+.sn--solo {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* ---- the court record ---- */
+
+.sn__record {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+  padding: 34px 44px 38px;
+  rotate: -0.4deg;
+  filter: drop-shadow(0 18px 26px color-mix(in srgb, var(--ink) 60%, transparent));
+  animation: sn-flicker 520ms ease-out 120ms both;
+}
+
+.sn__paper,
+.sn__slip {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.sn__paper path,
+.sn__slip path {
+  fill: var(--paper);
+  stroke: var(--ink);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.sn__head {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 22px;
+  padding-bottom: 14px;
+  border-bottom: 6px double var(--ink);
+}
+
+.sn__title {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--ink);
+  font-family: var(--sn-stamp);
+  font-size: 46px;
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: 0;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sn__source {
+  flex: none;
+  color: var(--wood-light);
+  font-family: var(--sn-doc);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.sn__body {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 32px;
+  min-height: 0;
+}
+
+/* pleading paper: numbered lines behind a double margin rule */
+.sn__yaml {
+  --size: clamp(20px, calc(700px / var(--rows) / 1.4), 26px);
+  position: relative;
+  min-height: 0;
+  margin: 0;
+  padding: 0 0 0 64px;
+  overflow: hidden;
+  list-style: none;
+  counter-reset: ln;
+  font-family: var(--sn-doc);
+  font-size: var(--size);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.sn__yaml::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 46px;
+  width: 5px;
+  border-inline: 1px solid var(--wood-light);
+}
+
+.sn__ln {
+  position: relative;
+  counter-increment: ln;
+}
+
+.sn__ln::before {
+  content: counter(ln);
+  position: absolute;
+  top: 0;
+  left: -64px;
+  width: 36px;
+  color: var(--wood-light);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: calc(var(--size) * 1.4);
+  text-align: right;
+}
+
+/* typed one character per step (Courier's fixed advance keeps each step a whole letter); long entries wrap
+   under their own text, never cut, since the claim text is the record */
+.sn__typed {
+  display: inline-block;
+  max-width: 100%;
+  padding-left: 6ch;
+  text-indent: -6ch;
+  vertical-align: top;
+  white-space: pre-wrap;
+  animation: sn-type var(--d) steps(var(--n), end) var(--t) both;
+}
+
+.sn__k {
+  font-weight: 400;
+}
+
+.sn__note {
+  color: var(--wood-light);
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.sn__ln--struck {
+  color: var(--crimson);
+}
+
+.sn__ln--unsworn {
+  color: var(--slate-deep);
+}
+
+.sn__ln--fabricated {
+  color: var(--sn-smoke);
+}
+
+/* ---- findings: the stamp and the figures ---- */
+
+.sn__findings {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  padding-top: 10px;
+}
+
+.sn__stamp {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  padding: 16px 30px 20px;
+  color: var(--wall-deep);
+  mix-blend-mode: multiply;
+  transform: rotate(-6deg);
+  animation: sn-slam 160ms cubic-bezier(0.55, 0, 1, 0.45) calc(var(--done) + 120ms) both;
+}
+
+.sn__frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.sn__frame path {
+  fill: none;
+  stroke: currentColor;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.sn__fid {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  font-family: var(--sn-stamp);
+  font-size: 150px;
+  line-height: 0.95;
+}
+
+/* three digits ("100") still fit the 340px column */
+.sn__fid--wide {
+  font-size: 112px;
+}
+
+.sn__pct {
+  margin: 0.14em 0 0 0.03em;
+  font-size: 0.4em;
+}
+
+.sn__fid-word {
+  position: relative;
+  margin: -2px -0.14em 0 0;
+  font-family: var(--sn-stamp);
+  font-size: 30px;
+  letter-spacing: 0.14em;
+}
+
+.sn__puff {
+  position: absolute;
+  bottom: -8px;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  background: var(--paper-deep);
+  border: 1.6px solid var(--ink);
+  border-radius: 50% 46% 52% 48%;
+  opacity: 0;
+  animation: sn-puff 480ms cubic-bezier(0.2, 0.7, 0.3, 1) calc(var(--done) + 270ms) both;
+}
+
+.sn__figs {
+  display: grid;
+  gap: 22px;
+  width: 100%;
+  margin: 0;
+}
+
+.sn__fig {
+  display: grid;
+  gap: 2px;
+  animation: sn-flicker 480ms ease-out calc(var(--done) + 380ms) both;
+}
+
+.sn__fig + .sn__fig {
+  animation-delay: calc(var(--done) + 500ms);
+}
+
+.sn__fig dt {
+  color: var(--wood-light);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sn__fig dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 12px;
+  margin: 0;
+}
+
+.sn__num {
+  font-family: var(--sn-stamp);
+  font-size: 44px;
+  line-height: 1.05;
+}
+
+.sn__arrow {
+  align-self: center;
+  width: 40px;
+  height: 24px;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.6px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sn__delta {
+  font-family: var(--sn-stamp);
+  font-size: 30px;
+}
+
+.sn__delta--down {
+  color: var(--crimson);
+}
+
+.sn__delta--up {
+  color: var(--wall-deep);
+}
+
+.sn__delta--flat,
+.sn__gloss {
+  color: var(--wood-light);
+}
+
+.sn__gloss {
+  font-size: 20px;
+}
+
+/* ---- the gallery slip, pinned beside the record ---- */
+
+.sn__gallery {
+  position: relative;
+  align-self: center;
+  min-width: 0;
+  padding: 44px 32px 30px;
+  rotate: 1.4deg;
+  filter: drop-shadow(0 14px 22px color-mix(in srgb, var(--ink) 60%, transparent));
+  animation: sn-deal 560ms cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--done) + 600ms) both;
+}
+
+.sn__tack {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 34px;
+  height: 34px;
+  translate: -50% 0;
+}
+
+.sn__gallery-title {
+  position: relative;
+  margin: 0 0 10px;
+  color: var(--ink);
+  font-family: var(--sn-stamp);
+  font-size: 36px;
+  font-weight: 400;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.sn__gallery .lb {
+  position: relative;
+}
+
+.sn__prize {
+  position: relative;
+  margin: 14px 0 0;
+  color: var(--wood-light);
+  font-size: 24px;
+  font-style: italic;
+  text-align: center;
+}
+
+/* ---- the last word ---- */
+
+.sn__closing {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--paper);
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  text-wrap: balance;
+  animation: sn-flicker 640ms ease-out calc(var(--done) + 1000ms) both;
+}
+
+/* ---- motion ---- */
+
+@keyframes sn-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* candlelight: opacity gutters a few times while the sheet settles */
+@keyframes sn-flicker {
+  0% {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  20% {
+    opacity: 0.7;
+  }
+  32% {
+    opacity: 0.25;
+  }
+  52% {
+    opacity: 0.9;
+  }
+  66% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes sn-type {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes sn-slam {
+  from {
+    opacity: 0;
+    transform: scale(1.6) rotate(-2deg);
+  }
+  40% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(-6deg);
+  }
+}
+
+@keyframes sn-puff {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  25% {
+    opacity: 0.95;
+  }
+  to {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) scale(1.3);
+  }
+}
+
+/* dealt in from the lower right along an arc */
+@keyframes sn-deal {
+  from {
+    opacity: 0;
+    transform: translate(260px, 170px) rotate(16deg);
+  }
+  55% {
+    opacity: 1;
+    transform: translate(36px, -26px) rotate(4deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sn__record,
+  .sn__typed,
+  .sn__stamp,
+  .sn__fig,
+  .sn__gallery,
+  .sn__closing {
+    animation-name: sn-fade;
+    animation-duration: 240ms;
+    animation-timing-function: ease-out;
+  }
+
+  .sn__puff {
+    display: none;
+  }
+}

@@ -1,0 +1,63 @@
+/* The letterboxed 16:9 stage. Every zone inside is placed absolutely on the 1920x1080 design canvas. */
+.stage-frame {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--wall-deep);
+}
+
+.stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  overflow: hidden;
+  background: var(--wall);
+  transform-origin: 50% 50%;
+}
+
+/* Cast drawings lean, wave and faint past their boxes, so zones never clip. Isolated, so a zone's inner
+   z-indexes (the card spread stacks up to 50) stay inside it and DOM order alone sets the paint order. */
+.stage-zone {
+  position: absolute;
+  isolation: isolate;
+}
+
+/* DigTicker and ReaderSheet paint their own page, so they take the parchment's whole window. */
+.stage .exhibit__sheet-body {
+  inset: 10px;
+}
+
+.stage-rail {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  box-sizing: border-box;
+  padding: 0 24px;
+}
+
+/* Top centre, clear of the subtitles the operator is reading. */
+.stage-dev {
+  position: absolute;
+  top: 92px;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 70;
+  margin: 0;
+  padding: 6px 14px;
+  border-radius: 6px;
+  background: var(--ink);
+  color: var(--paper);
+  font: 20px/1.3 var(--font-doc);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.stage-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

@@ -1,0 +1,155 @@
+/* Pastry avatars, the gallery leaderboard and bet chips. The weights used here load here so each renders on its own. */
+@import '@fontsource/alfa-slab-one/400.css';
+@import '@fontsource/atkinson-hyperlegible/400.css';
+@import '@fontsource/atkinson-hyperlegible/700.css';
+
+.pa {
+  display: block;
+  overflow: visible;
+}
+
+.pa__body {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+/* ---- leaderboard ---- */
+
+.lb {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--ink);
+  font-family: var(--font-ui, 'Atkinson Hyperlegible'), sans-serif;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+}
+
+.lb__row {
+  display: grid;
+  grid-template-columns: 34px 96px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.lb__row + .lb__row {
+  border-top: 2px dashed color-mix(in oklab, var(--wood-light), transparent 45%);
+}
+
+.lb__rank,
+.lb__credits {
+  font-family: var(--font-stamp, 'Alfa Slab One'), serif;
+  line-height: 1;
+}
+
+.lb__rank {
+  font-size: 36px;
+  text-align: center;
+}
+
+.lb__avatar {
+  display: block;
+  width: 96px;
+  height: 96px;
+}
+
+.lb__who {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.lb__name {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.lb__record {
+  color: var(--wood-light);
+  font-size: 20px;
+}
+
+.lb__credits {
+  font-size: 40px;
+}
+
+/* idle: each pastry breathes on its own beat */
+.lb .pa__body {
+  animation: pa-breathe 2.8s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * -0.9s);
+}
+
+@keyframes pa-breathe {
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+  50% {
+    transform: scale(1.03, 0.97);
+  }
+}
+
+/* ---- bet chips ---- */
+
+.bc {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 10px;
+  color: var(--ink);
+  font-family: var(--font-ui, 'Atkinson Hyperlegible'), sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+.bc__pile {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.bc__stack {
+  display: block;
+  width: 44px;
+  height: auto;
+  overflow: visible;
+}
+
+.bc__tag {
+  display: grid;
+  justify-items: center;
+  min-width: 66px;
+  padding: 2px 8px 3px;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 7px 6px 8px 6px;
+  line-height: 1.05;
+}
+
+.bc__count {
+  font-family: var(--font-stamp, 'Alfa Slab One'), serif;
+  font-size: 24px;
+}
+
+.bc__word {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.bc__pile--brass .bc__word {
+  color: var(--brass-deep);
+}
+
+.bc__pile--crimson .bc__word {
+  color: var(--crimson);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lb .pa__body {
+    animation: none;
+  }
+}
