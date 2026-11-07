@@ -293,6 +293,8 @@ export function CourtroomView() {
       live(revival, claim.test.steps, claim.test.observe),
     ]);
     const res = witnessResult(claim, statusOf(claim), verdictOf(claim.id), { original: o, revival: r });
+    // Practice cases were hand-written: say "the claim", never "the AI".
+    if (b?.source === 'fixture' && res.ai) res.ai = res.ai.replace("The AI's claim", 'The claim').replace('The AI claimed', 'The claim said').replace('The AI admitted', 'The claim admitted');
     setOuts({ original: o, revival: r });
     setResult(res);
     setStepAt(null);
