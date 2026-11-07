@@ -47,3 +47,12 @@ def test_tampered_regression_fails_verify():
     sealed = seal("app1", reg, [])
     reg["good"][0]["expect"] = "X"
     assert verify(sealed, reg, [])
+
+
+def test_default_run_leaves_cases_untouched(capsys):
+    tracked = ROOT / "cases/app1-fixture.case.yml"
+    before = tracked.read_bytes()
+    run(attacks_out=ROOT / "runs/app1/attacks.json", revival=ROOT / "runs/none.html")
+    assert tracked.read_bytes() == before
+    assert "runs" in capsys.readouterr().out.split("case file:")[1]
+    assert (ROOT / "runs/app1/app1-fixture.case.yml").is_file()
