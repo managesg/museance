@@ -7,6 +7,13 @@ Steps: click:<css> | type:<css>:<text> | key:<key name> | wait:<ms>
 from __future__ import annotations
 
 ACTION_TIMEOUT_MS = 2000
+LOAD_TIMEOUT_MS = 10000
+
+
+def _origin(url: str) -> str:
+    from urllib.parse import urlsplit
+    p = urlsplit(url)
+    return f"{p.scheme}://{p.netloc}"
 
 
 class StepError(ValueError):
@@ -41,7 +48,21 @@ def run_steps(page, url: str, steps: list[str], observe: str) -> str:
     other output. Malformed steps raise StepError (that is a contract bug, not a ruling).
     """
     parsed = [parse(s) for s in steps]
-    page.goto(url, wait_until="load")
+    origin = _origin(url)
+
+    def _same_origin_only(route):
+        # Offline + deterministic: the app under trial may only load its own files.
+        # (e.g. todo's Google Fonts link otherwise hangs the page load.)
+        if _origin(route.request.url) == origin or route.request.url.startswith(("data:", "blob:")):
+            route.continue_()
+        else:
+            route.abort()
+
+    page.route("**/*", _same_origin_only)
+    try:
+        page.goto(url, wait_until="domcontentloaded", timeout=LOAD_TIMEOUT_MS)
+    except Exception as e:  # noqa: BLE001 - an unreachable build is an observation, not a crash
+        return f"ERROR:load {type(e).__name__}"
     for i, (kind, args) in enumerate(parsed):
         try:
             if kind == "click":
