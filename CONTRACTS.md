@@ -14,6 +14,7 @@ A list of strings, run in order in a browser on the app page:
 ## Objects
 | Object | Writer | File | Fields |
 |---|---|---|---|
+| app | P1 (original), P4 (revival) | `apps.json` | id, name, license, source, original {url, cmd, port}, revival {url, cmd, port}. The court runs every test on `original.url` and `revival.url`. |
 | evidence | P2 | `evidence.json` | id, app, tier (A/B/C/D), kind (page, screenshot, video, issue, doc), source, text or path, license |
 | behavior_sheet | P2 | `sheet.json` | app, lines[]: {id, screen, text, label SEEN/GUESSED, citations[], conflicts[]} |
 | claim | P2 (Medium) | `claims.json` | id, app, screen, text, test {steps, observe, expect}, tier, label SEEN/GUESSED/FABRICATED, evidence[], confidence (0-1), bond (int), commit |
