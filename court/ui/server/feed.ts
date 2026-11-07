@@ -1,10 +1,11 @@
 // Stage feed: streams one CaseBundle per app as server-sent events, read from runs/<app>/ files or MongoDB Atlas,
 // and relays the judge's bench input to the court. Run from court/ui with `node server/feed.ts` (Node 24 strips the types).
-// Env, from the shell first and then the repo .env: PORT (8787), COURT_URL (http://127.0.0.1:8798), MONGODB_URI, MONGODB_DB (default: the URI's database).
+// Env, from the shell first and then the repo .env: PORT (8787), COURT_URL (http://127.0.0.1:8798), MONGODB_URI, MONGODB_DB (default: the URI's database),
+// MONGODB_AI_API_KEY (MongoDB AI embeddings for GET /api/match).
 import { createHash } from 'node:crypto';
 import { existsSync, watch } from 'node:fs';
 import type { FSWatcher } from 'node:fs';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { join, resolve } from 'node:path';
@@ -30,14 +31,22 @@ const PING_MS = 5000;
 const BENCH_TIMEOUT_MS = 70_000; // the court itself gives up at 60 s
 const BODY_LIMIT = 64 * 1024;
 const APP_RE = /^[a-z0-9-]+$/;
+const AI_KEY = process.env.MONGODB_AI_API_KEY || undefined;
+const AI_URL = 'https://ai.mongodb.com/v1/embeddings'; // Voyage models served by MongoDB, OpenAI-style
+const AI_MODEL = 'voyage-3.5';
+const AI_BATCH = 128; // inputs per request; the API caps one request at 1000
 
 type Source = 'runs' | 'atlas';
 // Every CaseBundle key, values unchecked: the stage validates each bundle (src/feed/validate.ts).
 type Wire = Record<keyof CaseBundle, unknown>;
 
 // Driver errors can echo a connection string, so credentials never reach the log or the stage.
-const scrub = (msg: string) =>
-  (MONGODB_URI ? msg.replaceAll(MONGODB_URI, '<MONGODB_URI>') : msg).replace(/\/\/[^\s/@]+@/g, '//***@');
+const scrub = (msg: string) => {
+  for (const [secret, name] of [[MONGODB_URI, '<MONGODB_URI>'], [AI_KEY, '<MONGODB_AI_API_KEY>']]) {
+    if (secret) msg = msg.replaceAll(secret, name!);
+  }
+  return msg.replace(/\/\/[^\s/@]+@/g, '//***@');
+};
 const errText = (e: unknown) => {
   const cause = e instanceof Error && e.cause instanceof Error && !e.message.includes(e.cause.message) ? `: ${e.cause.message}` : '';
   const msg = e instanceof Error ? e.message + cause : String(e);
@@ -232,6 +241,63 @@ function reply(res: ServerResponse, status: number, body: unknown) {
   res.writeHead(status, { 'content-type': 'application/json' }).end(JSON.stringify(body));
 }
 
+async function embed(key: string, input: string[], input_type: 'query' | 'document') {
+  const out: number[][] = [];
+  for (let i = 0; i < input.length; i += AI_BATCH) {
+    const res = await fetch(AI_URL, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ model: AI_MODEL, input: input.slice(i, i + AI_BATCH), input_type }),
+      signal: AbortSignal.timeout(30_000),
+    });
+    const text = await res.text();
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${text.slice(0, 200)}`);
+    for (const d of (JSON.parse(text) as { data: { index: number; embedding: number[] }[] }).data) out[i + d.index] = d.embedding;
+  }
+  return out;
+}
+
+const cosine = (a: number[], b: number[]) => {
+  let ab = 0, aa = 0, bb = 0;
+  a.forEach((x, i) => { ab += x * b[i]; aa += x * x; bb += b[i] * b[i]; });
+  return ab / Math.sqrt(aa * bb);
+};
+
+// Each claim's two closest evidence items by MongoDB AI embeddings. Cached under a sha256 of the inputs, so a repeat
+// call, or the demo offline, is served from runs/<app>/mongo_matches.json without the API.
+async function match(res: ServerResponse, app: string) {
+  const dir = join(RUNS, app);
+  const cacheFile = join(dir, 'mongo_matches.json');
+  const [claims, evidence, cached] = await Promise.all([
+    readJson(join(dir, 'claims.json')),
+    readJson(join(dir, 'evidence.json')).then((e) => e ?? readJson(join(ROOT, 'dig', 'out', app, 'evidence.json'))),
+    readJson(cacheFile).catch(() => null) as Promise<{ sha256?: string; reply?: unknown } | null>, // a broken cache is a miss
+  ]);
+  const usable = (list: unknown) => (Array.isArray(list) ? list : []).filter((x) => typeof x?.id === 'string' && typeof x?.text === 'string');
+  const cs = usable(claims);
+  const es = usable(evidence);
+  if (!cs.length || !es.length) return reply(res, 404, { error: `no claims or evidence for ${app}` });
+  const sha256 = createHash('sha256')
+    .update(JSON.stringify([AI_MODEL, cs.map((c) => [c.id, c.text]), es.map((e) => [e.id, e.kind, e.tier, e.text])])).digest('hex');
+  if (cached?.sha256 === sha256 && cached.reply) return reply(res, 200, cached.reply);
+  if (!AI_KEY) return reply(res, 503, { error: 'MONGODB_AI_API_KEY is not set (shell or repo .env)' });
+  const t0 = Date.now();
+  let q: number[][], d: number[][];
+  try {
+    [q, d] = await Promise.all([embed(AI_KEY, cs.map((c) => c.text), 'query'), embed(AI_KEY, es.map((e) => e.text), 'document')]);
+  } catch (e) {
+    return reply(res, 503, { error: `mongodb ai: ${errText(e)}` });
+  }
+  const matches = Object.fromEntries(cs.map((c, i) => [c.id, es
+    .map((e, j) => ({ e, score: cosine(q[i], d[j]) }))
+    .sort((a, b) => b.score - a.score).slice(0, 2)
+    .map(({ e, score }) => ({ id: e.id, kind: e.kind, tier: e.tier, text: e.text.slice(0, 160), score: Math.round(score * 1000) / 1000 }))]));
+  const body = { source: 'mongodb-ai', model: AI_MODEL, matches };
+  console.log(`match ${app}: ${cs.length} claims x ${es.length} evidence embedded by ${AI_MODEL} in ${Date.now() - t0} ms`);
+  await writeFile(cacheFile, JSON.stringify({ sha256, reply: body }, null, 2)).catch((e) => console.warn(`match ${app}: cache not written: ${errText(e)}`));
+  reply(res, 200, body);
+}
+
 async function bench(req: IncomingMessage, res: ServerResponse) {
   // Requiring JSON makes browsers preflight cross-site posts, and this server never approves a preflight.
   if (!/^application\/json\b/i.test(req.headers['content-type'] ?? '')) {
@@ -299,7 +365,12 @@ const server = createServer(async (req, res) => {
     const url = new URL(req.url ?? '/', 'http://localhost');
     const route = `${req.method} ${url.pathname}`;
     if (route === 'GET /api/health') {
-      return reply(res, 200, { ok: true, atlas: Boolean(MONGODB_URI), court: Boolean(COURT_URL) });
+      return reply(res, 200, { ok: true, atlas: Boolean(MONGODB_URI), mongo: Boolean(AI_KEY), court: Boolean(COURT_URL) });
+    }
+    if (route === 'GET /api/match') {
+      const app = url.searchParams.get('app') ?? 'app1';
+      if (!APP_RE.test(app)) return reply(res, 400, { error: 'app must match ^[a-z0-9-]+$' });
+      return await match(res, app);
     }
     if (route === 'GET /api/feed') {
       const app = url.searchParams.get('app') ?? 'app1';
