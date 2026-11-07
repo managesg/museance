@@ -34,3 +34,11 @@ def test_pipeline():
     req = json.loads((ROOT / "contracts/claim.schema.json").read_text())["required"]
     for c in claims:
         assert all(k in c for k in req) and c["commit"] == commit_hash(c)
+
+
+def test_subq_sets_confidence():
+    ev = pile.build("app1", ROOT / "dig/piles/app1")
+    lines = reader.read(ev, chat=lambda *a: SHEET_REPLY, provider="X")
+    claims, _ = medium.cards("app1", {"lines": lines}, ev, SEL, chat=lambda *a: CLAIM_REPLY, decide=lambda *a: 0.4)
+    assert all(c["confidence"] == 0.4 and c["bond"] == 40 for c in claims)
+    assert claims[0]["medium_confidence"] == 0.9 and claims[0]["commit"] == commit_hash(claims[0])
