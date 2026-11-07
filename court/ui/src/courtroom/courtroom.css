@@ -48,19 +48,19 @@
 .cr-app.is-off { color: color-mix(in oklab, var(--white) 55%, var(--navy-900)); font-weight: 400; cursor: not-allowed; }
 
 /* The case so far: what each AI did, then the measured numbers. */
-.cr-band { display: flex; align-items: center; gap: 28px; padding: 12px 24px; background: var(--white); border-bottom: 1px solid var(--border-1); }
+.cr-band { display: flex; align-items: center; gap: 28px; padding: 10px 24px; background: var(--white); border-bottom: 1px solid var(--border-1); }
 .cr-story { flex: 1 1 auto; min-width: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); margin: 0; padding: 0; list-style: none; }
 .cr-story li { display: flex; flex-direction: column; min-width: 0; padding: 2px 12px; border-left: 1px solid var(--border-1); }
 .cr-story li:first-child { padding-left: 0; border-left: 0; }
 .cr-story__name { font-size: 14px; font-weight: 600; color: var(--fg-2); }
-.cr-story__value { font: 500 22px/1.25 var(--font-display); color: var(--navy); font-variant-numeric: tabular-nums; }
-.cr-story__who { font-size: 14px; line-height: 1.3; color: var(--fg-2); }
+.cr-story__value { font: 500 20px/1.2 var(--font-display); color: var(--navy); font-variant-numeric: tabular-nums; }
+.cr-story__who { font-size: 14px; line-height: 1.25; color: var(--fg-2); }
 .cr-story li.is-court .cr-story__who { color: var(--locked-ink); font-weight: 600; }
 .cr-story__note { flex: 1 1 auto; margin: 0; color: var(--fg-2); }
 .cr-nums { flex: 0 0 auto; display: grid; grid-template-columns: repeat(3, auto); column-gap: 28px; margin: 0; }
 .cr-nums div { display: flex; flex-direction: column; }
 .cr-nums dt { font-size: 14px; font-weight: 600; color: var(--fg-2); }
-.cr-nums dd { margin: 0; font: 500 44px/1.05 var(--font-display); color: var(--navy); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cr-nums dd { margin: 0; font: 500 42px/1 var(--font-display); color: var(--navy); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .cr-nums__to { font-size: .6em; color: var(--fg-2); vertical-align: .18em; }
 .cr-nums__of { font-size: .45em; color: var(--fg-2); }
 .cr-nums__src { grid-column: 1 / -1; margin: 4px 0 0; font-size: 14px; color: var(--fg-2); }
@@ -87,9 +87,9 @@
 .cr-card__out.is-diff { background: var(--struck-tint); }
 .cr-card__out.is-unsure { background: var(--unsworn-tint); }
 
-.cr-rail { min-height: 0; display: flex; flex-direction: column; gap: 12px; }
-.cr-verdict { flex: 0 0 auto; padding: 16px 18px; background: var(--white); border: 1px solid var(--border-1); border-radius: var(--radius); box-shadow: var(--shadow-1); }
-.cr-verdict__claim { margin: 0; font: 500 20px/1.3 var(--font-display); color: var(--navy); text-wrap: balance; }
+.cr-rail { min-height: 0; display: grid; grid-template-rows: minmax(0, auto) auto minmax(176px, 1fr) auto; gap: 12px; }
+.cr-verdict { min-height: 0; overflow: auto; padding: 14px 18px; background: var(--white); border: 1px solid var(--border-1); border-radius: var(--radius); box-shadow: var(--shadow-1); }
+.cr-verdict__claim { margin: 0; font: 500 19px/1.28 var(--font-display); color: var(--navy); text-wrap: balance; }
 .cr-verdict__id { margin-right: 8px; font: 500 15px/1 var(--font-mono); color: var(--fg-2); }
 .cr-verdict__sub { margin: 8px 0 0; color: var(--fg-2); }
 .cr-steps { margin: 10px 0 0; padding-left: 22px; color: var(--fg-2); }
@@ -117,7 +117,7 @@
 .cr-btn--main:hover:not(:disabled) { background: var(--deep-blue); border-color: var(--deep-blue); }
 .cr-btn:disabled { opacity: .5; cursor: not-allowed; }
 
-.cr-docket { flex: 1 1 auto; min-height: 0; overflow: auto; margin: 0; padding: 4px 0; list-style: none; background: var(--white); border: 1px solid var(--border-1); border-radius: var(--radius); box-shadow: var(--shadow-1); }
+.cr-docket { min-height: 0; overflow: auto; margin: 0; padding: 4px 0; list-style: none; background: var(--white); border: 1px solid var(--border-1); border-radius: var(--radius); box-shadow: var(--shadow-1); }
 .cr-docket li { display: grid; grid-template-columns: 3.2ch minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 7px 14px; border-top: 1px solid var(--border-1); }
 .cr-docket li:first-child { border-top: 0; }
 .cr-docket li[aria-current] { background: var(--aqua-200); }

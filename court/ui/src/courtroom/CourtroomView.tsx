@@ -41,20 +41,37 @@ interface Match { id: string; kind?: string; tier?: string; text: string; score:
 
 const TONE: Record<Word, 'same' | 'diff' | 'unsure'> = { SAME: 'same', DIFFERENT: 'diff', UNSURE: 'unsure', 'NO RULING': 'unsure' };
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
-const said = (s: string | null | undefined) => `“${plainOutput(s) || 'nothing'}”`;
+// A missing element is what the app showed: nothing there. Say it without the selector.
+function shown(s: string | null | undefined): string {
+  const out = plainOutput(s);
+  const none = /^(?:nothing to read: )?it has no (.+)$/.exec(out);
+  return none ? `nothing in ${plainClaim(none[1])}` : out;
+}
+const said = (s: string | null | undefined) => {
+  const out = shown(s);
+  return out && !out.startsWith('nothing in ') ? `“${out}”` : out || 'nothing';
+};
 const diffs = (vs: Verdict[]) => vs.filter((v) => !v.match && !v.flaky).length;
 
 // What the AI claimed about the original, and whether the court found it true there. The stage says it; it never decides it.
 function aiLine(claim: Claim, status: LockStatus, v: Verdict | undefined): string {
   const sure = pct(claim.confidence);
   if (status === 'LOCKED') return `The AI's claim about the original was true${sure ? ` (scored ${sure} by SubQ)` : ''}, so it is locked into the record.`;
-  if (status === 'STRUCK') return `The AI claimed ${said(claim.test.expect)}, but the original showed ${said(v?.original)}. Perjury: it loses its ${claim.bond}-credit bond.`;
+  if (status === 'STRUCK') return `The AI claimed ${claim.test.expect ? said(claim.test.expect) : 'an empty entry'}, but the original showed ${said(v?.original)}. Perjury: it loses its ${claim.bond}-credit bond.`;
   if (status === 'FABRICATED') return 'The AI admitted it had no evidence for this claim.';
   return 'The court could not get a stable answer on the original, so the claim is unsworn.';
 }
 
 // The headline answers one question: did the revival do what the original did? The court's recorded verdict decides it.
 function witnessResult(claim: Claim, status: LockStatus, v: Verdict | undefined, live: Outs): Result {
+  const res = recordedResult(claim, status, v, live);
+  const replaySame = live.original === live.revival;
+  return v && !v.flaky && replaySame !== v.match
+    ? { ...res, note: `The replay on this screen came out ${replaySame ? 'the same' : 'different'}; the court's recorded run says ${v.match ? 'same' : 'different'}.` }
+    : res;
+}
+
+function recordedResult(claim: Claim, status: LockStatus, v: Verdict | undefined, live: Outs): Result {
   const ai = aiLine(claim, status, v);
   if (v?.flaky) return { word: 'UNSURE', why: 'The court ran this twice and got two different answers, so it will not rule.', ai, who: 'DR. HOOT', line: 'Two answers is no answer.' };
   const same = v ? v.match : live.original === live.revival;
@@ -133,7 +150,7 @@ function Stand({ side, label, src, base, out, tone, frameRef, recording }: {
       </div>
       <p className={`cr-card__out${tone ? ` is-${tone}` : ''}`}>
         <span className="cr-card__out-label">Showed</span>
-        <span className="cr-card__out-value">{out === null ? '—' : plainOutput(out) || '(nothing)'}</span>
+        <span className="cr-card__out-value">{out === null ? '—' : shown(out) || 'nothing'}</span>
       </p>
     </figure>
   );
@@ -185,6 +202,9 @@ export function CourtroomView() {
   const [rec, setRec] = useState<string[] | null>(null);
   const [matches, setMatches] = useState<{ model: string; byClaim: Record<string, Match[]> } | null>(null);
   const docket = useRef<HTMLOListElement>(null);
+  const running = useRef(false);
+  // A replay focuses fields inside the app's frame; hand focus back so N, T and Enter keep working.
+  const nextBtn = useRef<HTMLButtonElement>(null);
 
   const app = b?.app ?? APP;
   useEffect(() => {
@@ -243,9 +263,10 @@ export function CourtroomView() {
   }, [claims, statusOf, verdictOf]);
 
   const judged = claims.length > 0 && (b?.verdicts.length ?? 0) > 0;
-  // The registered builds first: app1's fixture case is judged on its original, so P4's real revival takes the stand.
-  const builds = BUILDS[app] ?? b?.builds ?? BUILDS.todo;
-  const base = COURT_SCALE[app] ?? BUILDS[app]?.scale ?? builds.scale;
+  // The stands show exactly the builds the court judged: a practice case was judged against the practice revival,
+  // so showing another rebuild there would contradict the recorded verdicts.
+  const builds = b?.source === 'fixture' ? b.builds : BUILDS[app] ?? b?.builds ?? BUILDS.todo;
+  const base = COURT_SCALE[app] ?? builds.scale;
   const observe = claims[0]?.test.observe ?? 'body';
   const label = (sel: string) => labelFrom(original?.contentDocument ?? null)(sel);
   const names = NAMES[app] ?? { name: b?.appLabel ?? app };
@@ -259,7 +280,8 @@ export function CourtroomView() {
 
   async function callWitness() {
     const claim = order[next % order.length];
-    if (!claim || busy) return;
+    if (!claim || running.current) return;
+    running.current = true;
     setRec(null);
     setBusy('witness');
     setCalled(claim.id);
@@ -279,10 +301,12 @@ export function CourtroomView() {
     setHeard((h) => ({ ...h, [claim.id]: res.word }));
     setNext((n) => n + 1);
     setBusy(null);
+    running.current = false;
+    window.setTimeout(() => nextBtn.current?.focus({ preventScroll: true }), 60);
   }
 
   async function startOwnTest() {
-    if (busy) return;
+    if (running.current) return;
     setCalled(null);
     await reset();
     setRec([]);
@@ -294,7 +318,8 @@ export function CourtroomView() {
   }
 
   async function askCourt() {
-    if (busy || !rec?.length) return;
+    if (running.current || !rec?.length) return;
+    running.current = true;
     const steps = rec;
     setRec(null);
     setBusy('court');
@@ -316,6 +341,8 @@ export function CourtroomView() {
       setResult({ word: 'NO RULING', why: `The court could not run these steps: ${plainOutput(message(e))}.`, ai: null, who: 'DR. HOOT', line: 'Try a shorter test.' });
     } finally {
       setBusy(null);
+      running.current = false;
+      window.setTimeout(() => nextBtn.current?.focus({ preventScroll: true }), 60);
     }
   }
 
@@ -451,7 +478,7 @@ export function CourtroomView() {
               </>
             ) : (
               <>
-                <button type="button" className="cr-btn cr-btn--main" onClick={() => void callWitness()} disabled={!judged || !!busy}>Run the next test</button>
+                <button type="button" ref={nextBtn} className="cr-btn cr-btn--main" onClick={() => void callWitness()} disabled={!judged || !!busy}>Run the next test</button>
                 <button type="button" className="cr-btn" onClick={() => void startOwnTest()} disabled={!!busy}>Test it yourself</button>
               </>
             )}
