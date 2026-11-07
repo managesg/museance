@@ -1,24 +1,32 @@
 app: "todo"
 fidelity: 100
-brier: 0.014
+brier: 0.071
 credibility_start: 1000
-credibility_end: 1010
+credibility_end: 930
 locked:
-  - "main: Typing an activity and clicking the add button shows it in the todo list. [A]"
-  - "main: Pressing Enter in the activity field adds the item to the todo list. [A]"
-  - "main: Clicking add with an empty field adds nothing. [A]"
-  - "main: Pressing Enter with an empty field adds nothing. [A]"
-  - "main: Clicking the complete button moves the item into the completed list. [A]"
-  - "main: Completing the only item leaves the todo list empty. [A]"
-  - "main: Clicking the remove button deletes the item from the todo list. [A]"
-  - "main: Clicking complete on a completed item moves it back to the todo list. [A]"
-struck: []
+  - "add: Typing 'Buy milk' into #item and clicking #add creates a todo item with text 'Buy milk' in #todo. [B]"
+  - "add: Typing 'Walk dog' into #item and pressing Enter creates a todo item with text 'Walk dog' in #todo. [B]"
+  - "add: New items appear at the top of #todo: after adding 'Buy milk' then 'Walk dog', the list shows 'Walk dog' above 'Buy milk'. [B]"
+  - "add: Duplicate items are allowed: adding 'Buy milk' twice results in #todo containing 2 items both reading 'Buy milk'. [B]"
+  - "add: Submitting a whitespace-only value ('   ') via #add creates a todo item with no visible text (one #todo item whose visible text is empty). [B]"
+  - "add: Clicking #add with an empty input creates no todo item (#todo remains empty). [B]"
+  - "add: Adding a very long single-word item is accepted and displayed as one #todo item with the full text intact (word-break styling prevents overflow). [B]"
+  - "add: Enter on the numeric keypad (NumpadEnter) also submits a new todo item, not just the main Enter key. [C]"
+  - "todo: Clicking the .complete control on an item in #todo moves it out of #todo into #completed with the same text 'Buy milk'. [B]"
+  - "todo: With two items ('Buy milk' added first, 'Walk dog' on top), clicking .complete on the top item leaves #todo with 'Buy milk' and puts 'Walk dog' into #completed. [B]"
+  - "todo: Clicking the .remove control on a #todo item deletes it: after adding 'Buy milk' then 'Walk dog', removing the top item leaves #todo with 1 item 'Buy milk'. [B]"
+  - "completed: Clicking the .complete control on an item in #completed moves it back into #todo: after completing 'Buy milk' then clicking .complete on the completed item, #todo has 1 item 'Buy milk' and #completed is empty. [B]"
+  - "completed: Clicking the .remove control on an item in #completed deletes it permanently: after completing 'Buy milk' then clicking .remove in #completed, both lists are empty. [B]"
+  - "completed: Completed items stack with the most recently completed on top: completing 'Buy milk' then 'Walk dog' results in #completed showing 'Walk dog' above 'Buy milk' (2 items). [B]"
+  - "list: The app starts with an empty state: #todo contains 0 items. [B]"
+struck:
+  - "add: An empty task can be created (reported as a bug): clicking #add with an empty input shows an item with no text in the list. [C]"
 fabricated: []
 unsworn: []
 counts:
-  claims: 8
-  locked: 8
-  struck: 0
+  claims: 16
+  locked: 15
+  struck: 1
   fabricated: 0
   unsworn: 0
   false_strikes: 0
