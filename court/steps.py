@@ -18,7 +18,7 @@ import re
 import time
 from urllib.parse import urlsplit
 
-ACTION_TIMEOUT_MS = 2000
+ACTION_TIMEOUT_MS = 5000  # was 2000: a CPU-starved browser timing out one of two runs reads as FLAKY
 GOTO_TIMEOUT_MS = 10000
 SETTLE_MAX_MS = 1500
 SETTLE_POLL_MS = 50

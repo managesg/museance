@@ -13,7 +13,7 @@ from court.ledger import Ledger
 def srv(tmp_path):
     runs = tmp_path / "runs"
     (runs / "app1").mkdir(parents=True)
-    s = make_server(runs, 0)
+    s = make_server(runs, 0, apps=tmp_path / "none.json")  # isolated from the shared fixtures/apps.json
     s.RequestHandlerClass.poll_s = 0.05
     threading.Thread(target=s.serve_forever, daemon=True).start()
     yield f"http://127.0.0.1:{s.server_address[1]}", runs
@@ -121,7 +121,7 @@ def test_bench_a01(tmp_path):
     root = pathlib.Path(__file__).resolve().parents[2]
     attack = json.loads((root / "fixtures" / "attacks.json").read_text(encoding="utf-8"))[0]
     assert attack["id"] == "a01"
-    s = make_server(tmp_path, 0, original_dir=root / "fixtures" / "app1",
+    s = make_server(tmp_path, 0, apps=tmp_path / "none.json", original_dir=root / "fixtures" / "app1",
                     revival_dir=root / "court" / "tests" / "revival_app1")
     threading.Thread(target=s.serve_forever, daemon=True).start()
     try:

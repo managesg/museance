@@ -32,7 +32,9 @@ def test_original_vs_itself_has_zero_false_strikes(bench):
     with serve.folder(ORIGINAL) as url:
         rep = check(load(REG), url, url, bench=bench)
     c = rep["counts"]
-    assert (c["false_strikes"], c["struck"], c["mismatches"], c["flaky"]) == (0, 0, 0, 0)
+    bad = [(r["id"], r["original"], r["expect"], r["flaky"]) for r in rep["rows"]
+           if r["flaky"] or r["original"] != r["expect"]]
+    assert (c["false_strikes"], c["struck"], c["mismatches"], c["flaky"]) == (0, 0, 0, 0), bad  # name the row
     # every expect P4 wrote (good and traps) is what the court sees on the original
     assert all(r["status"] == "LOCKED" and r["original"] == r["expect"] for r in rep["rows"])
 
