@@ -68,3 +68,17 @@ def test_todo_attacks_cover_both_lists_and_stay_valid():
     attacks = generate("todo", sel)
     assert len(attacks) > 30 and {a["observe"] for a in attacks} == {"#todo", "#completed", "body"}
     assert len({a["id"] for a in attacks}) == len(attacks)
+
+
+def test_codex_skeptic_runs_outside_the_repo(tmp_path, monkeypatch):
+    """The Codex skeptic gets an empty cwd, so even its read-only sandbox cannot open claims.json."""
+    import skeptic_codex, subprocess, os
+    seen = {}
+    def fake_run(cmd, **kw):
+        seen.update(kw)
+        return subprocess.CompletedProcess(cmd, 0, stdout="[]", stderr="")
+    monkeypatch.setattr(skeptic_codex.subprocess, "run", fake_run)
+    monkeypatch.setattr("sys.argv", ["skeptic_codex.py", "--app", "app1", "--selectors",
+                                     str(ROOT / "eval/regression/app1-selectors.json"), "--out", str(tmp_path / "x.json")])
+    skeptic_codex.main()
+    assert seen["cwd"] and os.path.realpath(seen["cwd"]) != os.path.realpath(ROOT) and not os.path.exists(os.path.join(seen["cwd"], "fixtures"))

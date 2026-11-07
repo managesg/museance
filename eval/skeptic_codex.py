@@ -1,5 +1,5 @@
 """Skeptic via Codex CLI: extra attacks from ONLY screen names and selectors. Never sees claims."""
-import argparse, json, pathlib, re, subprocess, sys
+import argparse, json, pathlib, re, subprocess, sys, tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from commit import commit_hash
@@ -47,8 +47,9 @@ def main():
     sel = json.loads(pathlib.Path(a.selectors).read_text(encoding="utf-8"))
     flat = [*sel["digits"], sel["zero"], sel["decimal"], *sel["operators"].values(), sel["equals"], sel["clear"]]
     screens = ["digit", "decimal", "equals", "clear", *sel["operators"]]
-    r = subprocess.run(["codex", "exec", "-s", "read-only", "--skip-git-repo-check", "--ephemeral", "-"],
-                       input=prompt(screens, flat), capture_output=True, text=True, encoding="utf-8", timeout=300, shell=sys.platform == "win32")
+    with tempfile.TemporaryDirectory(prefix="seance-skeptic-") as work:  # empty cwd: read-only codex cannot open claims.json
+        r = subprocess.run(["codex", "exec", "-s", "read-only", "--skip-git-repo-check", "--ephemeral", "-"], cwd=work,
+                           input=prompt(screens, flat), capture_output=True, text=True, encoding="utf-8", timeout=300, shell=sys.platform == "win32")
     attacks = parse(r.stdout, a.app, sel["observe"], screens, flat)
     out = pathlib.Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
