@@ -10,11 +10,13 @@ import { reloadFrame, runSteps } from '../exhibits/runSteps';
 import { fetchApps, type AppEntry } from '../feed/apps';
 import { BUILDS } from '../feed/builds';
 import { useCaseFeed } from '../feed/useCaseFeed';
+import { loadFixtureBundle } from '../fixtures';
 import { addRec, plainOutput, record } from './recorder';
 import './courtroom.css';
 
 const STEP_MS = 450;
 const APP = new URLSearchParams(location.search).get('app') || 'todo';
+const FIXTURE_APP = loadFixtureBundle().app;
 
 type Word = 'LOCKED' | 'PERJURY' | 'UNSWORN' | 'FABRICATED' | 'MATCH' | 'MISMATCH' | 'NO RULING';
 interface Ruling { word: Word; why: string; who: 'McCLUSKY' | 'DR. HOOT'; line: string; note?: string }
@@ -126,7 +128,8 @@ export function CourtroomView() {
   const app = b?.app ?? APP;
   const claims = b?.claims ?? [];
   const judged = claims.length > 0 && (b?.verdicts.length ?? 0) > 0;
-  const builds = b?.builds ?? BUILDS[app] ?? BUILDS.todo;
+  // The registered builds first: app1's fixture case is judged on its original, so P4's real revival takes the stand.
+  const builds = BUILDS[app] ?? b?.builds ?? BUILDS.todo;
   const scale = BUILDS[app]?.scale ?? builds.scale;
   const observe = claims[0]?.test.observe ?? 'body';
   const verdictOf = (id: string) => b?.verdicts.find((v) => v.kind === 'claim' && v.ref === id);
@@ -165,6 +168,8 @@ export function CourtroomView() {
     setBusy('court');
     try {
       const v = await benchRun(original, revival, steps, observe, app, { original: builds.original, revival: builds.revival });
+      // P1's court ruled in its own browser; replay the steps on the revival stand so the room sees what it did.
+      if (!ruledLocally(v)) await live(revival, steps, observe);
       setOuts({ original: v.original, revival: v.revival });
       const here = ruledLocally(v) ? 'Ruled in this browser: P1’s court did not answer.' : 'Ruled by P1’s court in a real browser, twice per app.';
       setRuling(v.flaky
@@ -194,9 +199,12 @@ export function CourtroomView() {
         <p className="cr-tag">A court for rebuilt apps. Two apps take the stand; the court checks they behave the same.</p>
         <nav className="cr-apps" aria-label="Choose the app">
           {apps.map((a) => {
-            const ok = a.hasRun || a.fidelity !== null;
-            return ok ? (
-              <a key={a.id} className="cr-app" href={`?source=runs&app=${encodeURIComponent(a.id)}`} aria-current={a.id === app ? 'page' : undefined}>{a.id}</a>
+            // A run judged by the court, else the repo's judged fixture case for that app.
+            const source = a.hasRun || a.fidelity !== null ? 'runs' : a.id === FIXTURE_APP ? 'fixture' : null;
+            return source ? (
+              <a key={a.id} className="cr-app" href={`?source=${source}&app=${encodeURIComponent(a.id)}`} aria-current={a.id === app ? 'page' : undefined}>
+                {a.id}{source === 'fixture' && <small>fixture case</small>}
+              </a>
             ) : (
               <span key={a.id} className="cr-app is-off" title={`${a.name}: not judged yet`}>{a.id} <small>not judged yet</small></span>
             );
