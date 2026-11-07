@@ -73,6 +73,7 @@ Details: `revive/README.md`.
 
 **Scoring.** Credibility, Brier and fidelity are pure functions in `eval/score.py`, defined in the
 "Scoring (P4)" section of `CONTRACTS.md`. There is no model in the court or in the scoring.
+Todo fidelity, all 121 verdicts (P2's 16 claims + 105 sealed attacks), MEASURED: 41 for revival v1 (`cases/todo/v1-16claims/verdicts.json`), 100 for v2 (`cases/todo/v2-16claims/verdicts.json`); `cases/BEFORE_AFTER.md`.
 
 ```sh
 python -m pytest -q eval revive dig      # lane tests

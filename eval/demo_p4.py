@@ -11,6 +11,7 @@ import argparse, contextlib, hashlib, io, json, pathlib, subprocess, sys, tempfi
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path[:0] = [str(ROOT / "eval"), str(ROOT)]
 from metrics_report import parse_case  # noqa: E402
+import score  # noqa: E402
 
 C, OUT = ROOT / "cases", ROOT / "revive/out/todo"
 REG, ATK, SEAL = ROOT / "eval/regression/todo.json", C / "todo/attacks.json", C / "todo.commits.json"
@@ -127,8 +128,11 @@ def main(argv=None):
     s.head(5, "FINAL NUMBERS")
     CF = rel(C / "todo.case.yml")
     s.row("fidelity (attacks only)", f"{v1['fidelity']} -> {case['fidelity']}", f"{BA} / {CF}")
-    print("      (all-verdict fidelity per CONTRACTS.md, 105 attacks + 16 claims: 41 -> 100 as on the stage and in DEMO.md;"
-          " the 41 is from the uncommitted runs/ v1 court run. Committed v1 verdicts at 9a5877c (8 claims + 105 attacks): 36)")
+    for ver in ("v1", "v2"):  # MEASURED all-verdict fidelity (CONTRACTS.md, P2's 16 claims + 105 attacks), committed court output
+        vf = C / "todo" / f"{ver}-16claims" / "verdicts.json"
+        if vf.is_file():
+            s.row(f"fidelity all-verdict {ver}", score.fidelity(load(vf)), rel(vf))
+    print("      (attacks-only fidelity above uses 105 attacks; all-verdict adds P2's 16 claims = 121 verdicts. Older cases/todo/verdicts.json at 9a5877c used P1's 8 claims: 36)")
     s.row("attack mismatches", f"{v1['attack_mismatches']} -> {v2['attack_mismatches']}", BA)
     s.row("regression", f"{v1['regression_passed']} -> {v2['regression_passed']} of {v2['regression_total']}", BA)
     s.row("claims locked / struck", f"{case['counts']['locked']} / {case['counts']['struck']} of {case['counts']['claims']}", CF)

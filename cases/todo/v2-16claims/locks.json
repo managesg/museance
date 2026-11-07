@@ -1,0 +1,82 @@
+[
+ {
+  "claim_id": "c01",
+  "status": "LOCKED",
+  "reason": "original shows 'Buy milk' as claimed"
+ },
+ {
+  "claim_id": "c02",
+  "status": "LOCKED",
+  "reason": "original shows 'Walk dog' as claimed"
+ },
+ {
+  "claim_id": "c03",
+  "status": "LOCKED",
+  "reason": "original shows 'Walk dog\\nBuy milk' as claimed"
+ },
+ {
+  "claim_id": "c04",
+  "status": "LOCKED",
+  "reason": "original shows 'Buy milk\\nBuy milk' as claimed"
+ },
+ {
+  "claim_id": "c05",
+  "status": "LOCKED",
+  "reason": "original shows '' as claimed"
+ },
+ {
+  "claim_id": "c06",
+  "status": "LOCKED",
+  "reason": "original shows '' as claimed"
+ },
+ {
+  "claim_id": "c07",
+  "status": "STRUCK",
+  "reason": "claimed '', original shows 'ERROR:observe #todo li: TimeoutError'"
+ },
+ {
+  "claim_id": "c08",
+  "status": "LOCKED",
+  "reason": "original shows 'Supercalifragilisticexpialidocious-and-then-some-more-text' as claimed"
+ },
+ {
+  "claim_id": "c09",
+  "status": "LOCKED",
+  "reason": "original shows 'Walk dog' as claimed"
+ },
+ {
+  "claim_id": "c10",
+  "status": "LOCKED",
+  "reason": "original shows 'Buy milk' as claimed"
+ },
+ {
+  "claim_id": "c11",
+  "status": "LOCKED",
+  "reason": "original shows 'Walk dog' as claimed"
+ },
+ {
+  "claim_id": "c12",
+  "status": "LOCKED",
+  "reason": "original shows 'Buy milk' as claimed"
+ },
+ {
+  "claim_id": "c13",
+  "status": "LOCKED",
+  "reason": "original shows 'Buy milk' as claimed"
+ },
+ {
+  "claim_id": "c14",
+  "status": "LOCKED",
+  "reason": "original shows '' as claimed"
+ },
+ {
+  "claim_id": "c15",
+  "status": "LOCKED",
+  "reason": "original shows 'Walk dog\\nBuy milk' as claimed"
+ },
+ {
+  "claim_id": "c16",
+  "status": "LOCKED",
+  "reason": "original shows '' as claimed"
+ }
+]

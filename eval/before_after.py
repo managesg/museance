@@ -139,7 +139,8 @@ def render(rows):
            "`traps_flagged` = trap behaviors where the revival diverged from the original, i.e. traps the court caught. Fewer after repair "
            "means the revival now matches the original on them, not that the court got worse.", "",
            "Fidelity differs by source: todo v1 shows 35 because it is read from `repairs.jsonl`, which scores attacks only; the todo case file "
-           "at 9a5877c shows 36 because it scores claims plus attacks.", ""]
+           "at 9a5877c shows 36 because it scores P1's 8 claims plus attacks. The stage number is the all-verdict fidelity over P2's 16 claims plus the 105 attacks, "
+           "re-measured on the box and committed under `cases/todo/v1-16claims/` and `cases/todo/v2-16claims/` (`fidelity_all_verdicts` keys, listed under the todo table).", ""]
     for app in dict.fromkeys(r["app"] for r in rows):
         out += [f"## {app}", "", "| Version | Regression | Attack mismatches | Traps flagged | False strikes | Fidelity | Repair that produced the next version |",
                 "|---|---|---|---|---|---|---|"]
@@ -152,8 +153,24 @@ def render(rows):
                                                       f": {r['repair_reason']}")
             out.append(f"| {r['version']} | {_of(r['regression_passed'], r['regression_total'])} | {_v(r['attack_mismatches'])} | "
                        f"{_of(r['traps_flagged'], r['traps_of'])} | {_of(r['false_strikes'], r['false_strikes_of'])} | {_v(r['fidelity'])} | {rep} |")
+        for r in (x for x in rows if x["app"] == app and "fidelity_all_verdicts" in x):
+            out.append(f"All-verdict fidelity, MEASURED, {r['version']}: {r['fidelity_all_verdicts']} over {r['fidelity_all_verdicts_n']} verdicts "
+                       f"(P2's claims + sealed attacks; 100*matched/(matched+mismatched), flaky excluded), source `{r['fidelity_all_verdicts_source']}`.  ")
         out.append("")
     return "\n".join(out)
+
+
+def add_all_verdicts(rows, cases):
+    """MEASURED all-verdict fidelity (CONTRACTS.md: claims + attacks, flaky excluded) from cases/<app>/<version>-16claims/verdicts.json, when committed."""
+    from score import fidelity
+    for r in rows:
+        f = pathlib.Path(cases) / r["app"] / f"{r['version']}-16claims" / "verdicts.json"
+        if f.is_file():
+            v = json.loads(f.read_text(encoding="utf-8"))
+            r["fidelity_all_verdicts"] = fidelity(v)
+            r["fidelity_all_verdicts_n"] = sum(not x.get("flaky") for x in v)
+            r["fidelity_all_verdicts_source"] = f"cases/{r['app']}/{r['version']}-16claims/verdicts.json"
+    return rows
 
 
 def main(repo, cases):
@@ -161,6 +178,7 @@ def main(repo, cases):
     rows = []
     for d in sorted(p for p in cases.iterdir() if (p / "repairs.jsonl").is_file()):
         rows += build_app(*gather(repo, d.name))
+    add_all_verdicts(rows, cases)
     (cases / "before_after.json").write_text(json.dumps({"rows": rows}, indent=1) + "\n", encoding="utf-8", newline="\n")
     (cases / "BEFORE_AFTER.md").write_text(render(rows) + "\n", encoding="utf-8", newline="\n")
     return rows
