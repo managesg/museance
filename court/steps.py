@@ -59,7 +59,15 @@ class StepError(ValueError):
 
 
 def parse(step: str) -> tuple[str, list[str]]:
+    if step == "reload":
+        return "reload", []
     kind, sep, rest = step.partition(":")
+    if kind == "storage" and sep:
+        # storage:<key>=<value>  -> localStorage.setItem(key, value) on the app's origin (value may hold '=')
+        key, eq, value = rest.partition("=")
+        if not eq or not key:
+            raise StepError(f"bad storage step {step!r}, want storage:<key>=<value>")
+        return kind, [key, value]
     if not sep or not rest:
         raise StepError(f"bad step {step!r}")
     if kind == "click":
@@ -76,6 +84,21 @@ def parse(step: str) -> tuple[str, list[str]]:
             raise StepError(f"bad wait step {step!r}, want wait:<ms>")
         return kind, [rest]
     raise StepError(f"unknown step kind {kind!r} in {step!r}")
+
+
+def _settle_ready(page) -> None:
+    """Let apps that bind input on a later frame finish booting (2048 builds its GameManager inside
+    requestAnimationFrame, so a key pressed right after load can be dropped). Two animation frames +
+    a short idle; deterministic for both builds."""
+    try:
+        page.wait_for_load_state("load", timeout=GOTO_TIMEOUT_MS)
+        page.evaluate("() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(() => r())))")
+        page.wait_for_timeout(READY_IDLE_MS)
+    except Exception:  # noqa: BLE001 - never fail a run on the readiness wait itself
+        pass
+
+
+READY_IDLE_MS = 150
 
 
 def run_steps(page, url: str, steps: list[str], observe: str) -> str:
@@ -98,6 +121,7 @@ def run_steps(page, url: str, steps: list[str], observe: str) -> str:
         page.goto(url, wait_until="domcontentloaded", timeout=GOTO_TIMEOUT_MS)
     except Exception as e:  # noqa: BLE001 - connection refused, DNS, timeout: the oracle is unreachable
         return f"ERROR:load {type(e).__name__}"
+    _settle_ready(page)
     for i, (kind, args) in enumerate(parsed):
         try:
             if kind == "click":
@@ -111,6 +135,11 @@ def run_steps(page, url: str, steps: list[str], observe: str) -> str:
                 page.keyboard.press(args[0])
             elif kind == "wait":
                 page.wait_for_timeout(int(args[0]))
+            elif kind == "storage":
+                page.evaluate("([k, v]) => window.localStorage.setItem(k, v)", args)
+            elif kind == "reload":
+                page.reload(wait_until="load", timeout=GOTO_TIMEOUT_MS)
+                _settle_ready(page)
         except Exception as e:  # noqa: BLE001 - any Playwright failure is an observation
             return f"ERROR:step {i} {steps[i]}: {type(e).__name__}"
     try:
