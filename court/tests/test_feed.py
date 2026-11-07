@@ -13,7 +13,9 @@ from court.ledger import Ledger
 def srv(tmp_path):
     runs = tmp_path / "runs"
     (runs / "app1").mkdir(parents=True)
-    s = make_server(runs, 0)
+    # isolated, empty app registry: tests must not depend on the shared fixtures/apps.json,
+    # which other lanes edit (P4 added app1/todo revival URLs at 13:58 -> "no URLs" case broke)
+    s = make_server(runs, 0, apps=tmp_path / "no-apps.json")
     s.RequestHandlerClass.poll_s = 0.05
     threading.Thread(target=s.serve_forever, daemon=True).start()
     yield f"http://127.0.0.1:{s.server_address[1]}", runs
