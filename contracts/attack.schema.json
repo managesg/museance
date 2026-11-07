@@ -1,0 +1,3 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","title":"attack","type":"object",
+ "required":["id","app","screen","steps","observe"],
+ "properties":{"id":{"type":"string"},"app":{"type":"string"},"screen":{"type":"string"},"steps":{"type":"array","items":{"type":"string"}},"observe":{"type":"string"},"commit":{"type":"string"}}}

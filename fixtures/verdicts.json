@@ -1,0 +1,7 @@
+[
+ {"ref":"c01","kind":"claim","original":"15","revival":"15","claim_true":true,"match":true,"flaky":false,"shrunk_steps":[]},
+ {"ref":"c02","kind":"claim","original":"56","revival":"56","claim_true":true,"match":true,"flaky":false,"shrunk_steps":[]},
+ {"ref":"c03","kind":"claim","original":"0.12","revival":"0.13","claim_true":false,"match":false,"flaky":false,"shrunk_steps":["click:#k1","click:#kdiv","click:#k8","click:#keq"]},
+ {"ref":"c04","kind":"claim","original":"0","revival":"0","claim_true":true,"match":true,"flaky":false,"shrunk_steps":[]},
+ {"ref":"c05","kind":"claim","original":"Error","revival":"Infinity","claim_true":true,"match":false,"flaky":false,"shrunk_steps":["click:#k7","click:#kdiv","click:#k0","click:#keq"]}
+]

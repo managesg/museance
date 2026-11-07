@@ -1,0 +1,7 @@
+[
+ {"id":"a01","app":"app1","screen":"divide","steps":["click:#k1","click:#kdiv","click:#k8","click:#keq"],"observe":"#display"},
+ {"id":"a02","app":"app1","screen":"add","steps":["click:#kdot","click:#k1","click:#kadd","click:#kdot","click:#k1","click:#keq"],"observe":"#display"},
+ {"id":"a03","app":"app1","screen":"multiply","steps":["click:#k8","click:#kmul","click:#kmul","click:#k7","click:#keq"],"observe":"#display"},
+ {"id":"a04","app":"app1","screen":"clear","steps":["click:#kc","click:#kc","click:#k0","click:#k0"],"observe":"#display"},
+ {"id":"a05","app":"app1","screen":"divide","steps":["click:#k0","click:#kdiv","click:#k0","click:#keq"],"observe":"#display"}
+]

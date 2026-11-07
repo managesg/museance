@@ -1,0 +1,4 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","title":"verdict","type":"object",
+ "required":["ref","kind","original","revival","match","flaky"],
+ "properties":{"ref":{"type":"string"},"kind":{"enum":["claim","attack"]},"original":{"type":"string"},"revival":{"type":"string"},
+  "claim_true":{"type":["boolean","null"]},"match":{"type":"boolean"},"flaky":{"type":"boolean"},"shrunk_steps":{"type":"array","items":{"type":"string"}}}}

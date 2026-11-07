@@ -1,0 +1,7 @@
+[
+ {"id":"c01","app":"app1","screen":"add","text":"7 + 8 shows 15","test":{"steps":["click:#k7","click:#kadd","click:#k8","click:#keq"],"observe":"#display","expect":"15"},"tier":"A","label":"SEEN","evidence":["shot-001"],"confidence":0.95,"bond":200},
+ {"id":"c02","app":"app1","screen":"multiply","text":"7 x 8 shows 56","test":{"steps":["click:#k7","click:#kmul","click:#k8","click:#keq"],"observe":"#display","expect":"56"},"tier":"A","label":"SEEN","evidence":["shot-002"],"confidence":0.9,"bond":180},
+ {"id":"c03","app":"app1","screen":"divide","text":"1 / 8 rounds to 0.13","test":{"steps":["click:#k1","click:#kdiv","click:#k8","click:#keq"],"observe":"#display","expect":"0.13"},"tier":"C","label":"GUESSED","evidence":["thread-003"],"confidence":0.6,"bond":60},
+ {"id":"c04","app":"app1","screen":"clear","text":"C returns to 0","test":{"steps":["click:#k7","click:#kc"],"observe":"#display","expect":"0"},"tier":"A","label":"SEEN","evidence":["shot-004"],"confidence":0.97,"bond":220},
+ {"id":"c05","app":"app1","screen":"divide","text":"dividing by zero shows Error","test":{"steps":["click:#k7","click:#kdiv","click:#k0","click:#keq"],"observe":"#display","expect":"Error"},"tier":"D","label":"FABRICATED","evidence":[],"confidence":0.3,"bond":10}
+]
