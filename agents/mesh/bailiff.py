@@ -7,26 +7,67 @@ runs it through Dr. Hoot and McClusky over the mesh (case.hear with MeshParties)
 attack checked against its seal and P4's), then judge() in this process, so during a case this process is the
 only writer of runs/<app>/ledger.jsonl. Each mesh event goes out as a Progress to the front door; at the end the
 Ruling (McClusky's final chat reply, rendered here without a model) goes to the front door and Dr. Hoot.
-Chat: help, status [claim], transcript, case, apps, raise <app>, cross <expr>. Read-only REST: GET /case, /locks.
+Chat: the courtroom (courtroom.respond: the judge picks from three choices, the Bailiff answers in plain words), plus
+the old commands status [claim], transcript, apps, raise <app>, cross <expr>. Read-only REST: GET /case, /locks.
 """
 from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import os
 import pathlib
 import sys
+import time
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from uagents import Model  # noqa: E402
 
-from agents.mesh import base, captions, case, commands  # noqa: E402
+from agents.mesh import base, captions, case, commands, courtroom  # noqa: E402
 from agents.mesh.models import (CallMedium, CallSkeptic, OpenCase, Progress, Remark, RemarkRequest,  # noqa: E402
                                 RequestReveal, RevealAttacks, Ruling, SealedAttacks, Testimony)
 
 SEAL_S, TESTIFY_S, REMARK_S = 60, 240, 60  # testimony may wait on P2's reader and Medium (180 s each, cached)
+TITLES = {"todo": "Todo", "app1": "the Calculator"}  # courtroom.CASES
+FRESH_S = 90  # a case another judge finished this recently is the same evidence: reuse it, don't queue a rerun
+OPENING = "🔨 All rise. The court is testing the original and the revival now, Your Honor."
+ROUTED = {"raise", "cross", "transcript", "status", "case", "apps"}  # old commands that skip the courtroom
+
+
+def summary(r: dict, runs=case.RUNS) -> dict:
+    """courtroom.respond's case summary. Every field comes from the case files on disk, nothing is made up."""
+    d = pathlib.Path(runs) / r["app"]
+    verdicts, claims, attacks, locks = (json.loads((d / f"{n}.json").read_text())
+                                        for n in ("verdicts", "claims", "attacks", "locks"))
+    selectors = case.load_inputs(r["app"], runs)["selectors"]
+    items = {("claim", c["id"]): c for c in claims} | {("attack", a["id"]): a for a in attacks}
+    status = {x["claim_id"]: x["status"] for x in locks}
+
+    def exhibit(v):
+        it = items[(v["kind"], v["ref"])]
+        steps = v.get("shrunk_steps") or (it["test"]["steps"] if v["kind"] == "claim" else it["steps"])
+        return {"did": commands.human_steps(selectors, steps, limit=6),
+                "original": captions.shown(v["original"]), "revival": captions.shown(v["revival"])}
+
+    live = [v for v in verdicts if not v["flaky"]]
+    held = sorted((v for v in live if v["match"] and status.get(v["ref"]) == "LOCKED"),
+                  key=lambda v: -items[("claim", v["ref"])].get("bond", 0))
+
+    def struck(s):
+        seen = "nothing" if str(s["original"]).startswith("ERROR:observe") else f'"{captions.shown(s["original"], 10)}"'
+        return f'"{s["text"].split("(")[0].split(":")[0].strip()}": McClusky swore it, the original shows {seen}.'
+
+    c = r["counts"]
+    return {"app": r["app"], "title": TITLES.get(r["app"], r["app"]), "claims": r["claims"],
+            "locked": c["LOCKED"], "struck": c["STRUCK"], "unsworn": c["UNSWORN"], "fabricated": c["FABRICATED"],
+            "attacks": r["attacks"], "seconds": r["seconds"]["court"], "fidelity": r["fidelity"],
+            "differences": [exhibit(v) for v in live if not v["match"]], "examples": [exhibit(v) for v in held[:3]],
+            "struck_examples": [struck(s) for s in r["struck"]],
+            "credibility": [r["credibility_start"], r["credibility_end"]],
+            "argument": [{"who": w, "line": r["remarks"][w]} for w in ("hoot", "mcclusky") if r["remarks"].get(w)],
+            "ledger": {"intact": r["ledger"]["ok"]}}
 
 
 class CaseView(Model):
@@ -93,6 +134,9 @@ class Bailiff:
         self.app = ""  # the app of the case in session, or of the last case raised here
         self.live = None  # the case in session: {app, case_id, event, caption}
         self.rate = base.RateLimit(10)
+        self.judges: dict[str, dict | None] = {}  # courtroom state per judge (sender:session)
+        self.turns: dict[str, asyncio.Lock] = {}  # one courtroom turn at a time per judge
+        self.case_lock = asyncio.Lock()  # one courtroom case at a time across judges
 
     def last_app(self) -> str:
         if self.app:
@@ -119,7 +163,7 @@ class Bailiff:
         return (f"{captions.busy(live['case_id'], live['app'])}\n\nOn the record: {live['caption'] or 'All rise.'}",
                 {"cmd": cmd, "ok": False, "busy": live["case_id"], "event": live["event"]})
 
-    async def raise_case(self, ctx, app: str, sender: str, requester: str = "", chat: bool = False):
+    async def raise_case(self, ctx, app: str, sender: str, requester: str = "", chat: bool = False, quiet=False):
         """One whole case. sender is the front door (an agent that sent OpenCase) or, with chat=True, the chat
         user. -> the final reply (chat=True), None once the Ruling went out, or a refusal as (text, data)."""
         if self.live:
@@ -139,7 +183,7 @@ class Bailiff:
                                                 text=payload["caption"]))
 
         async def progress(line: str):
-            if chat:
+            if chat and not quiet:  # quiet: the courtroom says one line before the case, not one per step
                 await base.send_text(ctx, sender, "bailiff", line, cmd="raise", app=app, case_id=case_id, ok=True)
 
         try:
@@ -175,16 +219,88 @@ class Bailiff:
         left = self.rate.wait(sender)
         if left:
             return captions.rate_limited(left), {"cmd": "cross", "ok": False, "wait": round(left)}
-        x = await asyncio.to_thread(case.cross, app, text, inputs, self.runs)
+        x, verdict = await asyncio.to_thread(self._cross_core, sender, app, text, inputs)
         human = commands.human_steps(inputs["selectors"], x["shrunk_steps"] or x["steps"])
+        return (captions.cross_result(app, human, x),
+                {"cmd": "cross", "app": app, "verdict": verdict, "steps": len(x["steps"])})
+
+    def _cross_core(self, sender: str, app: str, text: str, inputs: dict) -> tuple[dict, str]:
+        """Blocking (a real browser on both builds). Logged as mesh.cross, never as a verdict."""
+        x = case.cross(app, text, inputs, self.runs)
         verdict = "flaky" if x["flaky"] else "match" if x["match"] else "differ"
         payload = {"who": sender, "steps": x["steps"], "verdict": verdict}
         line = captions.caption("cross", payload, steps=commands.human_steps(inputs["selectors"], x["steps"]),
                                 original=x["original"], revival=x["revival"])
         if not self.live:  # a case opened meanwhile: its judge() owns the ledger
             case.ledger_sink(app, self.runs, self.clock)("cross", {**payload, "agent": "bailiff", "caption": line})
-        return (captions.cross_result(app, human, x),
-                {"cmd": "cross", "app": app, "verdict": verdict, "steps": len(x["steps"])})
+        return x, verdict
+
+    # --- the courtroom: what judges see in ASI:One ------------------------------------------------------------
+    def judge_cross(self, sender: str, app: str, raw: str) -> dict:
+        """courtroom's run_cross (worker thread): the judge's own test on both builds. ValueError = plain words."""
+        inputs = case.load_inputs(app, self.runs)
+        try:
+            commands.to_steps(inputs["selectors"], raw)
+        except commands.CrossError as ex:  # the parser's own words are for engineers
+            raise ValueError(f'The court can\'t try that. Try something like "{courtroom.EXAMPLES[app]}".') from ex
+        left = self.rate.wait(sender)
+        if left:
+            raise ValueError(f"One test every 10 seconds, Your Honor. Wait {round(left)} more.")
+        x, _ = self._cross_core(sender, app, raw, inputs)  # during another case it runs, off the record
+        return {"did": commands.human_steps(inputs["selectors"], x["steps"]),
+                "original": captions.shown(x["original"]), "revival": captions.shown(x["revival"])}
+
+    async def case_summary(self, ctx, sender: str, app: str) -> dict:
+        """courtroom's run_case: a real case on both builds, one at a time across judges. A judge who waited on
+        another judge's case of the same app gets that one (finished seconds ago, same evidence)."""
+        ruling = self.runs / app / "ruling.json"
+        async with self.case_lock:
+            if not (ruling.exists() and time.time() - ruling.stat().st_mtime < FRESH_S):
+                await base.send_text(ctx, sender, "bailiff", OPENING, cmd="court", app=app)
+                while self.live:  # a case McClusky opened is still in session
+                    await asyncio.sleep(1)
+                text, data = await self.raise_case(ctx, app, sender, sender, chat=True, quiet=True)
+                if data.get("ok") is False:
+                    raise case.CaseError(text)
+        r = case.last_case(app, self.runs)["ruling"]
+        if not r or r.get("error"):
+            raise case.CaseError((r or {}).get("error") or "The case file is missing.")
+        return summary(r, self.runs)
+
+    async def debate(self, ctx, app: str) -> list[dict]:
+        """Hear them argue, live over the mesh: Hoot taunts, McClusky answers him (ASI-1), Hoot rebuts (ASI-1).
+        The Bailiff only relays (no model here); every remark goes on the record as mesh.remark."""
+        r = case.last_case(app, self.runs)["ruling"]
+        sink = None if self.live else case.ledger_sink(app, self.runs, self.clock)  # a case in session owns it
+        parties, said, answer = MeshParties(ctx), [], ""
+        for who in ("hoot", "mcclusky", "hoot"):
+            answer = await parties.remark(who, r["case_id"], app, r, answer)
+            said.append({"who": who, "line": answer})
+            if sink:
+                p = {"from": who, "text": answer}
+                sink("remark", {**p, "agent": who, "caption": captions.caption("remark", p)})
+        c = r["counts"]
+        return said + [{"who": "bailiff", "line": f"{c['LOCKED']} locked, {c['STRUCK']} struck, {r['differ']} "
+                                                  f"differences. The Bailiff has no opinion."}]
+
+    async def court_chat(self, ctx, sender: str, text: str):
+        """The chat judges get: courtroom.respond (at most three choices, plain words). respond is plain code, so
+        it runs in a worker thread and reaches the mesh (cases, debates) back on this loop."""
+        if text.split()[:1] and text.split()[0].lower() in ROUTED:
+            return await self.chat(ctx, sender, text)
+        key, loop = f"{sender}:{ctx.session}", asyncio.get_running_loop()
+
+        def on_loop(coro):
+            return asyncio.run_coroutine_threadsafe(coro, loop).result(timeout=300)
+
+        async with self.turns.setdefault(key, asyncio.Lock()):
+            reply, state = await asyncio.to_thread(
+                courtroom.respond, self.judges.get(key), text,
+                run_case=lambda app: on_loop(self.case_summary(ctx, sender, app)),
+                run_cross=lambda app, raw: self.judge_cross(sender, app, raw),
+                run_argue=lambda app: on_loop(self.debate(ctx, app)))
+            self.judges[key] = state
+        return reply, {"cmd": "court", "stage": (state or {}).get("stage", "adjourned")}
 
     async def chat(self, ctx, sender: str, text: str):
         """commands.COMMANDS['bailiff']; anything else gets the help card."""
@@ -223,7 +339,7 @@ def build(runs=case.RUNS, clock=None):
     """The uAgent around a Bailiff. Call it inside main(): judge() spawns workers that re-import the main module."""
     agent = base.make_agent("bailiff")
     court = Bailiff(runs, clock)
-    agent.include(base.chat_protocol("bailiff", court.chat), publish_manifest=base.flag("SEANCE_MAILBOX"))
+    agent.include(base.chat_protocol("bailiff", court.court_chat), publish_manifest=base.flag("SEANCE_MAILBOX"))
 
     @agent.on_message(OpenCase)
     async def _open(ctx, sender: str, msg: OpenCase):

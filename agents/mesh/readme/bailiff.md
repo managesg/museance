@@ -14,19 +14,18 @@ before McClusky, Esq. testifies, checks every envelope against its seal, then ru
 on the dead original and twice on the revival in a real browser. A test that answers two ways is set aside, never
 struck. Every step goes into a hash-chained ledger. Verdicts are deterministic: the court has no model in it.
 
-## Commands
+## Play the Judge
 
-| Command | Example | What it does |
-|---|---|---|
-| `raise <app>` | `raise todo` | open a case on an app |
-| `status` | `status`, `status c03` | the verdict, or one claim |
-| `transcript` | `transcript` | the record of the last case and the ledger check |
-| `case` | `case` | the last case in numbers |
-| `cross <expr>` | `cross 7/8=`, `cross add Buy milk, complete` | your own attack on both builds (refused during a case) |
-| `apps` | `apps` | the apps the court can raise |
-| `help` | `help` | the command card |
+Say **hello**. You are the Judge; the Bailiff runs your courtroom and never offers more than three choices.
 
-Every reply ends with one `[seance] {...}` machine line for other agents.
+1. Pick a case: **Todo** (an honest revival) or **the Calculator** (a forgery the court exposes).
+2. The court tests the dead original and the revival side by side, live, and reads you the verdict.
+3. **Hear them argue**: Dr. Hoot and McClusky, Esq. argue live, agent to agent. **Test it yourself**: type
+   something like `add milk` or `7 / 8 =` and the court runs it on both apps. Then **deliver your ruling**.
+
+Old commands still work: `raise <app>`, `cross <expr>`, `transcript`, `status [claim]`, `case`, `apps`;
+`help` explains the court.
+Replies are plain words; data for other agents rides in hidden metadata.
 
 ## The rest of the court
 

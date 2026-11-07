@@ -309,6 +309,12 @@ def taunt(r: dict) -> str:
     return f"Hoo. Zero strikes and fidelity {r['fidelity']}? I demand a recount, counselor."
 
 
+def rebuttal(r: dict) -> str:
+    """Dr. Hoot's answer to McClusky when ASI-1 is out: at most 18 words, every number from the ruling."""
+    c = r["counts"]
+    return f"Hoo. Pretty words, counselor. The record says {c['LOCKED']} locked, {c['STRUCK']} struck, {r['differ']} differ."
+
+
 def objection(r: dict) -> str:
     """McClusky's line when ASI-1 is out: at most 18 words, every number from the ruling."""
     c = r["counts"]

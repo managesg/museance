@@ -26,7 +26,7 @@ mostly to Dr. Hoot. His voice is ASI-1; his testimony is hashed before the court
 2. One line from McClusky, with the real numbers.
 3. What the court actually did: real tests in plain words, original vs revival, ✅ or ❌, and the totals.
 4. Thinking: what the data flags (seal checks, flaky tests set aside, conflicts in the evidence).
-5. The record of the case, the ledger check, and one `[seance] {...}` machine line for other agents.
+5. The record of the case and the ledger check. Data for other agents rides in hidden metadata.
 
 ## Commands
 

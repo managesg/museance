@@ -64,13 +64,24 @@ def fit(text: str, n: int = 18) -> str:
     return head[: end + 1] if end > 0 and len(head[: end + 1].split()) >= 5 else ""
 
 
+def _facts(r: dict) -> str:
+    c = r["counts"]
+    return (f"Facts, the only numbers you may use: the court tested the dead app {r['app']} against its revival. "
+            f"Claims about the original: {c['LOCKED']} locked, {c['STRUCK']} struck, {c['UNSWORN']} unsworn, of "
+            f"{r['claims']}. Revival: {r['differ']} of {r['judged']} behaviors differ, fidelity {r['fidelity']}. ")
+
+
+def hoot_line(r: dict, answer: str) -> str:
+    """Dr. Hoot's rebuttal to McClusky in a live debate: ASI-1 in character, told only the ruling's numbers."""
+    from agents.mesh import captions
+    prompt = (_facts(r) + f"McClusky, Esq. just said: \"{answer}\". Rebut him in one sentence of at most 18 words "
+              f"that cites one number.")
+    return persona("hoot", prompt, captions.rebuttal(r))
+
+
 def mcclusky_line(r: dict, answer: str = "") -> str:
     """McClusky's voice line after the ruling: ASI-1 in character, told only the ruling's numbers."""
     from agents.mesh import captions
-    c = r["counts"]
-    prompt = (f"Facts, the only numbers you may use: the court tested the dead app {r['app']} against its revival. "
-              f"Claims about the original: {c['LOCKED']} locked, {c['STRUCK']} struck, {c['UNSWORN']} unsworn, of "
-              f"{r['claims']}. Revival: {r['differ']} of {r['judged']} behaviors differ, fidelity {r['fidelity']}. "
-              f"Your credibility: {r['credibility_start']} to {r['credibility_end']}. Dr. Hoot just said: "
+    prompt = (_facts(r) + f"Your credibility: {r['credibility_start']} to {r['credibility_end']}. Dr. Hoot just said: "
               f"\"{answer}\". Answer him in one sentence of at most 18 words that cites the main numbers.")
     return persona("mcclusky", prompt, captions.objection(r))

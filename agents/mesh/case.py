@@ -366,10 +366,10 @@ class LocalParties:
         return self._attacks
 
     async def remark(self, speaker: str, case_id: str, app: str, r: dict, answer: str = "") -> str:
-        if speaker == "hoot":
+        if speaker == "hoot" and not answer:
             return captions.taunt(r)
-        from agents.mesh import voice  # noqa: PLC0415 - McClusky's ASI-1 voice, never the Bailiff's
-        return await asyncio.to_thread(voice.mcclusky_line, r, answer)
+        from agents.mesh import voice  # noqa: PLC0415 - the parties' ASI-1 voices, never the Bailiff's
+        return await asyncio.to_thread(voice.hoot_line if speaker == "hoot" else voice.mcclusky_line, r, answer)
 
 
 def numbers(r: dict) -> dict:
