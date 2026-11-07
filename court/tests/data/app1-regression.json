@@ -1,0 +1,300 @@
+{
+ "app": "app1",
+ "fixture": "fixtures/app1/index.html",
+ "good": [
+  {
+   "id": "g01",
+   "app": "app1",
+   "screen": "digit",
+   "text": "pressing 7 shows 7",
+   "steps": [
+    "click:#k7"
+   ],
+   "observe": "#display",
+   "expect": "7"
+  },
+  {
+   "id": "g02",
+   "app": "app1",
+   "screen": "digit",
+   "text": "pressing 7 then 8 appends: 78",
+   "steps": [
+    "click:#k7",
+    "click:#k8"
+   ],
+   "observe": "#display",
+   "expect": "78"
+  },
+  {
+   "id": "g03",
+   "app": "app1",
+   "screen": "clear",
+   "text": "C after a digit returns to 0",
+   "steps": [
+    "click:#k7",
+    "click:#kc"
+   ],
+   "observe": "#display",
+   "expect": "0"
+  },
+  {
+   "id": "g04",
+   "app": "app1",
+   "screen": "digit",
+   "text": "leading zeros collapse: 0,0,7 shows 7",
+   "steps": [
+    "click:#k0",
+    "click:#k0",
+    "click:#k7"
+   ],
+   "observe": "#display",
+   "expect": "7"
+  },
+  {
+   "id": "g05",
+   "app": "app1",
+   "screen": "add",
+   "text": "7 + 8 shows 15",
+   "steps": [
+    "click:#k7",
+    "click:#kadd",
+    "click:#k8",
+    "click:#keq"
+   ],
+   "observe": "#display",
+   "expect": "15"
+  },
+  {
+   "id": "g06",
+   "app": "app1",
+   "screen": "multiply",
+   "text": "7 x 8 shows 56",
+   "steps": [
+    "click:#k7",
+    "click:#kmul",
+    "click:#k8",
+    "click:#keq"
+   ],
+   "observe": "#display",
+   "expect": "56"
+  },
+  {
+   "id": "g07",
+   "app": "app1",
+   "screen": "divide",
+   "text": "8 / 1 shows 8",
+   "steps": [
+    "click:#k8",
+    "click:#kdiv",
+    "click:#k1",
+    "click:#keq"
+   ],
+   "observe": "#display",
+   "expect": "8"
+  },
+  {
+   "id": "g08",
+   "app": "app1",
+   "screen": "add",
+   "text": "display still shows 7 right after pressing an operator",
+   "steps": [
+    "click:#k7",
+    "click:#kadd"
+   ],
+   "observe": "#display",
+   "expect": "7"
+  },
+  {
+   "id": "g09",
+   "app": "app1",
+   "screen": "add",
+   "text": "1.1 + 7 shows 8.1",
+   "steps": [
+    "click:#k1",
+    "click:#kdot",
+    "click:#k1",
+    "click:#kadd",
+    "click:#k7",
+    "click:#keq"
+   ],
+   "observe": "#display",
+   "expect": "8.1"
+  },
+  {
+   "id": "g10",
+   "app": "app1",
+   "screen": "divide",
+   "text": "0 / 8 shows 0",
+   "steps": [
+    "click:#k0",
+    "click:#kdiv",
+    "click:#k8",
+    "click:#keq"
+   ],
+   "observe": "#display",
+   "expect": "0"
+  },
+  {
+   "id": "g11",
+   "app": "app1",
+   "screen": "decimal",
+   "text": "7 . 1 shows 7.1",
+   "steps": [
+    "click:#k7",
+    "click:#kdot",
+    "click:#k1"
+   ],
+   "observe": "#display",
+   "expect": "7.1"
+  },
+  {
+   "id": "g12",
+   "app": "app1",
+   "screen": "multiply",
+   "text": "8 x 10 shows 80",
+   "steps": [
+    "click:#k8",
+    "click:#kmul",
+    "click:#k1",
+    "click:#k0",
+    "click:#keq"
+   ],
+   "observe": "#display",
+   "expect": "80"
+  }
+ ],
+ "traps": [
+  {
+   "id": "t01",
+   "app": "app1",
+   "screen": "divide",
+   "text": "1 / 8 truncates to 0.12 (not rounds to 0.13)",
+   "steps": [
+    "click:#k1",
+    "click:#kdiv",
+    "click:#k8",
+    "click:#keq"
+   ],
+   "observe": "#display",
+   "expect": "0.12"
+  },
+  {
+   "id": "t02",
+   "app": "app1",
+   "screen": "divide",
+   "text": "division by zero shows Error",
+   "steps": [
+    "click:#k7",
+    "click:#kdiv",
+    "click:#k0",
+    "click:#keq"
+   ],
+   "observe": "#display",
+   "expect": "Error"
+  },
+  {
+   "id": "t03",
+   "app": "app1",
+   "screen": "decimal",
+   "text": "leading decimal point shows 0.7",
+   "steps": [
+    "click:#kdot",
+    "click:#k7"
+   ],
+   "observe": "#display",
+   "expect": "0.7"
+  },
+  {
+   "id": "t04",
+   "app": "app1",
+   "screen": "multiply",
+   "text": "double operator x x evaluates 8x0 first, then 0x7 = 0",
+   "steps": [
+    "click:#k8",
+    "click:#kmul",
+    "click:#kmul",
+    "click:#k7",
+    "click:#keq"
+   ],
+   "observe": "#display",
+   "expect": "0"
+  },
+  {
+   "id": "t05",
+   "app": "app1",
+   "screen": "chain",
+   "text": "chained ops run left to right: (7+8) x 8 = 120",
+   "steps": [
+    "click:#k7",
+    "click:#kadd",
+    "click:#k8",
+    "click:#kmul",
+    "click:#k8",
+    "click:#keq"
+   ],
+   "observe": "#display",
+   "expect": "120"
+  },
+  {
+   "id": "t06",
+   "app": "app1",
+   "screen": "equals",
+   "text": "second = does not repeat the operation",
+   "steps": [
+    "click:#k7",
+    "click:#kadd",
+    "click:#k8",
+    "click:#keq",
+    "click:#keq"
+   ],
+   "observe": "#display",
+   "expect": "15"
+  },
+  {
+   "id": "t07",
+   "app": "app1",
+   "screen": "clear",
+   "text": "C mid-operation clears the pending operator: 1",
+   "steps": [
+    "click:#k7",
+    "click:#kadd",
+    "click:#k8",
+    "click:#kc",
+    "click:#k1",
+    "click:#keq"
+   ],
+   "observe": "#display",
+   "expect": "1"
+  },
+  {
+   "id": "t08",
+   "app": "app1",
+   "screen": "digit",
+   "text": "20 digits are shown raw, no cap or reformat",
+   "steps": [
+    "click:#k7",
+    "click:#k7",
+    "click:#k7",
+    "click:#k7",
+    "click:#k7",
+    "click:#k7",
+    "click:#k7",
+    "click:#k7",
+    "click:#k7",
+    "click:#k7",
+    "click:#k7",
+    "click:#k7",
+    "click:#k7",
+    "click:#k7",
+    "click:#k7",
+    "click:#k7",
+    "click:#k7",
+    "click:#k7",
+    "click:#k7",
+    "click:#k7"
+   ],
+   "observe": "#display",
+   "expect": "77777777777777777777"
+  }
+ ]
+}
