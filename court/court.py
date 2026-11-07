@@ -24,7 +24,7 @@ import sys
 from court import bailiff, serve
 from court.ledger import Ledger, commit_hash
 from court.shrink import shrink
-from court.steps import run_steps
+from court.steps import launch_browser, run_steps
 
 RUNS_PER_BUILD = 2
 
@@ -35,7 +35,7 @@ class Bench:
     def __enter__(self):
         from playwright.sync_api import sync_playwright
         self._pw = sync_playwright().start()
-        self._browser = self._pw.chromium.launch()
+        self._browser = launch_browser(self._pw)
         return self
 
     def run(self, url: str, steps: list[str], observe: str) -> str:
