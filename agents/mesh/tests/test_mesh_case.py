@@ -1,57 +1,72 @@
 import asyncio
 import json
-import pathlib
 
 import pytest
 
-from agents.mesh import captions, case, commands
-from agents.mesh.models import Ruling
+from agents.mesh import base, captions, case
 from court.ledger import commit_hash, read, verify
 
-ROOT = pathlib.Path(__file__).resolve().parents[3]
 CLOCK = lambda: "2026-11-07T20:30:00+00:00"  # noqa: E731
-MESH_ORDER = ["open", "summon", "sealed", "summon", "testimony", "summon", "reveal", "court", "ruling",
-              "remark", "remark", "closed"]
+ORDER = ["open", "sealed", "sworn", "revealed", "ruling", "remark", "remark"]
+KEYS = {"open": {"app", "case_id", "requested_by"}, "sealed": {"count", "seal"}, "sworn": {"count", "total_bond"},
+        "revealed": {"count", "matched"}, "remark": {"from", "text"},
+        "ruling": {"locked", "struck", "fabricated", "unsworn", "fidelity", "credibility"}}
+AGENT = {"open": "bailiff", "sealed": "hoot", "sworn": "mcclusky", "revealed": "hoot", "ruling": "bailiff"}
+APP1 = {"LOCKED": 3, "STRUCK": 1, "FABRICATED": 1, "UNSWORN": 0}
 
 
-def mesh_events(runs):
+def mesh(runs):
     return [e for e in read(runs / "app1" / "ledger.jsonl") if e["type"].startswith("mesh.")]
 
 
 def test_run_case_app1_with_fakes(runs):
-    r = case.run_case("app1", runs=runs, clock=CLOCK, case_id="app1-t1")
-    assert r["counts"] == {"LOCKED": 3, "STRUCK": 1, "FABRICATED": 1, "UNSWORN": 0}
-    assert (r["claims"], r["attacks"], r["refused"]) == (5, 75, 0)
-    assert (r["credibility_end"], r["brier"]) == (963, 0.173)
-    assert [s["id"] for s in r["struck"]] == ["c03"] and r["struck"][0]["original"] == "0.12"
-    assert r["funniest"].startswith("c03:") and "90 credibility" in r["funniest"]
-    traps = {(tuple(e["steps"]), e["observe"])
-             for e in json.loads((ROOT / "eval/regression/app1-fixture.json").read_text())["traps"]}
-    attacks = json.loads((runs / "app1/attacks.json").read_text())
-    assert r["catches"] == sum((tuple(a["steps"]), a["observe"]) in traps for a in attacks) > 0
-    assert set(r["remarks"]) == {"hoot", "mcclusky"} and "90 points" in r["remarks"]["hoot"]
-    assert set(r) - {"remarks"} <= set(Ruling.__fields__)  # the ruling dict is the Ruling model
-    Ruling(**{k: v for k, v in r.items() if k != "remarks"})
-
-    path = runs / "app1/ledger.jsonl"
-    assert verify(path)[0]
+    lines = []
+    r = case.run_case("app1", runs=runs, clock=CLOCK, case_id="app1-t1", progress=lines.append)
+    assert (r["counts"], r["claims"], r["attacks"], r["error"]) == (APP1, 5, 20, "")
+    assert r["credibility_end"] == 963 and r["struck"][0]["id"] == "c03"
+    assert lines == list(case.PROGRESS.values())  # R6: one per stage, 4 in all
+    assert r["seal"]["p4_count"] == 75 and r["seal"]["p4_problems"] == [] and r["seal"]["matched"] == 20
+    events = mesh(runs)
+    assert [e["type"][5:] for e in events] == ORDER  # R2: exactly these types, in order
+    for e in events:
+        t, p = e["type"][5:], e["payload"]
+        assert set(p) == KEYS[t] | {"agent", "caption"}, t  # no extra payload keys
+        assert p["agent"] == AGENT.get(t, p.get("from")) and len(p["caption"].split()) <= 20 and "\n" not in p["caption"]
+    assert events[-2]["payload"]["from"] == "hoot" and events[-1]["payload"]["from"] == "mcclusky"
+    path = runs / "app1" / "ledger.jsonl"
+    assert verify(path) == (True, f"{len(read(path))} events, chain intact") and r["ledger"]["ok"]
     types = [e["type"] for e in read(path)]
-    assert [t[5:] for t in types if t.startswith("mesh.")] == MESH_ORDER
-    court_part = types[types.index("mesh.court") + 1: types.index("mesh.ruling")]
-    assert court_part == ["commit"] * 80 + ["verdict"] * 80 + ["lock"] * 5  # judge's own events, in place
-    for e in mesh_events(runs):
-        p = {k: v for k, v in e["payload"].items() if k != "caption"}
-        assert e["payload"]["caption"] == captions.caption(e["type"][5:], p) and "\n" not in e["payload"]["caption"]
-    sealed = next(e["payload"] for e in mesh_events(runs) if e["type"] == "mesh.sealed")
-    assert sealed["p4_match"] and sealed["attacks"] == 75  # Hoot's live seal == P4's seal in git
+    assert types[4:4 + 25] == ["commit"] * 25 and types[-8:-3] == ["lock"] * 5  # judge()'s own events, in the chain
+    on_file = json.loads((runs / "app1" / "ruling.json").read_text())
+    assert on_file["case_id"] == "app1-t1" and on_file["record"] == [e["payload"]["caption"] for e in events]
+
+
+def test_final_reply_shape(runs):
+    r = case.run_case("app1", runs=runs, clock=CLOCK, case_id="app1-t2")
+    text = base.with_machine_line(captions.final_reply(r), "mcclusky", cmd="raise", **case.numbers(r))
+    parts = text.split("\n\n")
+    assert parts[0] == "⚖️ The case: is the revived app1 the same app as the dead original?"
+    assert parts[1].startswith("🐧 ") and len(parts[1].split()) <= 20
+    heads = [p.split("\n")[0] for p in parts]
+    i, j, k = heads.index("🔍 What the court actually did"), heads.index("💭 Thinking"), heads.index("📜 Record")
+    assert i < j < k
+    tests = parts[i + 1].splitlines()
+    assert 3 <= len(tests) <= 4 and tests[-1].startswith("- Totals: 5 claims, 20 attacks, 2 runs per build")
+    assert tests[0].startswith("- ❌ c03 struck: 1 divide 8 equals")  # strikes first, in the app's own words
+    assert 2 <= len(parts[j + 1].splitlines()) <= 3 and "Seal checked" in parts[j + 1]
+    record = parts[k + 1].splitlines()
+    assert len(record) == 7 and record[1].startswith("2. 🦉→🔨 Sealed 20 attacks")
+    assert parts[-2] == f"Ledger: {r['ledger']['entries']} entries, chain intact."
+    m = json.loads(parts[-1].removeprefix("[seance] "))
+    assert (m["agent"], m["locked"], m["struck"], m["fidelity"], m["chain"]) == ("mcclusky", 3, 1, r["fidelity"], True)
+    assert all(len(ln.split()) <= 20 for ln in text.splitlines() if not ln.startswith("[seance]"))
 
 
 def test_a_new_case_archives_the_old_ledger(runs):
     case.run_case("app1", runs=runs, case_id="app1-a")
     case.run_case("app1", runs=runs, case_id="app1-b")
     assert len(list((runs / "app1").glob("ledger-*.jsonl"))) == 1
-    first = read(runs / "app1/ledger.jsonl")[0]
-    assert first["seq"] == 1 and first["payload"]["case_id"] == "app1-b"
+    assert read(runs / "app1/ledger.jsonl")[0]["payload"]["case_id"] == "app1-b"
 
 
 class Cheat(case.LocalParties):
@@ -63,11 +78,10 @@ class Cheat(case.LocalParties):
 
 def test_an_attack_edited_after_the_seal_is_refused(runs):
     inp = case.load_inputs("app1", runs)
-    r = asyncio.run(case.hear("app1", Cheat(inp), runs=runs, inputs=inp, case_id="app1-c"))
-    assert (r["refused"], r["attacks"]) == (1, 74)
-    reveal = next(e["payload"] for e in mesh_events(runs) if e["type"] == "mesh.reveal")
-    assert reveal["refused"] == [{"id": "a001", "why": "content changed after the seal"}]
-    assert reveal["p4_problems"]  # P4's seal in git catches it too
+    r = asyncio.run(case.hear("app1", Cheat(inp, runs), runs=runs, inputs=inp, case_id="app1-c"))
+    assert (r["attacks"], r["seal"]["refused"]) == (19, [{"id": "a001", "why": "content changed after the seal"}])
+    revealed = next(e["payload"] for e in mesh(runs) if e["type"] == "mesh.revealed")
+    assert (revealed["count"], revealed["matched"]) == (20, 19) and "1 thrown out" in revealed["caption"]
 
 
 class Mute(case.LocalParties):
@@ -75,40 +89,15 @@ class Mute(case.LocalParties):
         raise case.CaseError("McClusky, Esq. did not answer in 240 s")
 
 
-def test_a_silent_party_adjourns_the_case(runs):
+def test_a_failed_case_still_ends_with_a_ruling_event(runs):
     inp = case.load_inputs("app1", runs)
-    r = asyncio.run(case.hear("app1", Mute(inp), runs=runs, inputs=inp, case_id="app1-m"))
-    assert r == {"case_id": "app1-m", "app": "app1", "error": "McClusky, Esq. did not answer in 240 s"}
-    types = [e["type"] for e in read(runs / "app1/ledger.jsonl")]
-    assert types[-1] == "mesh.adjourned" and "mesh.court" not in types and "commit" not in types
-
-
-def test_async_on_event_sees_every_hop_in_order(runs):
-    seen = []
-
-    async def on_event(type_, payload, caption):
-        await asyncio.sleep(0)
-        seen.append(type_)
-
-    asyncio.run(case.hear("app1", on_event=on_event, runs=runs, case_id="app1-e"))
-    assert seen == MESH_ORDER
-
-
-def test_last_case_feeds_the_chat_templates(runs):
-    assert captions.status(case.last_case("app1", runs)) == captions.no_case("app1")
-    case.run_case("app1", runs=runs, case_id="app1-l")
-    last = case.last_case("app1", runs)
-    assert last["ruling"]["case_id"] == "app1-l" and "chain intact" in last["chain"]
-    assert captions.status(last).startswith("RULING, case app1-l")
-    one = captions.status(last, "c03")
-    assert one.startswith("c03 STRUCK") and "'0.12'" in one and "bond of 90" in one
-    assert "No claim c09" in captions.status(last, "c09")
-    assert "5 claims" in captions.claims_list("app1", last["claims"], last["locks"])
-    assert "FABRICATED" in captions.why_line(last["claims"][4], last["locks"][4])
-    assert f"{last['ruling']['catches']} caught the revival" in captions.reveal_list("app1", last["attacks"], last["verdicts"])
-    head = last["events"][-1]["hash"]
-    line = captions.ledger_line("app1", len(last["events"]), last["chain"], head)
-    assert head[:12] in line and line.count(" events") == 1 and "chain intact" in line
+    r = asyncio.run(case.hear("app1", Mute(inp, runs), runs=runs, inputs=inp, case_id="app1-m"))
+    assert r["error"] == "McClusky, Esq. did not answer in 240 s"
+    last = mesh(runs)[-1]
+    assert last["type"] == "mesh.ruling" and last["payload"]["caption"].startswith("🔨 Error:")
+    assert all(last["payload"][k] is None for k in case.RULING_KEYS)
+    text = captions.final_reply(r)
+    assert "adjourned" in text and text.endswith("chain intact.")
 
 
 def test_verify_reveal_keeps_only_sealed_content():
@@ -124,25 +113,28 @@ def test_verify_reveal_keeps_only_sealed_content():
                    {"id": "a1", "why": "revealed twice"}, {"id": "a4", "why": "sealed but never revealed"}]
 
 
-def test_load_inputs_names_what_is_missing(tmp_path):
-    with pytest.raises(case.MissingInput) as ex:
-        case.load_inputs("app1", tmp_path)
-    msg = str(ex.value)
-    assert "dig/pile.py app1" in msg and "dig/reader.py app1" in msg and "revival" in msg
-    assert "original" not in msg  # fixtures/app1 is the original
+def test_attacks_are_p4s_sealed_ids_capped_and_spread(runs):
+    inp = case.load_inputs("app1", runs)
+    pool, picked = case.sealed_pool("app1", inp), case.make_attacks("app1", inp)
+    assert len(pool) == 75 and len(picked) == case.MAX_ATTACKS == 20 and picked[0]["id"] == "a001"
+    assert [a["id"] for a in picked] == sorted(a["id"] for a in picked) and {a["screen"] for a in picked} > {"add"}
+    inp["sealed"] = {**inp["sealed"], "attacks": inp["sealed"]["attacks"][:5]}
+    assert [a["id"] for a in case.make_attacks("app1", inp)] == ["a001", "a002", "a003", "a004", "a005"]
+    assert case.spread(list(range(105)), 20)[:3] == [0, 5, 10]
+
+
+def test_inputs_come_from_runs_then_dig_out(runs):
+    inp = case.load_inputs("todo", runs)  # nothing in the temp runs/: P2's dig/out/todo and the repo builds
+    assert len(inp["claims"]) == 16 and inp["original"]["dir"].endswith("apps/todo/original")
+    assert inp["revival"]["dir"].endswith("revive/out/todo") and len(inp["sealed"]["attacks"]) == 105
     with pytest.raises(case.MissingInput):
-        case.load_inputs("../etc", tmp_path)
-
-
-def test_apps_lists_ready_and_not_ready(runs):
-    docket = case.apps(runs)
-    assert docket["app1"] == "" and "sheet" in docket["todo"]
+        case.load_inputs("../etc", runs)
+    with pytest.raises(case.MissingInput, match="selectors"):
+        case.load_inputs("pong", runs)
+    assert case.apps(runs)["app1"] == "" and case.apps(runs)["todo"] == ""
 
 
 def test_cross_runs_known_keys_only(runs):
     x = case.cross("app1", "1/8=", runs=runs)
     assert x["steps"] == ["click:#k1", "click:#kdiv", "click:#k8", "click:#keq"] and x["observe"] == "#display"
     assert (x["original"], x["revival"], x["match"], x["flaky"]) == ("0.12", "0.12 (drift)", False, False)
-    assert not list((runs / "app1").glob("ledger*"))  # ad hoc, like the feed's bench
-    with pytest.raises(commands.CrossError):
-        case.cross("app1", "2+2=", runs=runs)

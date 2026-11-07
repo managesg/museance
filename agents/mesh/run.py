@@ -1,17 +1,20 @@
 """One command for the Seance mesh: start the three agents, raise a case, list their addresses.
 
-    agents/mesh/.venv/bin/python -m agents.mesh.run up [--mailbox]       # McClusky, Dr. Hoot, the Bailiff: 3 processes
+    agents/mesh/.venv/bin/python -m agents.mesh.run up [--mailbox]       # the Bailiff, McClusky, Dr. Hoot: 3 processes
     agents/mesh/.venv/bin/python -m agents.mesh.run raise todo            # the Clerk: a case through the Bailiff
     agents/mesh/.venv/bin/python -m agents.mesh.run raise todo --no-mesh  # the same case in this process, no uAgents
     agents/mesh/.venv/bin/python -m agents.mesh.run addresses             # names and addresses, never seeds
 
-`raise` prints one "[event] caption" line per case event and ends with exactly one [seance] machine line holding
-the ruling's numbers; it exits 0 only when the case closed. Run from the repo root: the agents read runs/ there.
+`raise` prints the status lines on stderr and, on stdout, exactly the final chat reply McClusky sends (its last
+line is the [seance] machine line); it exits 0 only when the court ruled. Run it from the repo root.
+Only `up` (and the agents it starts) holds the real seeds; tests always get throwaway ones (base.seed).
 """
 from __future__ import annotations
 
 import argparse
 import asyncio
+import contextlib
+import logging
 import os
 import pathlib
 import signal
@@ -24,20 +27,26 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from agents.mesh import base, captions, case  # noqa: E402 - none of these import uAgents: --no-mesh runs without it
 
-AGENTS = ("mcclusky", "hoot", "bailiff")
+AGENTS = ("bailiff", "mcclusky", "hoot")
 CASE_S = 900  # the Bailiff alone may wait 8 minutes on the parties (seal, testimony, reveal, remarks), then the court
-KEEP = ("case_id", "app", "error", "counts", "claims", "attacks", "refused", "catches", "fidelity", "brier",
-        "credibility_start", "credibility_end", "funniest", "chain")
 
 
-def show(event: str, text: str):
-    print(f"[{event}] {text}", flush=True)
+def status(line: str):
+    print(line, file=sys.stderr, flush=True)
 
 
-def finish(r: dict, event: str) -> int:
-    """The last line, for scripts: one machine line with the ruling's numbers. 0 only when the case closed."""
-    print(base.machine_line("clerk", event=event, **{k: r[k] for k in KEEP if k in r}), flush=True)
-    return 0 if event == "closed" and not r.get("error") else 1
+def reply(text: str, data: dict) -> int:
+    """stdout: exactly the final chat reply McClusky sends. 0 only when the court ruled."""
+    print(base.with_machine_line(text, "mcclusky", **data), flush=True)
+    return 0 if data.get("ok") else 1
+
+
+def logs_to_stderr():
+    """uAgents' loggers write to stdout; move every stdout handler to stderr."""
+    loggers = [logging.getLogger(), *(x for x in logging.Logger.manager.loggerDict.values() if isinstance(x, logging.Logger))]
+    for h in (h for x in loggers for h in x.handlers):
+        if isinstance(h, logging.StreamHandler) and h.stream in (sys.stdout, sys.__stdout__):
+            h.setStream(sys.stderr)
 
 
 def _missing(roles) -> list[str]:
@@ -115,59 +124,59 @@ def visit(agent, script, timeout: float):
 
 
 def clerk(app: str) -> int:
-    """The Clerk: OpenCase to the Bailiff from a short-lived agent (port 8774, a public seed), then every Progress
-    is printed; the machine line holds the Ruling the Bailiff sends its front door."""
+    """The Clerk: OpenCase to the Bailiff from a short-lived agent (a public seed), Progress captions on stderr,
+    then the Ruling's text: the reply McClusky would send a chat user."""
     from uagents_core.types import DeliveryStatus
 
     from agents.mesh.models import OpenCase, Progress, Ruling
 
+    quiet = contextlib.redirect_stdout(sys.stderr)  # uAgents logs to stdout; stdout carries only the reply
+    quiet.__enter__()
     bailiff, agent = base.address("bailiff"), base.make_agent("clerk")
-    got, over = {"event": "", "ruling": {}}, asyncio.Event()
+    logs_to_stderr()
+    got, over = {}, asyncio.Event()
 
     @agent.on_message(Progress)
     async def _progress(ctx, sender: str, p: Progress):
         if sender == bailiff:
-            show(p.event, p.text)
-            if p.event in ("closed", "adjourned"):
-                got["event"] = p.event
-                over.set()
+            status(p.text)
 
     @agent.on_message(Ruling)
     async def _ruling(ctx, sender: str, r: Ruling):
         if sender == bailiff:
-            got["ruling"] = r.dict()
+            got["ruling"] = r
+            over.set()
 
     async def open_case(ctx):
         sent = await ctx.send(bailiff, OpenCase(app=app))
         if sent.status == DeliveryStatus.FAILED:
-            show("adjourned", f"The Bailiff did not answer at {base.local_url('bailiff')} ({sent.detail}). "
-                              "Start the agents first: python -m agents.mesh.run up")
+            got["error"] = (f"The Bailiff did not answer at {base.local_url('bailiff')}. Start the agents first: "
+                            "python -m agents.mesh.run up")
             return
         await over.wait()
 
-    visit(agent, open_case, CASE_S)
-    return finish(got["ruling"] or {"app": app, "error": "no ruling"}, got["event"] or "adjourned")
+    try:
+        visit(agent, open_case, CASE_S)
+    finally:
+        quiet.__exit__(None, None, None)
+    r = got.get("ruling")
+    if not r:
+        return reply(got.get("error", f"No ruling after {CASE_S} s."), {"cmd": "raise", "app": app, "ok": False})
+    return reply(r.text, r.data or {"cmd": "raise", "app": app, "ok": False})
 
 
 def raise_here(app: str) -> int:
     """--no-mesh: Dr. Hoot and McClusky in this process (case.run_case), which writes runs/<app>/ledger.jsonl."""
-    sink = case.ledger_sink(app, case.RUNS)
-
-    def on_event(event: str, payload: dict, caption: str):
-        sink(event, payload, caption)
-        show(event, captions.ruling_text(payload) if event == "ruling" else caption)
-
     try:
-        r = case.run_case(app, on_event=on_event, runs=case.RUNS)
+        r = case.run_case(app, runs=case.RUNS, progress=status, requested_by="terminal")
     except case.MissingInput:
-        show("adjourned", captions.refusal(app, case.apps(case.RUNS)))
-        return finish({"app": app, "error": "no ruling"}, "adjourned")
-    return finish(r, "adjourned" if r.get("error") else "closed")
+        return reply(captions.refusal(app, case.apps(case.RUNS)), {"cmd": "raise", "app": app, "ok": False})
+    return reply(captions.final_reply(r), {"cmd": "raise", **case.numbers(r)})
 
 
 # --- addresses ------------------------------------------------------------------------------------------------
 def addresses() -> int:
-    missing = _missing(AGENTS)
+    missing = [] if base.throwaway() else _missing(AGENTS)
     for r in AGENTS:
         env = base.SEED_ENV[r]
         print(f"{base.NAMES[r]:<24} {f'{env} is not set' if env in missing else base.address(r)}")
@@ -190,7 +199,7 @@ def main(argv=None) -> int:
         return addresses()
     if a.cmd == "raise" and a.no_mesh:
         return raise_here(a.app)
-    missing = _missing(AGENTS if a.cmd == "up" else ["bailiff"])
+    missing = [] if base.throwaway() else _missing(AGENTS if a.cmd == "up" else ["bailiff"])
     if missing:
         print(f"{', '.join(missing)} not set: add them to .env (see .env.example).", file=sys.stderr)
         return 2

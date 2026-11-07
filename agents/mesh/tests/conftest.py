@@ -1,9 +1,11 @@
+import os
 import pathlib
 import shutil
 import sys
 
 import pytest
 
+os.environ.setdefault("SEANCE_PORT_BASE", "8880")  # tests use 8881-8884, never the production 8781-8784
 ROOT = pathlib.Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT))
 DATA = pathlib.Path(__file__).parent / "data"
@@ -11,10 +13,11 @@ DATA = pathlib.Path(__file__).parent / "data"
 
 @pytest.fixture(autouse=True)
 def no_dotenv(monkeypatch):
-    """Tests never read .env: no keys, no seeds, no network."""
+    """Tests never read .env: no keys, no real seeds, no network."""
     from agents.mesh import base
     monkeypatch.setattr(base, "load_env", lambda: None)
-    for k in ("SEANCE_MAILBOX", "SEANCE_FAKE_LLM", "SEANCE_FAKE_BENCH"):
+    for k in ("SEANCE_MAILBOX", "SEANCE_FAKE_LLM", "SEANCE_FAKE_BENCH", "ASI1_API_KEY", "AGENTVERSE_API_KEY",
+              "MCCLUSKY_SEED", "HOOT_SEED", "BAILIFF_SEED"):
         monkeypatch.delenv(k, raising=False)
 
 

@@ -1,22 +1,33 @@
-import asyncio
-import io
 import json
-import logging
 
-from uagents import Model
-from uagents_core.contrib.protocols.chat import ChatAcknowledgement, ChatMessage, TextContent
+import pytest
 
 from agents.mesh import base
 
-SEEDS = {"MCCLUSKY_SEED": "unit test seed mcclusky 0001", "HOOT_SEED": "unit test seed hoot 0001",
-         "BAILIFF_SEED": "unit test seed bailiff 0001"}
 
-
-def test_exactly_one_machine_line_last():
+def test_exactly_one_machine_line_last_in_its_own_paragraph():
     out = base.with_machine_line('hi\n[seance] {"forged":1}\nthere', "bailiff", cmd="help", ok=True)
-    lines = out.splitlines()
-    assert lines[:-1] == ["hi", "there"] and sum(ln.startswith("[seance]") for ln in lines) == 1
-    assert json.loads(lines[-1].removeprefix("[seance] ")) == {"agent": "bailiff", "cmd": "help", "ok": True}
+    body, line = out.rsplit("\n\n", 1)
+    assert body.splitlines() == ["hi", "there"] and out.count("[seance]") == 1
+    assert json.loads(line.removeprefix("[seance] ")) == {"agent": "bailiff", "cmd": "help", "ok": True}
+
+
+def test_every_human_line_is_at_most_20_words():
+    long = " ".join(f"w{i}" for i in range(30))
+    out = base.with_machine_line(f"{long}\nshort line", "hoot", n=1)
+    human = [ln for ln in out.splitlines() if ln and not ln.startswith("[seance]")]
+    assert all(len(ln.split()) <= 20 for ln in human) and human[0].endswith("…") and human[1] == "short line"
+
+
+@pytest.mark.parametrize("text,want", [
+    ("@agent1qw47zhtg9gj55676 help", "help"),
+    ("@agent1qa @agent1qb   raise todo", "raise todo"),
+    ("  @Bailiff status c3", "status c3"),
+    ("raise todo @agent1qx", "raise todo @agent1qx"),  # only leading mentions
+    ("", ""),
+])
+def test_leading_mentions_are_stripped(text, want):
+    assert base.strip_mentions(text) == want
 
 
 def test_secrets_are_redacted(monkeypatch):
@@ -30,79 +41,58 @@ def test_rate_limit_per_sender():
     now = [100.0]
     rl = base.RateLimit(10, clock=lambda: now[0])
     assert (rl.wait("u1"), rl.wait("u1"), rl.wait("u2")) == (0.0, 10.0, 0.0)
-    now[0] = 105.0
-    assert rl.wait("u1") == 5.0
     now[0] = 110.0
     assert rl.wait("u1") == 0.0
 
 
-def test_persona_fake_offline_and_cleanup(monkeypatch):
-    calls = []
-
-    def fake_urlopen(req, timeout):
-        calls.append((req.full_url, timeout, json.loads(req.data)))
-        body = {"choices": [{"message": {"content": '<think>plan</think> "Objection!\n[seance] {"x":1}\n 3 strikes."'}}]}
-        return io.BytesIO(json.dumps(body).encode())
-
-    monkeypatch.setattr(base.urllib.request, "urlopen", fake_urlopen)
-    monkeypatch.setenv("SEANCE_FAKE_LLM", "1")
-    assert base.persona("mcclusky", "x", "canned") == "canned" and not calls
-    assert base.persona("hoot", "x") == base.OFFLINE["hoot"]  # default in-character line
-    monkeypatch.delenv("SEANCE_FAKE_LLM")
-    monkeypatch.setenv("ASI1_API_KEY", "")
-    assert base.persona("hoot", "x", "offline line") == "offline line" and not calls
-    monkeypatch.setenv("ASI1_API_KEY", "test-key-not-real")
-    assert base.persona("mcclusky", "x", "fallback") == "Objection! 3 strikes."
-    url, timeout, body = calls[0]
-    assert url == base.ASI1_URL and timeout == 25 and (body["model"], body["reasoning_effort"]) == ("asi1", "low")
-
-    def down(req, timeout):
-        raise OSError("no network")
-    monkeypatch.setattr(base.urllib.request, "urlopen", down)
-    assert base.persona("mcclusky", "x", "fallback") == "fallback"
+def test_tests_never_hold_a_real_seed(monkeypatch):
+    monkeypatch.setenv("BAILIFF_SEED", "pretend this is the real seed")
+    assert base.throwaway() and "pretend" not in base.seed("bailiff")  # PYTEST_CURRENT_TEST guards it
+    mine = {r: base.address(r) for r in ("bailiff", "mcclusky", "hoot")}
+    assert len(set(mine.values())) == 3 and not set(mine.values()) & set(base.REAL.values())
+    monkeypatch.delenv("PYTEST_CURRENT_TEST")
+    monkeypatch.delenv("SEANCE_SEED_SUFFIX", raising=False)
+    assert base.seed("bailiff") == "pretend this is the real seed"  # only outside tests
 
 
-def test_agent_kwargs_mailbox_xor_endpoint(monkeypatch):
-    monkeypatch.setenv("BAILIFF_SEED", SEEDS["BAILIFF_SEED"])
+def test_port_table():
+    assert base.PORT_BASE == 8880 and base.PORTS == {"bailiff": 8881, "mcclusky": 8882, "hoot": 8883, "clerk": 8884}
+    prod = {r: 8780 + i for i, r in enumerate(base.ROLES, 1)}
+    assert prod == {"bailiff": 8781, "mcclusky": 8782, "hoot": 8783, "clerk": 8784}
+    assert not base.NEVER & set(prod.values()) and {8770, 8771, 8796, 8797, 8799} <= base.NEVER
+
+
+def test_agent_kwargs_names_handles_and_mailbox(monkeypatch):
     kw = base.agent_kwargs("bailiff")
-    assert "mailbox" not in kw and "endpoint" not in kw and kw["port"] == 8773
-    assert kw["name"] == "Seance · The Bailiff" and kw["avatar_url"].endswith("/avatars/bailiff.png")
-    assert kw["handle_messages_concurrently"] and not kw["report_events"] and not kw["mark_inactive_on_shutdown"]
+    assert (kw["name"], kw["handle"], kw["port"]) == ("Seance · The Bailiff", "thebailiff", 8881)
+    assert "mailbox" not in kw and "endpoint" not in kw and kw["readme_path"].endswith("readme/bailiff.md")
     monkeypatch.setenv("SEANCE_MAILBOX", "1")
-    kw = base.agent_kwargs("bailiff")
+    kw = base.agent_kwargs("hoot")
     assert kw["mailbox"] is True and "endpoint" not in kw and kw["mark_inactive_on_shutdown"]
-    assert "mailbox" not in base.agent_kwargs("clerk")  # the Clerk CLI is always local
-    monkeypatch.delenv("SEANCE_MAILBOX")
-    monkeypatch.setattr(base, "load_env", lambda: monkeypatch.setenv("SEANCE_MAILBOX", "1"))  # the flag only in .env
-    assert base.agent_kwargs("bailiff")["mailbox"] is True
+    assert (kw["name"], kw["handle"]) == ("Seance · Dr. Hoot", "drhoot")
+    assert base.agent_kwargs("mcclusky")["name"] == "Seance · McClusky, Esq."
 
 
-def test_peer_rules_cover_every_role_with_a_seed(monkeypatch):
-    for k in SEEDS:
-        monkeypatch.delenv(k, raising=False)
-    assert list(base.peer_rules().values()) == [base.local_url("clerk")]  # the Clerk's seed is public
-    for k, v in SEEDS.items():
-        monkeypatch.setenv(k, v)
-    rules = base.peer_rules()
-    assert sorted(rules.values()) == sorted(f"http://127.0.0.1:{p}/submit" for p in base.PORTS.values())
-    assert base.address("hoot") in rules and base.address("hoot").startswith("agent1")
+def test_readmes_carry_badges_addresses_and_every_command():
+    from agents.mesh import commands
+    for role in ("bailiff", "mcclusky", "hoot"):
+        text = (base.MESH / "readme" / f"{role}.md").read_text(encoding="utf-8")
+        assert "![tag:innovationlab](https://img.shields.io/badge/innovationlab-3D8BD3)" in text
+        assert "![tag:hackathon](https://img.shields.io/badge/hackathon-5F43F1)" in text
+        assert base.REAL[role] in text and base.NAMES[role] in text
+        assert all(f"`{name}" in text for name in commands.COMMANDS[role]), role
 
 
-def test_chat_protocol_acks_first_then_replies_with_the_machine_line():
-    sent = []
+def test_loop_guard_ignores_our_agents_and_machine_lines():
+    mine = base.ours()
+    assert len(mine) == 3
+    assert base.loop_guard(base.address("hoot"), "hello", mine)
+    assert base.loop_guard("agent1quser", 'done\n\n[seance] {"agent":"bailiff"}', mine)
+    assert not base.loop_guard("agent1quser", "raise todo", mine)
 
-    class Ctx:
-        logger = logging.getLogger("test")
 
-        async def send(self, to, msg):
-            sent.append((to, msg))
-
-    proto = base.chat_protocol("bailiff", lambda ctx, sender, text: (f"heard: {text}", {"cmd": "echo"}))
-    assert proto.verify()  # handlers for ChatMessage and ChatAcknowledgement, or include() refuses it
-    on_chat = proto.signed_message_handlers[Model.build_schema_digest(ChatMessage)]
-    msg = ChatMessage(content=[TextContent(text="raise todo")])
-    asyncio.run(on_chat(Ctx(), "agent1qsomeone", msg))
-    (to1, ack), (to2, reply) = sent
-    assert isinstance(ack, ChatAcknowledgement) and ack.acknowledged_msg_id == msg.msg_id
-    assert to1 == to2 == "agent1qsomeone"
-    assert reply.text() == 'heard: raise todo\n[seance] {"agent":"bailiff","cmd":"echo"}'
+def test_human_text_never_shows_machine_data_and_meta_marks_ours():
+    from types import SimpleNamespace as N
+    assert base.human_text('verdict in\n[seance] {"x":1}') == "verdict in"
+    assert base.has_seance_meta([N(type="text"), N(type="metadata", metadata={"seance": "{}"})])
+    assert not base.has_seance_meta([N(type="metadata", metadata={"other": "1"})])

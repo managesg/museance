@@ -3,7 +3,7 @@ import pathlib
 
 import pytest
 
-from agents.mesh.commands import COMMANDS, CrossError, parse, to_steps
+from agents.mesh.commands import COMMANDS, CrossError, human_steps, names, parse, to_steps
 
 ROOT = pathlib.Path(__file__).resolve().parents[3]
 CALC = json.loads((ROOT / "eval/regression/app1-selectors.json").read_text())
@@ -30,7 +30,12 @@ TODO = json.loads((ROOT / "eval/regression/todo-selectors.json").read_text())
     ("bailiff", "sing me a song", ("help", "")),
     ("bailiff", "", ("help", "")),
     ("bailiff", "?", ("help", "")),
-    ("bailiff", "ledger please", ("ledger", "")),
+    ("bailiff", "ledger please", ("transcript", "")),
+    ("bailiff", "transcript", ("transcript", "")),
+    ("bailiff", "@agent1qw47zhtg9gj55676vy8myruj297 help", ("help", "")),
+    ("bailiff", "@agent1qa @agent1qb status c3", ("status", "c03")),
+    ("mcclusky", "@agent1q2ehsgka raise todo", ("raise", "todo")),
+    ("bailiff", "case", ("case", "")),
     ("bailiff", "apps", ("apps", "")),
     ("hoot", "reveal!", ("reveal", "")),
     ("hoot", "Show attacks", ("attacks", "")),
@@ -83,3 +88,12 @@ def test_contract_steps_pass_through():
 def test_cross_refuses(sel, text):
     with pytest.raises(CrossError):
         to_steps(sel, text)
+
+
+def test_selectors_read_back_as_their_key_names():
+    assert names(CALC)["#kdiv"] == "divide" and names(CALC)["#k7"] == "7" and names(TODO)["#add"] == "add"
+    assert human_steps(CALC, ["click:#k7", "click:#kdiv", "click:#k8", "click:#keq"]) == "7 divide 8 equals"
+    assert human_steps(CALC, ["click:#k7"] * 20 + ["click:#keq"]) == "7 ×20 equals"
+    assert human_steps(TODO, ["type:#item:Buy milk", "click:#add"] * 2 + ["click:#todo li .complete"]) == \
+        '(type "Buy milk", add) ×2, complete open'
+    assert human_steps(TODO, ["key:Enter"]) == "Enter"

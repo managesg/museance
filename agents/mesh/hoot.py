@@ -1,17 +1,16 @@
 """Dr. Hoot, the Skeptic: a grumpy owl in round spectacles with a stopwatch. Never impressed. "Hoo."
 
-Attacks come only from P4's deterministic skeptic (case.make_attacks -> eval/skeptic.py, sealed with
-eval/seal.py). No model writes, picks or edits an attack; ASI-1 (base.persona) only does his banter.
+Attacks come only from P4's deterministic skeptic (case.make_attacks: eval/skeptic.py, restricted to the ids P4
+sealed, sealed again with eval/seal.py). No model writes, picks or edits an attack; ASI-1 only does his banter.
 
 Peer messages, from the Bailiff only (anyone else is refused):
   CallSkeptic   -> SealedAttacks  commits and hashes; the steps stay in the envelope
   RequestReveal -> RevealAttacks  the attacks themselves, exactly as sealed
-  Ruling        -> remembered: the catches he gloats about
-  RemarkRequest -> Remark         captions.taunt: one line per STRUCK claim, with the numbers
+  Ruling        -> remembered     the case he gloats about
+  RemarkRequest -> Remark         captions.taunt: deterministic, with the numbers
 Chat: help, attacks [app], seal [app], reveal [app] (only after a ruling); anything else is banter.
 
-    agents/mesh/.venv/bin/python agents/mesh/hoot.py             # port 8772, local-only
-    agents/mesh/.venv/bin/python agents/mesh/hoot.py --mailbox   # also on the Agentverse mailbox
+    agents/mesh/.venv/bin/python -m agents.mesh.hoot [--mailbox]      # port 8783
 """
 from __future__ import annotations
 
@@ -23,33 +22,22 @@ import pathlib
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-if str(ROOT) not in sys.path:  # `python agents/mesh/hoot.py` puts agents/mesh/ on sys.path, not the repo root
+if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-from agents.mesh import base, captions, case, commands  # noqa: E402
+from agents.mesh import base, captions, case, commands, voice  # noqa: E402
 from agents.mesh.models import (CallSkeptic, Remark, RemarkRequest, RequestReveal, RevealAttacks,  # noqa: E402
                                 Ruling, SealedAttacks)
 
 STRANGER = "Dr. Hoot answers only to the Bailiff. Hoo."
-STYLE = ("You are grumpy, you wear round spectacles and carry a stopwatch, nothing has ever impressed you, "
-         "and you say 'Hoo.' once.")
-
-
-def scoreboard(r: dict | None) -> str:
-    """Dr. Hoot's catches against McClusky's credibility, from a ruling dict (None: nothing ruled yet)."""
-    if not r:
-        return f"Scoreboard: 0 rulings on file, so McClusky, Esq. still has all {case.START} credibility. For now."
-    return (f"Scoreboard, case {r['case_id']}: Dr. Hoot {r['catches']} catches in {r['attacks']} attacks; "
-            f"McClusky, Esq. {r['credibility_end']} credibility ({r['credibility_end'] - r['credibility_start']:+d}), "
-            f"{r['counts'].get('STRUCK', 0)} STRUCK.")
+STYLE = "You are grumpy, wear round spectacles, carry a stopwatch, and nothing has ever impressed you."
 
 
 class Hoot:
     """Dr. Hoot's state and handlers; build() puts them on a uAgent."""
 
     def __init__(self, runs=case.RUNS, bailiff: str = ""):
-        self.runs, self.bailiff = runs, bailiff  # bailiff: the only address he takes peer messages from
+        self.runs, self.bailiff = pathlib.Path(runs), bailiff  # bailiff: the only address he takes peer messages from
         self.envelope: dict = {}  # the case in progress: case_id, app, attacks (the Bailiff runs one at a time)
-        self.rulings: dict[str, dict] = {}  # app -> the last Ruling, as a dict
         self.last_app = ""
 
     def _from_bailiff(self, ctx, sender: str, msg) -> bool:
@@ -57,11 +45,6 @@ class Hoot:
             return True
         ctx.logger.warning(f"refused {type(msg).__name__} from {sender}: not the Bailiff")
         return False
-
-    def _remember(self, r: Ruling):
-        if not r.error:
-            self.rulings[r.app] = r.dict()
-        self.last_app = r.app
 
     # --- the court path ---------------------------------------------------------------------------------------
     async def on_call(self, ctx, sender: str, msg: CallSkeptic):
@@ -74,7 +57,7 @@ class Hoot:
             attacks = case.make_attacks(msg.app, inp)
             seal = case.seal_attacks(msg.app, attacks, inp)
         except Exception as ex:  # noqa: BLE001 - the Bailiff adjourns on this line instead of waiting out a timeout
-            return await ctx.send(sender, SealedAttacks(**ids, error=f"Dr. Hoot cannot seal: {ex}"))
+            return await ctx.send(sender, SealedAttacks(**ids, error=f"Dr. Hoot cannot seal: {captions.short(ex, 150)}"))
         self.envelope, self.last_app = {**ids, "attacks": attacks}, msg.app
         await ctx.send(sender, SealedAttacks(**ids, seal=seal))
 
@@ -89,14 +72,12 @@ class Hoot:
 
     async def on_ruling(self, ctx, sender: str, msg: Ruling):
         if self._from_bailiff(ctx, sender, msg):
-            self._remember(msg)
+            self.last_app = msg.app or self.last_app
 
     async def on_remark(self, ctx, sender: str, msg: RemarkRequest):
         """The closing taunt: deterministic, the same words as --no-mesh (case.LocalParties)."""
-        if not self._from_bailiff(ctx, sender, msg):
-            return
-        self._remember(msg.ruling)  # the ruling rides along, in case its own message was lost
-        await ctx.send(sender, Remark(case_id=msg.case_id, speaker="hoot", text=captions.taunt(msg.ruling.dict())))
+        if self._from_bailiff(ctx, sender, msg):
+            await ctx.send(sender, Remark(case_id=msg.case_id, speaker="hoot", text=captions.taunt(msg.ruling)))
 
     # --- chat ---------------------------------------------------------------------------------------------------
     def _app(self, named: str) -> str:
@@ -107,48 +88,46 @@ class Hoot:
         cmd = commands.parse("hoot", text)
         if cmd.name == "help":
             return captions.help_card("hoot"), {"cmd": "help", "ok": True}
+        app = self._app(cmd.arg if cmd.name != "talk" else "")
         if cmd.name == "talk":
-            return await self._banter(self._app(""), text)
-        app = self._app(cmd.arg)
+            return await self._banter(app, text)
         out = {"cmd": cmd.name, "app": app, "ok": True}
-        if cmd.name == "reveal":
-            last = case.last_case(app, self.runs)
-            if last["ruling"]:  # hear() archives the old ledger before a new case, so this ruling is the latest
-                r = last["ruling"]
-                return (f"{captions.reveal_list(app, last['attacks'], last['verdicts'])}\n{scoreboard(r)}",
-                        {**out, "case_id": r["case_id"], "attacks": len(last["attacks"]), "catches": r["catches"]})
         try:
             inp = case.load_inputs(app, self.runs)
         except case.MissingInput:
             return captions.refusal(app, case.apps(self.runs)), {**out, "ok": False}
-        attacks = case.make_attacks(app, inp)
         if cmd.name == "reveal":
-            return captions.reveal_refused(len(attacks)), {**out, "ok": False, "attacks": len(attacks)}
+            last = case.last_case(app, self.runs)
+            r = last["ruling"]
+            if not r or r.get("error"):
+                return captions.reveal_refused(len(case.make_attacks(app, inp))), {**out, "ok": False}
+            by = {v["ref"]: v for v in last["verdicts"] if v["kind"] == "attack"}
+            rows = [(a["id"], commands.human_steps(inp["selectors"], by[a["id"]]["shrunk_steps"] or a["steps"], 6),
+                     by[a["id"]]["original"], by[a["id"]]["revival"]) for a in last["attacks"]
+                    if a["id"] in by and not by[a["id"]]["match"] and not by[a["id"]]["flaky"]]
+            return captions.reveal_list(app, rows, len(last["attacks"])), {
+                **out, "case_id": r["case_id"], "attacks": len(last["attacks"]), "caught": len(rows)}
+        attacks = case.make_attacks(app, inp)
         seal = case.seal_attacks(app, attacks, inp)
         out.update(attacks=len(attacks), attacks_sha256=seal["attacks_sha256"])
         if cmd.name == "attacks":
             screens = dict(collections.Counter(a["screen"] for a in attacks))
-            return captions.attacks_line(app, seal, screens), {**out, "screens": screens}
-        p4 = inp["sealed"]
-        return captions.seal_line(app, seal, p4), {
-            **out, "regression_sha256": seal["regression_sha256"],
-            "p4_match": all(seal[k] == p4.get(k) for k in ("attacks_sha256", "regression_sha256"))}
+            sealed_of = len(inp["sealed"]["attacks"]) if inp["sealed"] else 0
+            return captions.attacks_line(app, len(attacks), sealed_of, screens), {**out, "screens": screens}
+        problems = case.p4_check(app, inp, attacks)[1] if inp["sealed"] else None
+        return captions.seal_line(app, seal, problems), {**out, "p4_ok": problems == []}
 
     async def _banter(self, app: str, text: str):
         """Anything that is not a command: ASI-1 in character, fed only real numbers; a canned roast without it."""
-        r = self.rulings.get(app) or case.last_case(app, self.runs)["ruling"]
-        board = scoreboard(r)
-        worst = f" McClusky's worst strike: {r['funniest']}" if r and r.get("funniest") else ""
-        prompt = (f"{STYLE} Facts, use only these numbers: {board}{worst} To start a trial, people tell The Bailiff "
-                  f"or McClusky, Esq.: raise {app}. Your own commands: attacks, seal, reveal. Someone in the chat "
-                  f"says: \"{text[:500]}\". Answer them in character, and roast McClusky, Esq. with one of these "
-                  f"numbers when it fits.")
-        fallback = (f"Hoo. {board} Not impressed. My commands: attacks, seal, reveal. For a trial, tell The Bailiff: "
-                    f"raise {app}.")
-        data = {"cmd": "talk", "app": app, "ok": True}
-        if r:
-            data.update(case_id=r["case_id"], catches=r["catches"], credibility=r["credibility_end"])
-        return await asyncio.to_thread(base.persona, "hoot", prompt, fallback), data
+        r = case.last_case(app, self.runs)["ruling"]
+        facts = (f"Last case on {app}: {r['counts']['STRUCK']} claims struck, {r['differ']} revival behaviors differ, "
+                 f"fidelity {r['fidelity']}, McClusky's credibility {r['credibility_end']}."
+                 if r and not r.get("error") else "No ruling on file yet.")
+        prompt = (f"{STYLE} Facts, use only these numbers: {facts} Your commands: attacks, seal, reveal; trials "
+                  f"start when someone tells McClusky, Esq.: raise {app}. Someone says: \"{captions.short(text, 400)}\". "
+                  f"Answer in character.")
+        fallback = f"Hoo. {facts} Not impressed. Try: attacks, seal, reveal."
+        return await asyncio.to_thread(voice.persona, "hoot", prompt, fallback), {"cmd": "talk", "app": app, "ok": True}
 
 
 def build(hoot: Hoot | None = None):
@@ -163,12 +142,14 @@ def build(hoot: Hoot | None = None):
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="Dr. Hoot, the Seance skeptic (uAgent on port 8772).")
+    ap = argparse.ArgumentParser(description="Dr. Hoot, the Seance skeptic (uAgent).")
     ap.add_argument("--mailbox", action="store_true", help="also connect the Agentverse mailbox (SEANCE_MAILBOX=1)")
     if ap.parse_args(argv).mailbox:
         os.environ["SEANCE_MAILBOX"] = "1"
     base.load_env()  # before make_agent reads SEANCE_MAILBOX
-    build().run()
+    agent = build()
+    print(f"{base.NAMES['hoot']} {agent.address} on :{base.PORTS['hoot']}", flush=True)
+    agent.run()
 
 
 if __name__ == "__main__":

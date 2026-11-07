@@ -1,9 +1,11 @@
-"""Shared plumbing for the three agents (and the Clerk CLI): env, ports, seeds, the agent factory, the chat
-protocol, the [seance] machine line, a per-sender rate limiter and the ASI-1 persona voice.
+"""Shared plumbing for the three agents and the Clerk: env, ports, seeds, the agent factory and the chat protocol
+(mention strip, loop guard, 20-word lines, exactly one [seance] machine line last).
 
-uAgents is imported only inside make_agent, chat_protocol and send_text, so the --no-mesh path never needs it.
-Env flags: SEANCE_MAILBOX=1 (Agentverse mailbox; default local-only), SEANCE_FAKE_LLM=1 (no model calls),
-SEANCE_FAKE_BENCH=1 (no browser, see case.FakeBench).
+No model code in here: the Bailiff imports this module. The ASI-1 voice lives in voice.py.
+uAgents is imported only inside make_agent, chat_protocol and send_text, so --no-mesh never needs it.
+Env: SEANCE_MAILBOX=1 (Agentverse mailbox; default local-only), SEANCE_FAKE_LLM=1 (no model calls),
+SEANCE_FAKE_BENCH=1 (no browser, see case.FakeBench), SEANCE_PORT_BASE (tests use 8880),
+SEANCE_SEED_SUFFIX (throwaway seeds; pytest gets them anyway).
 """
 from __future__ import annotations
 
@@ -16,53 +18,51 @@ import pathlib
 import re
 import sys
 import time
-import urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 MESH = ROOT / "agents" / "mesh"
-for _p in (ROOT, ROOT / "agents"):  # same trick as agents/medium.py, so `python agents/mesh/x.py` works too
-    if str(_p) not in sys.path:
-        sys.path.insert(0, str(_p))
-import llm  # noqa: E402 - P2's .env reader, the same module object agents/medium.py uses
-
-from agents.mesh.captions import DEADPAN, OFFLINE  # noqa: E402
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 log = logging.getLogger("seance")
 
-ROLES = ("mcclusky", "hoot", "bailiff", "clerk")
-PORTS = {"mcclusky": 8771, "hoot": 8772, "bailiff": 8773, "clerk": 8774}
+ROLES = ("bailiff", "mcclusky", "hoot", "clerk")
+PORT_BASE = int(os.environ.get("SEANCE_PORT_BASE") or 8780)  # 8781 bailiff, 8782 mcclusky, 8783 hoot, 8784 clerk
+PORTS = {r: PORT_BASE + i for i, r in enumerate(ROLES, 1)}
+NEVER = {8770, 8771, 8796, 8797, 8798, 8799}  # macOS sharingd, and the live probe agents
+if NEVER & set(PORTS.values()):
+    raise RuntimeError(f"SEANCE_PORT_BASE={PORT_BASE} hits a reserved port")
 SEED_ENV = {r: f"{r.upper()}_SEED" for r in ROLES}
-CLERK_SEED = "seance clerk cli public identity 0001"  # the Clerk holds nothing worth stealing; a public seed is fine
-NAMES = {"mcclusky": "Seance · McClusky, Esq.", "hoot": "Seance · Dr. Hoot", "bailiff": "Seance · The Bailiff",
+REAL = {"bailiff": "agent1qw47zhtg9gj55676vy8myruj297339kqdjkj34e2n2xkt2mqewjn2ngyuw0",
+        "mcclusky": "agent1q2ehsgka4ljzsvxhz0kf9055ka4y23zpyz9x7euqeycyp2dwmgqzuhp7qhd",
+        "hoot": "agent1qf84m8mamqfjn49qutwucdtez4clrwavq4nzqlnw37hramsnk8hwzlthq5v"}
+CLERK_SEED = "seance clerk cli public identity 0001"  # the Clerk holds nothing worth stealing
+NAMES = {"bailiff": "Seance · The Bailiff", "mcclusky": "Seance · McClusky, Esq.", "hoot": "Seance · Dr. Hoot",
          "clerk": "Seance · The Clerk"}
+HANDLES = {"bailiff": "thebailiff", "mcclusky": "mcclusky", "hoot": "drhoot"}
 DESCRIPTIONS = {
-    "mcclusky": "Counsel for dead web apps. Say 'raise todo': he swears claims about the app with a bond on each, "
-                "then argues with Dr. Hoot. ASI-1 brain.",
+    "mcclusky": "Penguin lawyer for dead web apps. Say 'raise todo': he swears how the dead app behaved, bets "
+                "credibility on every claim, and a model-free court rules.",
     "hoot": "Owl skeptic. Seals edge-case attacks on a revived app before anyone testifies, then gloats about "
-            "every STRUCK claim, with numbers.",
+            "every strike, with numbers.",
     "bailiff": "Clerk of the Seance fidelity court. Runs the case, checks every seal, writes the hash-chained "
                "ledger. No opinion, no model.",
     "clerk": "Command-line client that starts Seance cases.",
 }
-AVATAR = "https://raw.githubusercontent.com/vihuynh72/aie-code/main/agents/mesh/avatars/{}.png"  # live once on main
-ASI1_URL = "https://api.asi1.ai/v1/chat/completions"
-PERSONAS = {
-    "mcclusky": "You are McClusky, Esq., a flamboyant, slightly shady defense lawyer in SEANCE, a court that tests "
-                "resurrected web apps. You represent the dead app and swore claims about how it behaved, with "
-                "credibility points on the line. Your rival is Dr. Hoot, a smug owl skeptic. The Bailiff has no "
-                "opinion and no model. Reply in one or two short sentences, in character, plain text, no markdown. "
-                "Use only numbers you are given; never invent numbers.",
-    "hoot": "You are Dr. Hoot, a smug, pedantic owl and professional skeptic in SEANCE, a court that tests "
-            "resurrected web apps. You seal edge-case attacks before anyone testifies and you love catching "
-            "McClusky, Esq. overselling his claims. Reply in one or two short sentences, in character, plain text, "
-            "no markdown. Use only numbers you are given; never invent numbers.",
-}
+AVATAR = "https://raw.githubusercontent.com/vihuynh72/aie-code/main/agents/mesh/avatars/{}.png"
 SECRET_NAME = re.compile(r"(KEY|SEED|TOKEN|SECRET|PASSWORD|URI)$")
+MENTIONS = re.compile(r"^(?:\s*@\S+)+")
+WORDS = 20
 
 
 def load_env() -> None:
-    """.env -> os.environ (setdefault). Values are never printed or logged."""
-    llm._load_env()
+    """.env -> os.environ (setdefault), the same rule as agents/llm.py. Values are never printed or logged."""
+    f = ROOT / ".env"
+    if f.exists():
+        for line in f.read_text(encoding="utf-8").splitlines():
+            k, _, v = line.partition("=")
+            if k.strip() and not k.startswith("#") and v.strip():
+                os.environ.setdefault(k.strip(), v.strip())
 
 
 def flag(name: str) -> bool:
@@ -77,14 +77,36 @@ def redact(text: str) -> str:
     return text
 
 
+def strip_mentions(text: str) -> str:
+    """ASI:One puts '@agent1q...' tokens in front of the user's words; drop every leading one."""
+    return MENTIONS.sub("", text or "").strip()
+
+
+def clip(line: str, n: int = WORDS) -> str:
+    """At most n words on a line a human reads."""
+    words = line.split()
+    return line if len(words) <= n else " ".join(words[:n]).rstrip(",;:") + "…"
+
+
 def machine_line(agent: str, **data) -> str:
     return "[seance] " + json.dumps({"agent": agent, **data}, ensure_ascii=False, separators=(",", ":"), default=str)
 
 
+def human_text(text: str) -> str:
+    """What a person sees in chat: plain lines of at most 20 words, never a machine line (Vi's rule)."""
+    return redact("\n".join(clip(ln) for ln in str(text).splitlines() if not ln.lstrip().startswith("[seance]")).strip())
+
+
+def has_seance_meta(content) -> bool:
+    """Another Seance agent's chat reply carries our hidden metadata (loop guard)."""
+    return any(getattr(c, "type", "") == "metadata" and "seance" in (getattr(c, "metadata", None) or {}) for c in content)
+
+
 def with_machine_line(text: str, agent: str, **data) -> str:
-    """Reply text + exactly one machine line (any [seance] line already in the text is dropped)."""
-    body = "\n".join(ln for ln in str(text).splitlines() if not ln.lstrip().startswith("[seance]")).strip()
-    return redact(f"{body}\n{machine_line(agent, **data)}")
+    """Reply text, every human line at most 20 words, then exactly one machine line in its own paragraph
+    (ASI:One renders markdown, so single newlines inside a paragraph collapse)."""
+    body = "\n".join(clip(ln) for ln in str(text).splitlines() if not ln.lstrip().startswith("[seance]")).strip()
+    return redact(f"{body}\n\n{machine_line(agent, **data)}")
 
 
 class RateLimit:
@@ -103,37 +125,19 @@ class RateLimit:
         return 0.0
 
 
-def persona(role: str, prompt: str, fallback: str = "") -> str:
-    """One short in-character reply from ASI-1. Blocking (urllib, 25 s): call it with asyncio.to_thread from a
-    handler. Returns `fallback` (default: the role's offline line) with SEANCE_FAKE_LLM=1, without
-    ASI1_API_KEY, offline, or on any error."""
-    fallback = fallback or OFFLINE[role]
-    if flag("SEANCE_FAKE_LLM"):
-        return fallback
-    load_env()
-    key = os.environ.get("ASI1_API_KEY")
-    if not key:
-        return fallback
-    body = {"model": "asi1", "reasoning_effort": "low",
-            "messages": [{"role": "system", "content": PERSONAS[role]}, {"role": "user", "content": prompt}]}
-    req = urllib.request.Request(ASI1_URL, json.dumps(body).encode(),
-                                 {"Content-Type": "application/json", "Authorization": f"Bearer {key}"})
-    try:
-        with urllib.request.urlopen(req, timeout=25) as r:
-            text = json.load(r)["choices"][0]["message"]["content"] or ""
-    except Exception as ex:  # noqa: BLE001 - the show goes on with the fallback line
-        log.warning("ASI-1 persona call failed (%s); using the fallback line", type(ex).__name__)
-        return fallback
-    text = re.sub(r"(?s)<think>.*?</think>", "", text)
-    text = " ".join(ln for ln in text.splitlines() if not ln.lstrip().startswith("[seance]"))
-    text = " ".join(text.split()).strip("\"' ")
-    return redact(text[:400]) or fallback
-
-
 # --- identities and the agent factory ---------------------------------------------------------------
+def throwaway() -> str:
+    """Tests and the processes they start never hold a real seed (they inherit PYTEST_CURRENT_TEST)."""
+    return os.environ.get("SEANCE_SEED_SUFFIX") or ("pytest" if os.environ.get("PYTEST_CURRENT_TEST") else "")
+
+
 def seed(role: str) -> str:
+    if suffix := throwaway():
+        return f"seance throwaway seed {role} {suffix}"
+    if role == "clerk":
+        return CLERK_SEED
     load_env()
-    value = os.environ.get(SEED_ENV[role]) or (CLERK_SEED if role == "clerk" else "")
+    value = os.environ.get(SEED_ENV[role])
     if not value:
         raise RuntimeError(f"{SEED_ENV[role]} is not set; add it to .env")
     return value
@@ -142,6 +146,17 @@ def seed(role: str) -> str:
 def address(role: str) -> str:
     from uagents_core.identity import Identity
     return Identity.from_seed(seed(role), 0).address
+
+
+def ours() -> set[str]:
+    """Our three agents' addresses: their chat is never answered (loop guard)."""
+    out = set()
+    for r in ("bailiff", "mcclusky", "hoot"):
+        try:
+            out.add(address(r))
+        except RuntimeError:
+            pass
+    return out
 
 
 def local_url(role: str) -> str:
@@ -166,7 +181,7 @@ def agent_kwargs(role: str) -> dict:
     readme = MESH / "readme" / f"{role}.md"
     kw = {"name": NAMES[role], "seed": seed(role), "port": PORTS[role], "description": DESCRIPTIONS[role],
           "readme_path": str(readme) if readme.is_file() else None,
-          "avatar_url": AVATAR.format(role) if role != "clerk" else None,
+          "avatar_url": AVATAR.format(role) if role != "clerk" else None, "handle": HANDLES.get(role),
           "report_events": False, "handle_messages_concurrently": True,  # a long case must not block chat acks
           "mark_inactive_on_shutdown": mailbox}
     if mailbox:
@@ -182,7 +197,7 @@ def make_agent(role: str):
     from uagents.resolver import GlobalResolver, Resolver, RulesBasedResolver
 
     class LocalFirstResolver(Resolver):
-        """Our agents by local rules; anyone else (ASI:One users) through the Almanac."""
+        """Our agents by local rules; anyone else (ASI:One users) through the Almanac; nothing when that fails."""
 
         def __init__(self, rules):
             self._rules, self._global = RulesBasedResolver(rules), GlobalResolver()
@@ -197,7 +212,7 @@ def make_agent(role: str):
                 return None, []
 
     class SeanceAgent(Agent):
-        # shortcut: overrides private uagents 0.26.1 Agent._update_agent_status / _use_mailbox; re-check on upgrade
+        # shortcut: overrides private uagents 0.26.1 Agent._update_agent_status; re-check on upgrade
         async def _update_agent_status(self, active: bool):
             if not self._use_mailbox:
                 return  # local-only agents are not on the Almanac; marking them (in)active is wrong
@@ -215,28 +230,50 @@ def make_agent(role: str):
 _ORDER: dict[str, asyncio.Lock] = {}
 
 
-async def send_text(ctx, to: str, agent: str, text: str, **data):
-    """One ChatMessage with exactly one machine line. Messages to one address leave in call order, even with
-    handle_messages_concurrently (asyncio.Lock is FIFO)."""
-    from uagents_core.contrib.protocols.chat import ChatMessage, TextContent
+async def send_text(ctx, to: str, agent: str, text: str, resources=(), **data):
+    """One ChatMessage: plain human text, the machine data in hidden MetadataContent (ASI:One does not render it),
+    then any ResourceContent (screenshots). Messages to one address leave in call order."""
+    from uagents_core.contrib.protocols.chat import ChatMessage, MetadataContent, TextContent
     async with _ORDER.setdefault(to, asyncio.Lock()):
-        return await ctx.send(to, ChatMessage(content=[TextContent(text=with_machine_line(text, agent, **data))]))
+        meta = redact(machine_line(agent, **data).removeprefix("[seance] "))
+        content = [TextContent(text=human_text(text)), MetadataContent(type="metadata", metadata={"seance": meta}),
+                   *resources]
+        return await ctx.send(to, ChatMessage(content=content))
+
+
+def loop_guard(sender: str, raw: str, mine: set[str]) -> bool:
+    """True: never answer. Our own agents talk in models, and a machine line means another agent's reply."""
+    return sender in mine or "[seance] {" in raw
+
+
+def reply_parts(out) -> tuple[str, dict, list]:
+    """A handler's answer: str, (str, dict) or (str, dict, resources)."""
+    if isinstance(out, str):
+        return out, {}, []
+    return out[0], out[1], list(out[2]) if len(out) > 2 else []
 
 
 def chat_protocol(role: str, handler):
-    """Agent Chat Protocol (ASI:One, the Clerk, other agents). Acks every ChatMessage first, then calls
-    handler(ctx, sender, text) -> reply: str, (str, dict of machine-line fields), an awaitable of either,
-    or None for no reply. Include it with agent.include(proto, publish_manifest=flag("SEANCE_MAILBOX")): the
-    manifest tells Agentverse and ASI:One about the protocol, and a local-only agent stays off the network."""
+    """Agent Chat Protocol (ASI:One, the Clerk, other agents). Acks every ChatMessage, ignores our own agents'
+    chat and anything carrying a machine line (loop guard), strips leading @mentions, then calls
+    handler(ctx, sender, text) -> str | (str, dict) | (str, dict, resources) | None, or an awaitable of one.
+    The reply goes to the sender from inside this handler (ASI:One threads by ctx.session). A handler may send
+    progress lines first with send_text: ASI:One shows only the last message, so the reply must stand alone."""
     from uagents import Protocol
     from uagents_core.contrib.protocols.chat import ChatAcknowledgement, ChatMessage, chat_protocol_spec
 
     proto = Protocol(spec=chat_protocol_spec)
+    mine: set[str] = set()
 
     @proto.on_message(ChatMessage)
     async def _on_chat(ctx, sender: str, msg: ChatMessage):
         await ctx.send(sender, ChatAcknowledgement(acknowledged_msg_id=msg.msg_id))
-        text = msg.text().strip()
+        raw = msg.text()
+        mine.update(mine or ours())
+        if loop_guard(sender, raw, mine) or has_seance_meta(msg.content):
+            ctx.logger.info(f"loop guard: no reply to {sender[:20]}")
+            return
+        text = strip_mentions(raw)
         if not text and any(c.type == "end-session" for c in msg.content):
             return
         try:
@@ -245,11 +282,11 @@ def chat_protocol(role: str, handler):
                 out = await out
         except Exception as ex:  # noqa: BLE001 - a chat user gets a line, not silence
             ctx.logger.exception("chat handler failed")
-            out = (f"The court tripped over its robes ({type(ex).__name__}). Try: help. {DEADPAN}",
+            out = (f"The court tripped over its robes ({type(ex).__name__}). Try: help.",
                    {"ok": False, "error": type(ex).__name__})
         if out:
-            reply, data = (out, {}) if isinstance(out, str) else out
-            await send_text(ctx, sender, role, reply, **data)
+            reply, data, res = reply_parts(out)
+            await send_text(ctx, sender, role, reply, resources=res, **data)
 
     @proto.on_message(ChatAcknowledgement)
     async def _on_ack(ctx, sender: str, msg: ChatAcknowledgement):

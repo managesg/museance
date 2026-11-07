@@ -1,15 +1,16 @@
-"""McClusky, Esq.: the Medium on the Seance mesh (ASI-1 brain), and the front door for chat users.
+"""McClusky, Esq.: the Medium on the Seance mesh (ASI-1 voice), and the front door for chat users.
 
-    agents/mesh/.venv/bin/python agents/mesh/mcclusky.py             # port 8771, local-only
-    agents/mesh/.venv/bin/python agents/mesh/mcclusky.py --mailbox   # also on the Agentverse mailbox, for ASI:One
+    agents/mesh/.venv/bin/python -m agents.mesh.mcclusky [--mailbox]      # port 8782
 
-From the Bailiff (sender checked against base.address("bailiff")):
-  CallMedium    -> Testimony   P2's Medium writes the cards (case.make_claims); McClusky never writes a claim
-  Progress      -> relayed     to the chat user who said "raise <app>" here, in arrival order
-  Ruling        -> logged      credibility is eval.score's, as the court computed it; stress 0-10; faints under 300
-  RemarkRequest -> Remark      a short ASI-1 objection aimed at Dr. Hoot (under 300 credibility, a faint)
-Chat: raise <app> (or "can you bring back the todo app?"), help, claims, credibility, why <claim>. Anything
-else is free talk with ASI-1, told only the case on file; the sworn claims are read from the court's files.
+From the Bailiff only (sender checked):
+  CallMedium    -> Testimony   P2's sworn claims (case.make_claims); McClusky never writes a claim himself
+  Progress      -> queued      for the chat user's raise handler: at most 4 short status lines
+  Ruling        -> queued      the final reply, rendered by the Bailiff from the court's files
+  RemarkRequest -> Remark      one ASI-1 line aimed at Dr. Hoot, with the ruling's numbers
+Chat: raise <app> (or "can you bring back the todo app?"), help, claims, credibility, why <claim>; anything else
+is free talk with ASI-1, told only the case on file. The raise handler waits for the case and answers from inside
+the chat handler (ASI:One threads replies by session and shows only the last message), so the final reply is
+complete on its own. With AGENTVERSE_API_KEY it carries the first mismatch's two screenshots.
 """
 from __future__ import annotations
 
@@ -19,50 +20,26 @@ import os
 import pathlib
 import re
 import sys
+import uuid
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from uagents_core.types import DeliveryStatus  # noqa: E402
 
-from agents.mesh import base, captions, case, commands  # noqa: E402
+from agents.mesh import base, captions, case, commands, voice  # noqa: E402
 from agents.mesh.models import CallMedium, OpenCase, Progress, Remark, RemarkRequest, Ruling, Testimony  # noqa: E402
 
 ROLE = "mcclusky"
-FAINT = 300  # credibility below this and McClusky faints
+CASE_S = 600  # the longest a chat user waits for a case
 # plain-words raise. Not "revival" or "seance": people ask about the revival and about Seance all the time
 INTENT = re.compile(r"(?i)\b(?:bring\b.{0,40}?\bback|resurrect\w*|reviv(?:e|ing)|reanimat\w*|exhum\w*|summon\w*"
-                    r"|on\s+trial)\b")
-RESERVED = {"ctx", "to", "agent", "text"}  # base.send_text's own parameter names, never machine-line keys
-
-
-def stress(credibility: int) -> int:
-    """0 at the credibility he walks in with, 10 at the line where he faints."""
-    return max(0, min(10, round((case.START - credibility) * 10 / (case.START - FAINT))))
-
-
-def meter(credibility: int) -> str:
-    s = stress(credibility)
-    if credibility < FAINT:
-        return f"Stress {s}/10: McClusky, Esq. has fainted at credibility {credibility}. The scarves will take questions."
-    if s <= 2:
-        return f"Stress {s}/10: cool as a cucumber in a wig."
-    return f"Stress {s}/10: dabbing my brow with scarf number {s}."
-
-
-def objection(r: dict, answer: str = "") -> str:
-    """Closing remark aimed at Dr. Hoot: ASI-1 in character (the canned line offline). Under 300, a faint."""
-    cred, s = r["credibility_end"], stress(r["credibility_end"])
-    if cred < FAINT:
-        return f"*thud* McClusky, Esq. faints at credibility {cred}, stress {s}/10. His scarves will take questions, Dr. Hoot."
-    prompt = (f"{captions.objection_prompt(r, answer)} Aim it at Dr. Hoot. Your stress meter reads {s}/10; "
-              f"{'you are sweating through your scarves' if s >= 5 else 'stay smug'}.")
-    return f"{base.persona(ROLE, prompt, captions.objection(r))} (Stress meter: {s}/10.)"
+                    r"|on\s+trial|put\b.{0,30}?\bon\s+trial)\b")
 
 
 def intent_app(text: str, docket: dict) -> str | None:
-    """'can you bring back the todo app?' -> 'todo'; None when nothing asks for a revival. An app the court never
-    heard of comes back as the first word after the verb, so it gets the usual refusal."""
+    """'can you bring back the todo app?' -> 'todo'; None when nothing asks for a revival. An unknown app comes
+    back as the first word after the verb, so it gets the usual refusal."""
     m = INTENT.search(text or "")
     if not m:
         return None
@@ -72,23 +49,43 @@ def intent_app(text: str, docket: dict) -> str | None:
 
 def talk_prompt(text: str, last: dict, docket: dict) -> str:
     """Free talk is told only the case on file, so every number McClusky says is real."""
-    r, status = last["ruling"], {x["claim_id"]: x["status"] for x in last["locks"]}
-    if r:
-        cred = r["credibility_end"]
-        counts = ", ".join(f"{r['counts'].get(k, 0)} {k}" for k in captions.STATUSES)
-        head = (f"Last case {r['case_id']} on the app {r['app']}: {counts} of {r['claims']} claims, fidelity "
-                f"{r['fidelity']}, Dr. Hoot made {r['catches']} catches in {r['attacks']} attacks. Your credibility "
-                f"went {r['credibility_start']} -> {cred}, stress {stress(cred)}/10{', you fainted' if cred < FAINT else ''}.")
+    r = last["ruling"]
+    if r and not r.get("error"):
+        c = r["counts"]
+        head = (f"Last case {r['case_id']} on {r['app']}: claims about the original {c['LOCKED']} locked, "
+                f"{c['STRUCK']} struck, {c['UNSWORN']} unsworn of {r['claims']}; revival {r['differ']} of "
+                f"{r['judged']} behaviors differ, fidelity {r['fidelity']}; your credibility "
+                f"{r['credibility_start']} to {r['credibility_end']}.")
     else:
-        head = f"No ruling on file{' for ' + last['app'] if last['app'] else ''}."
-    sworn = [f"{c['id']} {status.get(c['id'], 'PENDING')}, {c['confidence']:.0%}, bond {c['bond']}: "
-             f"{captions.short(c['text'], 80)}" for c in last["claims"][:15]]
+        head = "No ruling on file yet."
     ready = [a for a, why in docket.items() if not why]
-    return "\n".join([
-        "Facts, the only numbers you may use:", head,
-        *(["Your sworn claims (quote them exactly; never add, change or withdraw one):", *sworn] if sworn else []),
-        f"Apps you can put on trial now: {', '.join(ready) or 'none'}. The user starts a trial by typing: raise <app>.",
-        f'The user says: "{captions.short(text, 500)}"'])
+    return (f"Facts, the only numbers you may use: {head} Apps you can put on trial: {', '.join(ready) or 'none'}; "
+            f"the user starts one by typing: raise <app>. The user says: \"{captions.short(text, 400)}\"")
+
+
+def attach(user: str, shots: list[dict]) -> list:
+    """R8: the first mismatch's original and revival screenshots as ResourceContent, stored on Agentverse and
+    readable by the chat user. [] without AGENTVERSE_API_KEY or on any failure. Blocking (requests)."""
+    key = os.environ.get("AGENTVERSE_API_KEY")
+    if not key or not shots:
+        return []
+    try:
+        from uagents_core.config import AgentverseConfig
+        from uagents_core.contrib.protocols.chat import Resource, ResourceContent
+        from uagents_core.storage import ExternalStorage
+        cfg = AgentverseConfig()
+        store = ExternalStorage(api_token=key, storage_url=getattr(cfg, "storage_endpoint", None) or cfg.storage_api)
+        out = []
+        for side in ("original", "revival"):
+            png = (ROOT / shots[0][side]).read_bytes()
+            asset = store.create_asset(f"{shots[0]['ref']}.{side}.png", png, mime_type="image/png")
+            store.set_permissions(asset, agent_address=user)
+            out.append(ResourceContent(resource_id=uuid.uuid4(), resource=Resource(
+                uri=f"agent-storage://{store.storage_url}/{asset}", metadata={"mime_type": "image/png", "role": "image"})))
+        return out
+    except Exception as ex:  # noqa: BLE001 - screenshots are optional; the text line says where they are
+        base.log.warning("screenshots not attached (%s)", type(ex).__name__)
+        return []
 
 
 class McClusky:
@@ -97,6 +94,7 @@ class McClusky:
     def __init__(self, bailiff: str, hoot: str = "", runs=case.RUNS):
         self.bailiff, self.runs, self.app = bailiff, pathlib.Path(runs), ""
         self.peers = {bailiff, hoot} - {""}
+        self.waiting: dict[str, asyncio.Queue] = {}  # chat user -> what the Bailiff sends for their case
 
     def _from_bailiff(self, ctx, sender: str, what: str) -> bool:
         if sender != self.bailiff:
@@ -110,7 +108,7 @@ class McClusky:
         self.app = msg.app
         try:
             inp = case.load_inputs(msg.app, self.runs)
-            claims, dropped = await asyncio.to_thread(case.make_claims, msg.app, inp)
+            claims, dropped = await asyncio.to_thread(case.make_claims, msg.app, inp, self.runs)
             out = Testimony(case_id=msg.case_id, app=msg.app, claims=claims, dropped=len(dropped))
         except Exception as ex:  # noqa: BLE001 - an error answer adjourns the case now, not at the Bailiff's timeout
             out = Testimony(case_id=msg.case_id, app=msg.app,
@@ -118,24 +116,20 @@ class McClusky:
         await ctx.send(sender, out)
 
     async def on_progress(self, ctx, sender: str, p: Progress):
-        if not self._from_bailiff(ctx, sender, "Progress") or not p.requester:
-            return
-        data = {k: v for k, v in {**p.data, "event": p.event, "case_id": p.case_id, "app": p.app}.items()
-                if k not in RESERVED}
-        await base.send_text(ctx, p.requester, ROLE, p.text, **data)
+        if self._from_bailiff(ctx, sender, "Progress") and p.requester in self.waiting:
+            await self.waiting[p.requester].put(p)
 
     async def on_ruling(self, ctx, sender: str, r: Ruling):
         if not self._from_bailiff(ctx, sender, "Ruling"):
             return
-        self.app = r.app
-        if not r.error:
-            ctx.logger.info(f"case {r.case_id}: credibility {r.credibility_start} -> {r.credibility_end}. "
-                            f"{meter(r.credibility_end)}")
+        self.app = r.app or self.app
+        if r.requester in self.waiting:
+            await self.waiting[r.requester].put(r)
 
     async def on_remark(self, ctx, sender: str, req: RemarkRequest):
         if not self._from_bailiff(ctx, sender, "RemarkRequest"):
             return
-        text = await asyncio.to_thread(objection, req.ruling.dict(), req.answer)
+        text = await asyncio.to_thread(voice.mcclusky_line, req.ruling, req.answer)
         await ctx.send(sender, Remark(case_id=req.case_id, speaker=ROLE, text=text))
 
     # --- chat ----------------------------------------------------------------------------------------------
@@ -152,55 +146,67 @@ class McClusky:
             return await self.raise_case(ctx, sender, arg, docket)
         last = self.on_file(arg if name in ("claims", "credibility") else "", docket)
         if name == "talk":
-            return await asyncio.to_thread(base.persona, ROLE, talk_prompt(text, last, docket)), {"cmd": "talk"}
+            return await asyncio.to_thread(voice.persona, ROLE, talk_prompt(text, last, docket)), {"cmd": "talk"}
         r, claims, app = last["ruling"], last["claims"], last["app"]
-        if not claims or (name == "credibility" and not r):
+        if not claims or not r or r.get("error"):
             return captions.no_case(app), {"cmd": name, "ok": False}
         if name == "claims":
             return captions.claims_list(app, claims, last["locks"]), {"cmd": "claims", "app": app, "claims": len(claims)}
         if name == "credibility":
-            cred = r["credibility_end"]
-            return (f"{captions.credibility_line(r)} {meter(cred)}",
-                    {"cmd": "credibility", "app": app, "case_id": r["case_id"], "credibility": cred,
-                     "stress": stress(cred), "fainted": cred < FAINT})
+            return (f"🐧 Credibility {r['credibility_start']} → {r['credibility_end']}, Brier {r['brier']}, "
+                    f"{r['counts']['LOCKED']} locked of {r['claims']}. A rounding error, Your Honor.",
+                    {"cmd": "credibility", "app": app, "case_id": r["case_id"], "credibility": r["credibility_end"]})
         c = next((c for c in claims if c["id"] == arg), None)  # why
         if not c:
-            return (f"I swore no {arg} on {app}: my testimony runs {len(claims)} claims, c01 to c{len(claims):02d}. "
-                    f"Next question.", {"cmd": "why", "claim": arg, "ok": False})
+            return (f"I swore no {arg} on {app}: my testimony runs c01 to c{len(claims):02d}. Next question.",
+                    {"cmd": "why", "claim": arg, "ok": False})
         lock = next((x for x in last["locks"] if x["claim_id"] == arg), None)
         return captions.why_line(c, lock), {"cmd": "why", "claim": arg, "status": lock["status"] if lock else "PENDING"}
 
     def on_file(self, app: str, docket: dict) -> dict:
-        """case.last_case() for the app named, else my last case, else the newest ledger on disk."""
+        """case.last_case() for the app named, else my last case, else the newest ruling on disk."""
         if app not in docket:
-            newest = max(self.runs.glob("*/ledger.jsonl"), key=lambda p: p.stat().st_mtime, default=None)
+            newest = max(self.runs.glob("*/ruling.json"), key=lambda p: p.stat().st_mtime, default=None)
             app = self.app or (newest.parent.name if newest else "")
-        last = case.last_case(app, self.runs)
-        if not last["ruling"]:
-            last["locks"] = []  # without a ruling the files on disk can mix new testimony with old verdicts
-        return last
+        return case.last_case(app, self.runs) if app else {"app": "", "ruling": None, "claims": [], "locks": []}
 
     async def raise_case(self, ctx, user: str, app: str, docket: dict):
-        """Tell the user first, so this reply leads the Bailiff's progress lines, then open the case for them."""
+        """Open the case at the Bailiff for this user, relay at most 4 status lines, then answer with the final
+        reply, all from inside the chat handler."""
         ready = [a for a, why in docket.items() if not why]
         if not app:
-            return (f"Raise what, exactly? {captions.docket(docket).rstrip('.')}. Say: raise {(ready or ['todo'])[0]}",
+            return (f"Raise what, exactly? {captions.docket(docket)} Say: raise {(ready or ['todo'])[0]}",
                     {"cmd": "raise", "ok": False, "ready": ready})
-        try:
-            inp = case.load_inputs(app, self.runs)
-        except case.MissingInput:
+        if app not in docket or docket[app]:
             return captions.refusal(app[:40], docket), {"cmd": "raise", "app": app[:40], "ok": False, "ready": ready}
-        n_ev, n_lines = len(inp["evidence"]), len(inp["sheet"].get("lines", []))
-        await base.send_text(ctx, user, ROLE, f"Splendid. McClusky, Esq. takes the case of {app}: {n_ev} pieces of "
-                             f"evidence, a {n_lines}-line behavior sheet and my entire reputation. Calling the Bailiff; "
-                             f"the trial plays out right here.", cmd="raise", app=app, ok=True, evidence=n_ev,
-                             lines=n_lines)
-        sent = await ctx.send(self.bailiff, OpenCase(app=app, requester=user))
-        if sent.status == DeliveryStatus.FAILED:
-            return (f"The Bailiff did not answer ({sent.detail}). He has no opinion, no model and, it seems, no pulse. "
-                    f"Once he is up, say raise {app} again.", {"cmd": "raise", "app": app, "ok": False})
-        self.app = app
-        return None
+        if user in self.waiting:
+            return f"{captions.IN_SESSION} Your case is still running; the ruling lands here.", {"cmd": "raise", "ok": False}
+        q = self.waiting[user] = asyncio.Queue()
+        try:
+            sent = await ctx.send(self.bailiff, OpenCase(app=app, requester=user))
+            if sent.status == DeliveryStatus.FAILED:
+                return (f"The Bailiff did not answer ({captions.short(sent.detail, 60)}). Once he is up, say raise "
+                        f"{app} again.", {"cmd": "raise", "app": app, "ok": False})
+            self.app, shown = app, 0
+            while True:
+                msg = await asyncio.wait_for(q.get(), CASE_S)
+                if isinstance(msg, Ruling):
+                    break
+                if msg.event in case.PROGRESS and shown < len(case.PROGRESS):
+                    shown += 1
+                    await base.send_text(ctx, user, ROLE, case.PROGRESS[msg.event], cmd="raise", app=app,
+                                         case_id=msg.case_id, event=msg.event, ok=True)
+        except asyncio.TimeoutError:
+            return f"No ruling after {CASE_S} s; ask the Bailiff: status.", {"cmd": "raise", "app": app, "ok": False}
+        finally:
+            self.waiting.pop(user, None)
+        if msg.error and not msg.case_id:  # refused before the case opened
+            return msg.text, {"cmd": "raise", "app": app, "ok": False}
+        pics = await asyncio.to_thread(attach, user, msg.shots)
+        text = msg.text
+        if pics:  # the screenshots ride along, so drop the line that says where they are
+            text = "\n\n".join(p for p in text.split("\n\n") if not p.startswith("📸"))
+        return text, msg.data, pics
 
 
 def _address(role: str) -> str:
@@ -211,7 +217,7 @@ def _address(role: str) -> str:
 
 
 def build(runs=case.RUNS):
-    """The uAgent on port 8771. Call it inside main(): worker processes re-import the main module."""
+    """The uAgent on port 8782. Call it inside main(): worker processes re-import the main module."""
     agent = base.make_agent(ROLE)
     mc = McClusky(base.address("bailiff"), _address("hoot"), runs)
     agent.include(base.chat_protocol(ROLE, mc.chat), publish_manifest=base.flag("SEANCE_MAILBOX"))
@@ -222,13 +228,13 @@ def build(runs=case.RUNS):
 
 
 def main(argv=None) -> None:
-    ap = argparse.ArgumentParser(description="McClusky, Esq.: the Seance Medium as a uAgent on port 8771.")
+    ap = argparse.ArgumentParser(description="McClusky, Esq.: the Seance Medium as a uAgent.")
     ap.add_argument("--mailbox", action="store_true", help="also on the Agentverse mailbox, for ASI:One (SEANCE_MAILBOX=1)")
     if ap.parse_args(argv).mailbox:
         os.environ["SEANCE_MAILBOX"] = "1"
     base.load_env()
     agent = build()
-    print(f"McClusky, Esq. {agent.address} at {base.local_url(ROLE)}; chat him: raise todo")
+    print(f"{base.NAMES[ROLE]} {agent.address} on :{base.PORTS[ROLE]}; chat him: raise todo", flush=True)
     agent.run()
 
 

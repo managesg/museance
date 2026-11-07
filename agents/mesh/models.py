@@ -1,21 +1,19 @@
-"""Every uAgents message the Seance mesh sends. Final: stage 2 must not change it.
+"""Every uAgents message the Seance mesh sends between our agents (chat users get the Agent Chat Protocol).
 
-Messages route by schema digest (class name + every field + defaults), so all agents import these classes
-and an edit here must ship to every agent at once.
+Messages route by schema digest (class name + every field + defaults), so all agents import these classes and an
+edit here must ship to every agent at once.
 
 A case, in order (sender -> receiver: message, reply):
-  front door -> Bailiff     OpenCase       a chat user said "raise <app>". Front door = the envelope sender:
-                                           McClusky (relaying for a chat user), the Clerk CLI, or any agent.
-  Bailiff -> front door     Progress       one per hop; `text` is the one-line caption, ready for chat.
-                                           The last one of every case has event "closed" or "adjourned".
+  front door -> Bailiff     OpenCase       a chat user said "raise <app>" to McClusky (or the Clerk CLI asked)
+  Bailiff -> front door     Progress       one per mesh event; McClusky turns at most 4 into status lines
   Bailiff -> Hoot           CallSkeptic    -> SealedAttacks (commits and seal only, no steps yet)
   Bailiff -> McClusky       CallMedium     -> Testimony (claims, each with its commit)
   Bailiff -> Hoot           RequestReveal  -> RevealAttacks (each attack must hash to its sealed commit)
-  Bailiff -> McClusky, Hoot, and the front door when it is another agent:  Ruling
-  Bailiff -> Hoot, then McClusky (with Hoot's taunt in `answer`):  RemarkRequest -> Remark
-Replies go back in the request's session, so the Bailiff can await them with ctx.send_and_receive.
-Claims and attacks travel as plain dicts (CONTRACTS.md shapes): a typed model would drop fields it does
-not know, change the object and break its commit hash.
+  Bailiff -> Hoot, then McClusky (Hoot's taunt in `answer`):  RemarkRequest -> Remark
+  Bailiff -> front door and Hoot:  Ruling (text = McClusky's final chat reply, data = its machine line)
+Replies to requests go back in the request's session, so the Bailiff awaits them with ctx.send_and_receive.
+Claims and attacks travel as plain dicts (CONTRACTS.md shapes): a typed model would drop fields it does not know,
+change the object and break its commit hash.
 """
 from uagents import Model
 
@@ -28,10 +26,9 @@ class OpenCase(Model):
 class Progress(Model):
     case_id: str
     app: str
-    requester: str = ""  # echoed from OpenCase so the front door knows whose chat to relay to
-    event: str  # mesh event type without "mesh.": open, summon, sealed, ..., closed, adjourned
-    text: str  # caption, one line (the ruling: a few lines)
-    data: dict = {}  # small payload for the [seance] machine line
+    requester: str = ""
+    event: str  # mesh event type without "mesh.": open, sealed, sworn, revealed, ruling, remark
+    text: str  # the event's caption
 
 
 class CallSkeptic(Model):
@@ -71,30 +68,10 @@ class RevealAttacks(Model):
     error: str = ""
 
 
-class Ruling(Model):
-    case_id: str
-    app: str
-    requester: str = ""
-    error: str = ""  # set when the case was adjourned; the numbers below are then empty
-    counts: dict[str, int] = {}  # LOCKED, STRUCK, FABRICATED, UNSWORN
-    claims: int = 0
-    attacks: int = 0  # attacks the court ran
-    refused: int = 0  # attacks thrown out at reveal (content no longer matched the sealed commit)
-    catches: int = 0  # attacks where original and revival disagreed (not flaky): Hoot's score
-    fidelity: int = 0
-    brier: float = 0.0
-    credibility_start: int = 1000
-    credibility_end: int = 1000  # McClusky's score
-    struck: list[dict] = []  # per STRUCK claim: id, text, expect, original, bond, confidence
-    funniest: str = ""  # the most overconfident STRUCK claim, as one line
-    chain: str = ""  # court.ledger.verify() message after the court ruled
-    text: str = ""  # chat-ready summary
-
-
 class RemarkRequest(Model):
     case_id: str
     app: str
-    ruling: Ruling
+    ruling: dict = {}  # runs/<app>/ruling.json so far
     answer: str = ""  # the remark to answer (Hoot's taunt, sent to McClusky)
 
 
@@ -102,3 +79,13 @@ class Remark(Model):
     case_id: str
     speaker: str  # "hoot" or "mcclusky"
     text: str
+
+
+class Ruling(Model):
+    case_id: str
+    app: str
+    requester: str = ""
+    error: str = ""  # set when the case was adjourned
+    text: str = ""  # McClusky's final chat reply, without the machine line
+    data: dict = {}  # the machine line's fields (case.numbers)
+    shots: list[dict] = []  # first mismatches: {ref, original, revival} PNG paths relative to the repo
