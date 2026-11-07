@@ -1,0 +1,5 @@
+{"input": "#item", "add": "#add", "lists": {"todo": "#todo", "completed": "#completed"},
+ "items": ["#todo li", "#completed li"],
+ "item_buttons": {"complete_open": "#todo li .complete", "remove_open": "#todo li .remove",
+                  "complete_done": "#completed li .complete", "remove_done": "#completed li .remove"},
+ "observe": ["#todo", "#completed", "#item", "body"]}

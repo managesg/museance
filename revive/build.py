@@ -1,8 +1,10 @@
 """Build a single-file revival from supplied evidence, without original sources."""
 import argparse
 import json
+import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import tempfile
 from html.parser import HTMLParser
@@ -13,9 +15,13 @@ def selector_ids(selectors):
         return set().union(*(selector_ids(v) for v in selectors.values()))
     if isinstance(selectors, list):
         return set().union(*(selector_ids(v) for v in selectors))
-    if not isinstance(selectors, str) or not re.fullmatch(r"#[A-Za-z_][\w-]*", selectors):
+    if selectors == "body":
+        return set()
+    # "#todo li .complete" needs the element #todo; the li/.complete parts are created by the script
+    match = isinstance(selectors, str) and re.match(r"#([A-Za-z_][\w-]*)(?=$|[\s.:\[>+~])", selectors)
+    if not match:
         raise ValueError(f"Expected an ID selector, got {selectors!r}")
-    return {selectors[1:]}
+    return {match.group(1)}
 
 
 def make_prompt(sheet, selectors):
@@ -29,6 +35,7 @@ def make_prompt(sheet, selectors):
         "Use plain JavaScript, inline CSS and classic inline scripts; no imports, libraries, "
         "external assets, fetches or dependencies. Keep every selector ID as a real HTML element. "
         "Show results as text in the observe element. Put scripts after the markup. "
+        "A selector like '#list li .btn' names elements your script creates: give them exactly those tags and classes. "
         "For compatibility with the stub DOM evaluator, bind each button using "
         "document.getElementById(id).onclick and update innerText or textContent. "
         "Do not depend on DOM-ready events, inline HTML event attributes or browser-only APIs.\n"
@@ -66,6 +73,9 @@ def check_selectors(html, selectors):
 def builder_command(builder):
     if builder == "codex":
         return ["codex", "exec", "-s", "read-only", "--skip-git-repo-check", "--ephemeral", "-"]
+    if builder == "muse":  # no tools can run or write; the prompt is passed by --prompt-file (no stdin support)
+        return ["muse", "exec", "--disable-shell", "--disable-write", "--disable-web-tools", "--approval-mode", "never",
+                "--no-session-log", "--no-foreign-personal-context"]
     executable = "claude" if builder == "claude" else str(Path.home() / ".local/bin/glm")
     return [executable, "-p", "--output-format", "text", "--permission-mode", "plan"]
 
@@ -73,8 +83,16 @@ def builder_command(builder):
 def run_builder(builder, prompt):
     """Send a prompt to the coding CLI and return its reply text."""
     # Neither repository context nor original-app paths are handed to the coding CLI.
-    with tempfile.TemporaryDirectory(prefix="seance-revival-") as work:
-        result = subprocess.run(builder_command(builder), input=prompt, cwd=work,
+    with tempfile.TemporaryDirectory(prefix="seance-revival-") as work, tempfile.TemporaryDirectory(prefix="seance-tmp-") as tmp:
+        command = builder_command(builder)
+        env = None
+        if builder == "muse":  # Muse refuses a workspace that contains TMPDIR, so TMPDIR is a sibling dir
+            (Path(work) / "prompt.txt").write_text(prompt, encoding="utf-8")
+            command += ["--prompt-file", "prompt.txt"]
+            prompt = None
+            env = {**os.environ, "TMPDIR": tmp, "TEMP": tmp, "TMP": tmp}
+        command[0] = shutil.which(command[0]) or command[0]  # Windows npm shims are codex.cmd, not codex
+        result = subprocess.run(command, input=prompt, cwd=work, env=env,
                                 capture_output=True, text=True, encoding="utf-8", timeout=600)
     if result.returncode:
         raise RuntimeError(f"{builder} exited {result.returncode}: {result.stderr[-3000:]}")
