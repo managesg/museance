@@ -133,6 +133,29 @@
    "repair_reason": null,
    "repair_to": null,
    "not_recorded": []
+  },
+  {
+   "app": "todo",
+   "version": "v2-muse",
+   "sha256": "ab98d5efd3c7ef4fee47833c04d0762c3533aa44377804bb9a8bdcb41bd2dfdd",
+   "regression_total": 20,
+   "traps_of": null,
+   "false_strikes_of": 12,
+   "regression_passed": 20,
+   "attack_mismatches": 0,
+   "traps_flagged": null,
+   "false_strikes": 0,
+   "fidelity": 100,
+   "repair_claim": "attacks:todo",
+   "repair_decision": "patched",
+   "repair_builder": "muse",
+   "repair_builder_source": "repairs.jsonl",
+   "repair_reason": "attack mismatches 68->0, fidelity 35->100, regression 19->20",
+   "repair_to": null,
+   "alternate_of": "v1",
+   "not_recorded": [
+    "traps_flagged"
+   ]
   }
  ]
 }

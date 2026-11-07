@@ -29,3 +29,10 @@ def test_builder_source_carried():
 def test_stored_regression_file_ignored_when_it_disagrees_with_recorded_score():
     rows = build_app("x", REP, HEAD, HEAD, None, None, [None, None])  # HEAD passes 3 but v1 recorded 2
     assert rows[0]["regression_passed"] == 2 and rows[0]["traps_flagged"] is None
+
+
+def test_alternate_builder_branch_gets_its_own_row():
+    a = {"claim_id": "k", "from_sha256": "A", "to_sha256": "B", "decision": "patched", "reason": "r", "regression": [2, 3], "mismatches": [5, 0]}
+    rows = build_app("x", [a, dict(a, to_sha256="C", builder="muse")], None, [ROW("g1", True)] * 3, None, None, [("codex", None), ("muse", "repairs.jsonl")])
+    assert [r["version"] for r in rows] == ["v1", "v2", "v2-muse"]
+    assert rows[2]["repair_builder"] == "muse" and rows[2]["alternate_of"] == "v1" and rows[2]["sha256"] == "C" and rows[1]["sha256"] == "B"

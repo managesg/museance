@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Todo</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: #edf0f1;
+  color: #444;
+  font-family: Arial, Helvetica, sans-serif;
+}
+header {
+  padding: 15px;
+  background: #25b99a;
+  border-radius: 0 0 10px 10px;
+  box-shadow: 0 2px 4px rgba(44,62,80,.15);
+}
+.entry { position: relative; }
+#item {
+  width: 100%;
+  height: 50px;
+  padding: 0 65px 0 18px;
+  border: 0;
+  border-radius: 5px 25px 25px 5px;
+  background: rgba(255,255,255,.2);
+  color: white;
+  font: inherit;
+  outline-offset: 3px;
+}
+#item::placeholder { color: rgba(255,255,255,.8); }
+button {
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+}
+button:focus-visible { outline: 2px solid #176f60; outline-offset: 2px; }
+#add {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 50px;
+  height: 50px;
+  background: white;
+  border-radius: 50%;
+}
+#add::before, #add::after {
+  content: "";
+  position: absolute;
+  top: 24px;
+  left: 16px;
+  width: 18px;
+  height: 2px;
+  background: #25b99a;
+}
+#add::after { transform: rotate(90deg); }
+main { padding: 15px; }
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+ul.empty {
+  padding: 20px 0 5px;
+  text-align: center;
+  color: #a5aaad;
+  font-size: 13px;
+}
+li {
+  position: relative;
+  min-height: 50px;
+  margin-bottom: 10px;
+  padding: 15px 110px 15px 15px;
+  background: white;
+  border-radius: 5px;
+  box-shadow: 0 1px 2px rgba(44,62,80,.1);
+  font-size: 14px;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+li button {
+  position: absolute;
+  top: 0;
+  width: 50px;
+  height: 100%;
+  min-height: 50px;
+}
+.remove { right: 50px; }
+.complete { right: 0; }
+.complete::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  left: 0;
+  height: 22px;
+  border-left: 1px solid #edf0f1;
+}
+.check {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  width: 22px;
+  height: 22px;
+  border: 2px solid #25b99a;
+  border-radius: 50%;
+}
+.check::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 3px;
+  width: 5px;
+  height: 9px;
+  border-right: 2px solid #25b99a;
+  border-bottom: 2px solid #25b99a;
+  transform: rotate(45deg);
+}
+#completed .check { background: #25b99a; }
+#completed .check::after { border-color: white; }
+.trash {
+  position: absolute;
+  top: 19px;
+  left: 19px;
+  width: 12px;
+  height: 14px;
+  border: 2px solid #c0cecb;
+  border-top: 0;
+  border-radius: 0 0 2px 2px;
+}
+.trash::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: -3px;
+  width: 14px;
+  border-top: 2px solid #c0cecb;
+}
+.trash::after {
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: 2px;
+  width: 4px;
+  height: 3px;
+  border: 2px solid #c0cecb;
+  border-bottom: 0;
+}
+.remove:hover .trash,
+.remove:hover .trash::before,
+.remove:hover .trash::after { border-color: #e66b6b; }
+.divider {
+  width: 150px;
+  height: 1px;
+  margin: 30px auto 15px;
+  background: #d8e5e0;
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="entry">
+    <input id="item" type="text" placeholder="Enter an activity.." aria-label="Activity" autocomplete="off">
+    <button id="add" type="button" aria-label="Add activity"></button>
+  </div>
+</header>
+<main>
+  <ul id="todo" aria-label="Todo tasks"></ul>
+  <div class="divider" aria-hidden="true"></div>
+  <ul id="completed" aria-label="Completed tasks"></ul>
+</main>
+<script>
+var tasks = { todo: [], completed: [] };
+var nextId = 1;
+
+function renderList(name) {
+  var list = document.getElementById(name);
+  list.textContent = "";
+  list.className = tasks[name].length ? "" : "empty";
+
+  tasks[name].forEach(function(task) {
+    var row = document.createElement("li");
+    row.textContent = task.text;
+
+    var remove = document.createElement("button");
+    remove.id = "remove-" + task.id;
+    remove.className = "remove";
+    remove.type = "button";
+    remove.setAttribute("aria-label", "Remove task");
+    var trash = document.createElement("span");
+    trash.className = "trash";
+    trash.setAttribute("aria-hidden", "true");
+    remove.appendChild(trash);
+
+    var complete = document.createElement("button");
+    complete.id = "complete-" + task.id;
+    complete.className = "complete";
+    complete.type = "button";
+    complete.setAttribute("aria-label", name === "todo" ? "Complete task" : "Restore task");
+    var check = document.createElement("span");
+    check.className = "check";
+    check.setAttribute("aria-hidden", "true");
+    complete.appendChild(check);
+
+    row.appendChild(remove);
+    row.appendChild(complete);
+    list.appendChild(row);
+
+    document.getElementById(remove.id).onclick = function() {
+      tasks[name] = tasks[name].filter(function(entry) {
+        return entry.id !== task.id;
+      });
+      render();
+    };
+
+    document.getElementById(complete.id).onclick = function() {
+      tasks[name] = tasks[name].filter(function(entry) {
+        return entry.id !== task.id;
+      });
+      var destination = name === "todo" ? "completed" : "todo";
+      tasks[destination].unshift(task);
+      render();
+    };
+  });
+}
+
+function render() {
+  renderList("todo");
+  renderList("completed");
+}
+
+function addTask() {
+  var input = document.getElementById("item");
+  if (input.value === "") return;
+  tasks.todo.unshift({ id: nextId++, text: input.value });
+  input.value = "";
+  render();
+}
+
+document.getElementById("add").onclick = addTask;
+document.getElementById("item").onkeydown = function(event) {
+  if (event.key === "Enter" || event.code === "NumpadEnter" || event.keyCode === 13) {
+    if (event.preventDefault) event.preventDefault();
+    addTask();
+  }
+};
+
+render();
+</script>
+</body>
+</html>

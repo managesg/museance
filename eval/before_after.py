@@ -39,6 +39,13 @@ def _bs(b):
 
 def build_app(app, repairs, reg_old, reg_head, fid_old, fid_head, builders):
     """repairs: jsonl dicts in order; reg_old/reg_head: regression row lists (old may be None); fid_*: case fidelity or None."""
+    chain = [0]  # repairs[0] then each repair that starts where the last ended; the rest are alternates from an earlier version
+    for i in range(1, len(repairs)):
+        if repairs[i]["from_sha256"] == repairs[chain[-1]]["to_sha256"]:
+            chain.append(i)
+    alts = [i for i in range(len(repairs)) if i not in chain]
+    builders = [builders[i] for i in chain] + [builders[i] for i in alts]
+    repairs, n_alt = [repairs[i] for i in chain], [repairs[i] for i in alts]
     n, rows = len(repairs), []
     sizes = dict(regression_total=len(reg_head), traps_of=sum(x["kind"] == "trap" for x in reg_head),
                  false_strikes_of=sum(x["kind"] == "good" for x in reg_head))
@@ -60,6 +67,18 @@ def build_app(app, repairs, reg_old, reg_head, fid_old, fid_head, builders):
             row["fidelity"] = fid_head if i == n else fid_old if i == 0 else None
         for den, num in (("regression_total", "regression_passed"), ("traps_of", "traps_flagged"), ("false_strikes_of", "false_strikes")):
             row[den] = row[den] if row[num] is not None else None  # no denominator without a numerator
+        row["not_recorded"] = [k for k in KEYS if row[k] is None]
+        rows.append(row)
+    for j, r in enumerate(n_alt):  # a different builder repairing an earlier version; its scores are the repair's recorded "after"
+        src = next((k for k, c in enumerate(repairs) if c["from_sha256"] == r["from_sha256"]), None)
+        b, bsrc = _bs(builders[n + j])
+        row = dict(app=app, version=f"v{(src or 0) + 2}-{b or 'alt'}", sha256=r["to_sha256"], **sizes,
+                   regression_passed=_pair(r, "regression")[1], attack_mismatches=_pair(r, "mismatches")[1], traps_flagged=None,
+                   false_strikes=_pair(r, "false_strikes")[1], fidelity=_pair(r, "fidelity")[1], repair_claim=r.get("claim_id"),
+                   repair_decision=r.get("decision"), repair_builder=b, repair_builder_source=bsrc, repair_reason=r.get("reason"),
+                   repair_to=None, alternate_of=f"v{(src or 0) + 1}")
+        for den, num in (("regression_total", "regression_passed"), ("traps_of", "traps_flagged"), ("false_strikes_of", "false_strikes")):
+            row[den] = row[den] if row[num] is not None else None
         row["not_recorded"] = [k for k in KEYS if row[k] is None]
         rows.append(row)
     return rows
@@ -115,7 +134,7 @@ def render(rows):
            "## JSON shape (`cases/before_after.json`)", "",
            "`{\"rows\": [ ... ]}`: one flat row per app and revival version. Keys: `app`, `version` (v1 = first revival), `sha256`, "
            "`regression_passed`, `regression_total`, `attack_mismatches`, `traps_flagged`, `traps_of`, `false_strikes`, `false_strikes_of`, "
-           "`fidelity`, `repair_claim`, `repair_decision`, `repair_builder`, `repair_builder_source` (commit or file that proves the builder), `repair_reason`, `repair_to` (the repair that produced the next "
+           "`fidelity`, `repair_claim`, `repair_decision`, `repair_builder`, `repair_builder_source` (commit or file that proves the builder), `repair_reason`, `alternate_of` (only on a row for a different builder's repair of an earlier version), `repair_to` (the repair that produced the next "
            "version; null on the last version), `not_recorded` (keys that are null because no committed file has them).", "",
            "`traps_flagged` = trap behaviors where the revival diverged from the original, i.e. traps the court caught. Fewer after repair "
            "means the revival now matches the original on them, not that the court got worse.", "",
@@ -125,7 +144,9 @@ def render(rows):
         out += [f"## {app}", "", "| Version | Regression | Attack mismatches | Traps flagged | False strikes | Fidelity | Repair that produced the next version |",
                 "|---|---|---|---|---|---|---|"]
         for r in (x for x in rows if x["app"] == app):
-            rep = "final" if not r["repair_to"] else (f"{r['repair_claim']} -> {r['repair_to']} ({r['repair_decision']}), builder "
+            rep = (f"alternate repair of {r['alternate_of']} ({r['repair_decision']}), builder {_v(r['repair_builder'])}"
+                   f"{' (' + r['repair_builder_source'] + ')' if r['repair_builder_source'] else ''}: {r['repair_reason']}"
+                   if r.get("alternate_of") else "final") if not r["repair_to"] else (f"{r['repair_claim']} -> {r['repair_to']} ({r['repair_decision']}), builder "
                                                       f"{_v(r['repair_builder'])}"
                                                       f"{' (' + r['repair_builder_source'] + ')' if r['repair_builder_source'] else ''}"
                                                       f": {r['repair_reason']}")
