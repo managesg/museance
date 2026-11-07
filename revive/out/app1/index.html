@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculator</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: #eef1f5;
+  color: #172033;
+  font-family: Arial, sans-serif;
+}
+main {
+  width: 310px;
+  padding: 22px;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 16px 45px #17203318;
+}
+h1 {
+  margin: 0 0 18px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #697386;
+}
+#display {
+  display: block;
+  min-height: 88px;
+  padding: 24px 14px;
+  margin-bottom: 18px;
+  overflow-wrap: anywhere;
+  border-radius: 12px;
+  background: #f3f5f8;
+  text-align: right;
+  font-size: 34px;
+  font-variant-numeric: tabular-nums;
+}
+.keys {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+button {
+  min-height: 58px;
+  border: 0;
+  border-radius: 12px;
+  background: #edf0f5;
+  color: #172033;
+  font: 500 22px Arial, sans-serif;
+  cursor: pointer;
+}
+button:hover { filter: brightness(.96); }
+button:active { transform: translateY(1px); }
+button:focus-visible { outline: 3px solid #859dff; outline-offset: 2px; }
+.operator { background: #e7ecff; color: #405dc1; }
+#kc { background: #fce9e9; color: #a44242; }
+#keq { grid-column: span 2; background: #4969da; color: #fff; }
+</style>
+</head>
+<body>
+<main aria-label="Calculator">
+  <h1>Calculator</h1>
+  <output id="display" aria-live="polite">0</output>
+  <div class="keys">
+    <button id="kc" type="button">C</button>
+    <button id="kdiv" class="operator" type="button" aria-label="Divide">÷</button>
+    <button id="kmul" class="operator" type="button" aria-label="Multiply">×</button>
+    <button id="k7" type="button">7</button>
+    <button id="k8" type="button">8</button>
+    <button id="kadd" class="operator" type="button" aria-label="Add">+</button>
+    <button id="k1" type="button">1</button>
+    <button id="k0" type="button">0</button>
+    <button id="kdot" type="button" aria-label="Decimal point">.</button>
+    <button id="keq" type="button" aria-label="Equals">=</button>
+  </div>
+</main>
+<script>
+var entry = "0";
+var saved = null;
+var operation = null;
+var fresh = true;
+
+function show() {
+  document.getElementById("display").textContent = entry;
+}
+
+function clearCalculator() {
+  entry = "0";
+  saved = null;
+  operation = null;
+  fresh = true;
+  show();
+}
+
+function digit(value) {
+  if (entry === "Error") clearCalculator();
+  if (fresh || entry === "0") {
+    entry = value;
+  } else {
+    entry += value;
+  }
+  fresh = false;
+  show();
+}
+
+function decimal() {
+  if (entry === "Error") clearCalculator();
+  if (fresh) entry = "0";
+  if (entry.indexOf(".") === -1) entry += ".";
+  fresh = false;
+  show();
+}
+
+function calculate() {
+  var right = Number(entry);
+  var result;
+  if (operation === "+") result = saved + right;
+  if (operation === "*") result = saved * right;
+  if (operation === "/") result = right === 0 ? NaN : saved / right;
+  if (!isFinite(result) || (operation === "/" && right === 0)) {
+    entry = "Error";
+  } else {
+    entry = String(Math.trunc(result * 100) / 100);
+  }
+}
+
+function chooseOperator(value) {
+  if (entry === "Error") return;
+  if (operation !== null && !fresh) calculate();
+  if (entry === "Error") {
+    saved = null;
+    operation = null;
+    fresh = true;
+    show();
+    return;
+  }
+  saved = fresh && operation !== null ? 0 : Number(entry);
+  operation = value;
+  fresh = true;
+  show();
+}
+
+function equals() {
+  if (operation === null || entry === "Error" || fresh) return;
+  calculate();
+  operation = null;
+  saved = null;
+  fresh = true;
+  show();
+}
+
+document.getElementById("k7").onclick = function () { digit("7"); };
+document.getElementById("k8").onclick = function () { digit("8"); };
+document.getElementById("k1").onclick = function () { digit("1"); };
+document.getElementById("k0").onclick = function () { digit("0"); };
+document.getElementById("kdot").onclick = function () { decimal(); };
+document.getElementById("kadd").onclick = function () { chooseOperator("+"); };
+document.getElementById("kmul").onclick = function () { chooseOperator("*"); };
+document.getElementById("kdiv").onclick = function () { chooseOperator("/"); };
+document.getElementById("keq").onclick = function () { equals(); };
+document.getElementById("kc").onclick = function () { clearCalculator(); };
+show();
+</script>
+</body>
+</html>

@@ -19,7 +19,7 @@ Endpoints (all JSON, CORS `Access-Control-Allow-Origin: *`; <app> matches ^[A-Za
         body {app, steps, observe, original?, revival?} -> ONE verdict (CONTRACTS.md shape,
         kind "attack", ref "bench-<n>") from court.court.rule: 2 runs per build, flaky check,
         shrink. Ad hoc: NOT written to runs/ or the ledger. 400 on bad steps/observe,
-        504 after 60 s. Build URLs: body, else --original-dir/--revival-dir, else the apps
+        504 after 60 s. Build URLs: body, else --build APP=ORIG,REV for that app, else --original-dir/--revival-dir, else the apps
         registry (--apps, default fixtures/apps.json: original.url / revival.url).
         All bench jobs run on one worker thread that owns the Playwright browser.
   OPTIONS answers CORS preflight (Allow-Methods GET, POST, OPTIONS).
@@ -116,6 +116,7 @@ class Handler(BaseHTTPRequestHandler):
     bench_timeout = 60.0
     worker: BenchWorker = None
     registry: dict = {}
+    app_dir_urls: dict = {}
     dir_urls: tuple = (None, None)
 
     def log_message(self, *a):
@@ -215,8 +216,11 @@ class Handler(BaseHTTPRequestHandler):
             if not isinstance(observe, str) or not observe.strip():
                 return self._err(400, "observe must be a non-empty string")
             ent = self.registry.get(app, {})
-            orig = body.get("original") or self.dir_urls[0] or ent.get("original", {}).get("url")
-            rev = body.get("revival") or self.dir_urls[1] or ent.get("revival", {}).get("url")
+            per_app = self.app_dir_urls.get(app, (None, None))
+            orig = (body.get("original") or per_app[0] or self.dir_urls[0]
+                    or ent.get("original", {}).get("url"))
+            rev = (body.get("revival") or per_app[1] or self.dir_urls[1]
+                   or ent.get("revival", {}).get("url"))
             if not orig or not rev:
                 return self._err(400, f"no original/revival URL for {app}")
             item = {"id": f"bench-{next(self.worker.n)}", "steps": steps, "observe": observe}
@@ -286,15 +290,20 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def make_server(runs, port=8787, host="127.0.0.1", apps=None, original_dir=None,
-                revival_dir=None) -> ThreadingHTTPServer:
+                revival_dir=None, builds=None) -> ThreadingHTTPServer:
+    """builds: {app_id: (original_dir, revival_dir)}, served per app for POST /bench.
+    original_dir/revival_dir (no app) are a global fallback for every app."""
     registry = {}
     ap = pathlib.Path(apps or "fixtures/apps.json")
     if ap.is_file():
         registry = {r["id"]: r for r in json.loads(ap.read_text(encoding="utf-8"))}
     stack = contextlib.ExitStack()
     urls = (stack.enter_context(serve.maybe(original_dir)), stack.enter_context(serve.maybe(revival_dir)))
+    app_urls = {app: (stack.enter_context(serve.maybe(o)), stack.enter_context(serve.maybe(r)))
+                for app, (o, r) in (builds or {}).items()}
     h = type("FeedHandler", (Handler,), {"runs": pathlib.Path(runs), "worker": BenchWorker(),
-                                         "registry": registry, "dir_urls": urls})
+                                         "registry": registry, "dir_urls": urls,
+                                         "app_dir_urls": app_urls})
     srv = ThreadingHTTPServer((host, port), h)
     srv.daemon_threads = True
     close = srv.server_close
@@ -310,8 +319,18 @@ def main(argv=None):
     ap.add_argument("--apps", default="fixtures/apps.json")
     ap.add_argument("--original-dir")
     ap.add_argument("--revival-dir")
+    ap.add_argument("--build", action="append", default=[], metavar="APP=ORIGINAL_DIR,REVIVAL_DIR",
+                    help="serve local build folders for ONE app's bench (repeatable), e.g. "
+                         "--build todo=apps/todo/original,revive/out/todo")
     a = ap.parse_args(argv)
-    srv = make_server(a.runs, a.port, a.host, a.apps, a.original_dir, a.revival_dir)
+    builds = {}
+    for spec in a.build:
+        app, sep, dirs = spec.partition("=")
+        o, sep2, r = dirs.partition(",")
+        if not (sep and sep2 and APP_RE.match(app) and o and r):
+            ap.error(f"bad --build {spec!r}, want APP=ORIGINAL_DIR,REVIVAL_DIR")
+        builds[app] = (o, r)
+    srv = make_server(a.runs, a.port, a.host, a.apps, a.original_dir, a.revival_dir, builds)
     print(f"court feed on http://{a.host}:{srv.server_address[1]} (runs={a.runs})")
     try:
         srv.serve_forever()

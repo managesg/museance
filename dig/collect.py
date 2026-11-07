@@ -43,8 +43,8 @@ def screenshots(app, original, scenes):
             page = browser.new_context(viewport={"width": 900, "height": 700}).new_page()  # fresh storage per scene
             run_steps(page, url, sc["steps"], "body")
             page.screenshot(path=shots / f"{sc['name']}.png")
-            seen = "; ".join(f"{sel}: {page.locator(sel + ' li').count()} items {page.locator(sel + ' li').all_inner_texts()}"
-                             for sel in sc.get("lists", LISTS))
+            seen = "; ".join(f"{sel} has {page.locator(sel + ' li').count()} items, its visible text is {page.inner_text(sel).strip()!r}"
+                             for sel in sc.get("lists", LISTS))  # same innerText the court observes
             items.append({"tier": "B", "kind": "screenshot", "source": f"our screenshot of the original, scene '{sc['name']}'",
                           "license": "ours", "path": f"shots/{sc['name']}.png",
                           "text": f"Screenshot after steps {sc['steps']}. Seen on screen: {seen}"})

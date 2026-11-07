@@ -2,6 +2,7 @@
 
 Same rules as P4's eval/score.py so the case file and locks.json never disagree:
 - no verdict, or flaky verdict      -> UNSWORN  (never STRUCK)
+- claim_true is None (the original errored: court could not judge) -> UNSWORN
 - claim_true                        -> LOCKED
 - otherwise                         -> STRUCK
 - label FABRICATED and not STRUCK   -> FABRICATED
@@ -14,6 +15,8 @@ def status(claim: dict, verdict: dict | None) -> tuple[str, str]:
         s, why = "UNSWORN", "no verdict"
     elif verdict["flaky"]:
         s, why = "UNSWORN", "flaky: two runs on the same build disagreed"
+    elif verdict.get("claim_true") is None:
+        s, why = "UNSWORN", "court could not run the test on the original"
     elif verdict["claim_true"]:
         s, why = "LOCKED", f"original shows {verdict['original']!r} as claimed"
     else:

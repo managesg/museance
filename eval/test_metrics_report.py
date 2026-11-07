@@ -31,3 +31,14 @@ def test_regression_and_repairs_counts(tmp_path):
     assert "| Regression | 1/3 |" in md and "| False strikes | 1/2 |" in md and "| Traps caught | 1/1 |" in md
     assert "| Repairs | patched 2, rollback 1, unsworn 0 |" in md
     assert "Not measured yet: none." in md
+
+
+def test_regression_only_app_section(tmp_path):
+    cases = tmp_path / "cases"
+    (cases / "y").mkdir(parents=True)
+    rows = [{"id": "g1", "kind": "good", "passed": True}, {"id": "t1", "kind": "trap", "passed": False}]
+    (cases / "y" / "regression-result.json").write_text(json.dumps(rows), encoding="utf-8")
+    (cases / "y" / "original-regression-result.json").write_text(json.dumps([dict(rows[0], passed=False)]), encoding="utf-8")
+    md = report(cases, cases)
+    assert "## y" in md and "| Regression | 1/2 |" in md and "| Traps caught | 1/1 |" in md
+    assert "| Original false strikes | 1/1 |" in md

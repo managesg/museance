@@ -1,9 +1,115 @@
 [
- {"name": "01-empty", "steps": []},
- {"name": "02-add-click", "steps": ["type:#item:Buy milk", "click:#add"]},
- {"name": "03-add-enter", "steps": ["type:#item:Walk dog", "key:Enter"]},
- {"name": "04-two-items", "steps": ["type:#item:Buy milk", "click:#add", "type:#item:Walk dog", "click:#add"]},
- {"name": "05-complete", "steps": ["type:#item:Buy milk", "click:#add", "click:#todo li .complete"]},
- {"name": "06-remove", "steps": ["type:#item:Buy milk", "click:#add", "type:#item:Walk dog", "click:#add", "click:#todo li .remove"]},
- {"name": "07-empty-add", "steps": ["click:#add"]}
+ {
+  "name": "01-empty",
+  "steps": []
+ },
+ {
+  "name": "02-add-click",
+  "steps": [
+   "type:#item:Buy milk",
+   "click:#add"
+  ]
+ },
+ {
+  "name": "03-add-enter",
+  "steps": [
+   "type:#item:Walk dog",
+   "key:Enter"
+  ]
+ },
+ {
+  "name": "04-two-items",
+  "steps": [
+   "type:#item:Buy milk",
+   "click:#add",
+   "type:#item:Walk dog",
+   "click:#add"
+  ]
+ },
+ {
+  "name": "05-complete",
+  "steps": [
+   "type:#item:Buy milk",
+   "click:#add",
+   "click:#todo li .complete"
+  ]
+ },
+ {
+  "name": "06-remove",
+  "steps": [
+   "type:#item:Buy milk",
+   "click:#add",
+   "type:#item:Walk dog",
+   "click:#add",
+   "click:#todo li .remove"
+  ]
+ },
+ {
+  "name": "07-empty-add",
+  "steps": [
+   "click:#add"
+  ]
+ },
+ {
+  "name": "08-uncomplete",
+  "steps": [
+   "type:#item:Buy milk",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .complete"
+  ]
+ },
+ {
+  "name": "09-remove-completed",
+  "steps": [
+   "type:#item:Buy milk",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .remove"
+  ]
+ },
+ {
+  "name": "10-duplicates",
+  "steps": [
+   "type:#item:Buy milk",
+   "click:#add",
+   "type:#item:Buy milk",
+   "click:#add"
+  ]
+ },
+ {
+  "name": "11-whitespace",
+  "steps": [
+   "type:#item:   ",
+   "click:#add"
+  ]
+ },
+ {
+  "name": "12-long-word",
+  "steps": [
+   "type:#item:Supercalifragilisticexpialidocious-and-then-some-more-text",
+   "click:#add"
+  ]
+ },
+ {
+  "name": "13-complete-top-of-two",
+  "steps": [
+   "type:#item:Buy milk",
+   "click:#add",
+   "type:#item:Walk dog",
+   "click:#add",
+   "click:#todo li .complete"
+  ]
+ },
+ {
+  "name": "14-two-completed",
+  "steps": [
+   "type:#item:Buy milk",
+   "click:#add",
+   "click:#todo li .complete",
+   "type:#item:Walk dog",
+   "click:#add",
+   "click:#todo li .complete"
+  ]
+ }
 ]

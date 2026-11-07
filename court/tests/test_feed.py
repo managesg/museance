@@ -13,7 +13,9 @@ from court.ledger import Ledger
 def srv(tmp_path):
     runs = tmp_path / "runs"
     (runs / "app1").mkdir(parents=True)
-    s = make_server(runs, 0)
+    # isolated, empty app registry: tests must not depend on the shared fixtures/apps.json,
+    # which other lanes edit (P4 added app1/todo revival URLs at 13:58 -> "no URLs" case broke)
+    s = make_server(runs, 0, apps=tmp_path / "no-apps.json")
     s.RequestHandlerClass.poll_s = 0.05
     threading.Thread(target=s.serve_forever, daemon=True).start()
     yield f"http://127.0.0.1:{s.server_address[1]}", runs
@@ -132,6 +134,27 @@ def test_bench_a01(tmp_path):
         assert v["match"] is False and v["flaky"] is False and v["claim_true"] is None
         assert v["original"] != v["revival"] and v["shrunk_steps"]
         assert not list(tmp_path.iterdir())  # nothing written to runs/
+    finally:
+        s.shutdown()
+        s.server_close()
+
+
+def test_bench_builds_are_per_app(tmp_path):
+    # --build todo=...  must not leak into app1's bench (Vi: a todo bench was judged against the calc)
+    import pathlib
+    root = pathlib.Path(__file__).resolve().parents[2]
+    s = make_server(tmp_path, 0, builds={
+        "app1": (root / "fixtures" / "app1", root / "court" / "tests" / "revival_app1"),
+        "todo": (root / "apps" / "todo" / "original", root / "apps" / "todo" / "original")})
+    threading.Thread(target=s.serve_forever, daemon=True).start()
+    try:
+        base = f"http://127.0.0.1:{s.server_address[1]}"
+        st, v = post(base + "/todo/bench", {"steps": ["type:#item:Buy milk", "key:Enter"], "observe": "#todo"})
+        assert st == 200 and v["original"] == "Buy milk" and v["match"] is True
+        st, v = post(base + "/app1/bench", {"steps": ["click:#k7"], "observe": "#display"})
+        assert st == 200 and v["original"] == "7" and v["revival"] == "7"
+        st, _ = post(base + "/other/bench", {"steps": ["click:#k7"], "observe": "#display"})
+        assert st == 400  # no build for an unknown app, no global fallback set
     finally:
         s.shutdown()
         s.server_close()

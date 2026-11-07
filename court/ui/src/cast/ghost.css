@@ -1,0 +1,334 @@
+/* The Departed. The root's ghost--{mood} class poses the named groups; every expression stays mounted and fades in by mood. */
+
+.ghost {
+  overflow: visible;
+}
+
+.ghost__glyph {
+  font-family: var(--font-stamp);
+}
+
+.ghost__rig {
+  transform-origin: 200px 300px;
+  animation: ghost-appear 800ms ease-out both;
+}
+
+.ghost__float {
+  animation: ghost-bob 2.2s ease-in-out infinite alternate;
+}
+
+.ghost__sheet {
+  opacity: 0.85;
+  transform-origin: 200px 160px;
+  animation: ghost-sway 3.4s ease-in-out infinite alternate;
+}
+
+.ghost__flicker,
+.ghost__body,
+.ghost__sheet,
+.ghost__glow,
+.ghost__split-a,
+.ghost__split-b,
+.ghost__brow,
+.ghost__var,
+.ghost__hat {
+  transition:
+    transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 240ms steps(3, end);
+}
+
+.ghost__body {
+  transform-origin: 200px 446px;
+}
+
+.ghost__glow {
+  transform-origin: 200px 440px;
+}
+
+.ghost__hat {
+  transform-origin: 210px 116px;
+}
+
+.ghost__eyes--open {
+  transform-origin: 200px 220px;
+}
+
+.ghost__brow--l {
+  transform-origin: 165px 183px;
+  transform: rotate(-6deg);
+}
+
+.ghost__brow--r {
+  transform-origin: 235px 183px;
+  transform: rotate(6deg);
+}
+
+.ghost__mouth--frown,
+.ghost__mouth--smile {
+  transform-origin: 200px 257px;
+}
+
+.ghost__mouth--frown {
+  transform: scale(0.75);
+}
+
+.ghost__glow,
+.ghost__split-a,
+.ghost__split-b,
+.ghost__var {
+  opacity: 0;
+}
+
+.ghost--idle :is(.ghost__eyes--open, .ghost__mouth--frown),
+.ghost--hopeful :is(.ghost__eyes--open, .ghost__mouth--smile),
+.ghost--sad :is(.ghost__eyes--lidded, .ghost__mouth--frown),
+.ghost--flicker :is(.ghost__eyes--open, .ghost__mouth--gasp),
+.ghost--relieved :is(.ghost__eyes--closed, .ghost__mouth--smile) {
+  opacity: 1;
+}
+
+/* hopeful: lifts, brows up, eyes up, slight smile, hat perks level */
+.ghost--hopeful .ghost__body {
+  transform: translateY(-8px);
+}
+.ghost--hopeful .ghost__brow--l {
+  transform: translateY(-10px) rotate(-10deg);
+}
+.ghost--hopeful .ghost__brow--r {
+  transform: translateY(-10px) rotate(10deg);
+}
+.ghost--hopeful .ghost__eyes--open {
+  transform: translateY(-5px) scale(1.1);
+}
+.ghost--hopeful .ghost__mouth--smile {
+  transform: scale(0.75);
+}
+.ghost--hopeful .ghost__hat {
+  transform: translateY(-6px) rotate(-8deg);
+}
+
+/* sad: the reference face; the sheet sags and the hat slides */
+.ghost--sad .ghost__body {
+  transform: translateY(6px) scale(1.03, 0.95);
+}
+.ghost--sad .ghost__brow--l {
+  transform: translateY(3px) rotate(-18deg);
+}
+.ghost--sad .ghost__brow--r {
+  transform: translateY(3px) rotate(18deg);
+}
+.ghost--sad .ghost__mouth--frown {
+  transform: translateY(2px);
+}
+.ghost--sad .ghost__hat {
+  transform: translate(4px, 5px) rotate(12deg);
+}
+
+/* relieved: warm stepped glow, closed eyes, small smile */
+.ghost--relieved .ghost__sheet {
+  opacity: 0.92;
+}
+.ghost--relieved .ghost__glow {
+  opacity: 1;
+  animation: ghost-breathe 3s ease-in-out infinite alternate;
+}
+.ghost--relieved .ghost__brow--l {
+  transform: translateY(-3px) rotate(6deg);
+}
+.ghost--relieved .ghost__brow--r {
+  transform: translateY(-3px) rotate(-6deg);
+}
+.ghost--relieved .ghost__hat {
+  transform: rotate(-5deg);
+}
+
+/* flicker: perjury. A 600ms stepped glitch, then a held broken pose (dim, faint split, hat knocked) */
+.ghost--flicker :is(.ghost__float, .ghost__sheet) {
+  animation-play-state: paused;
+}
+.ghost--flicker .ghost__flicker {
+  opacity: 0.7;
+  animation:
+    ghost-stutter 600ms steps(1, end),
+    ghost-unsteady 3.2s 600ms steps(1, end) infinite;
+}
+.ghost--flicker .ghost__body {
+  transform: translateX(4px) skewX(-3deg);
+}
+.ghost--flicker .ghost__brow--l {
+  transform: translateY(-14px) rotate(-22deg);
+}
+.ghost--flicker .ghost__brow--r {
+  transform: translateY(-14px) rotate(22deg);
+}
+.ghost--flicker .ghost__eyes--open {
+  transform: scale(0.72);
+}
+.ghost--flicker .ghost__hat {
+  transform: translate(8px, -12px) rotate(-22deg);
+}
+.ghost--flicker .ghost__split-a {
+  opacity: 0.5;
+  transform: translateX(-4px);
+  animation: ghost-split-a 600ms steps(1, end);
+}
+.ghost--flicker .ghost__split-b {
+  opacity: 0.5;
+  transform: translateX(4px);
+  animation: ghost-split-b 600ms steps(1, end);
+}
+
+@keyframes ghost-appear {
+  0% {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  18% {
+    opacity: 0.75;
+  }
+  28% {
+    opacity: 0.2;
+  }
+  44% {
+    opacity: 0.9;
+  }
+  56% {
+    opacity: 0.5;
+  }
+  72% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ghost-bob {
+  to {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes ghost-sway {
+  from {
+    transform: skewX(-1.5deg);
+  }
+  to {
+    transform: skewX(1.5deg);
+  }
+}
+
+@keyframes ghost-breathe {
+  to {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes ghost-stutter {
+  0% {
+    opacity: 1;
+    transform: translateX(-6px);
+  }
+  15% {
+    opacity: 0.25;
+    transform: translate(5px, -2px);
+  }
+  30% {
+    opacity: 0.9;
+    transform: translate(-3px, 2px);
+  }
+  45% {
+    opacity: 0.15;
+    transform: translateX(7px);
+  }
+  60% {
+    opacity: 0.8;
+    transform: translate(-5px, -1px);
+  }
+  75% {
+    opacity: 0.35;
+    transform: translateX(3px);
+  }
+  90% {
+    opacity: 0.85;
+    transform: translateX(-2px);
+  }
+  100% {
+    opacity: 0.7;
+    transform: none;
+  }
+}
+
+@keyframes ghost-unsteady {
+  0%,
+  88%,
+  100% {
+    opacity: 0.7;
+  }
+  91% {
+    opacity: 0.3;
+  }
+  94% {
+    opacity: 0.85;
+  }
+  97% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes ghost-split-a {
+  0% {
+    opacity: 0.9;
+    transform: translateX(-12px);
+  }
+  25% {
+    transform: translate(-5px, 3px);
+  }
+  50% {
+    transform: translate(-14px, -2px);
+  }
+  75% {
+    transform: translate(-8px, 1px);
+  }
+  100% {
+    opacity: 0.5;
+    transform: translateX(-4px);
+  }
+}
+
+@keyframes ghost-split-b {
+  0% {
+    opacity: 0.9;
+    transform: translateX(12px);
+  }
+  25% {
+    transform: translate(5px, -3px);
+  }
+  50% {
+    transform: translate(14px, 2px);
+  }
+  75% {
+    transform: translate(8px, -1px);
+  }
+  100% {
+    opacity: 0.5;
+    transform: translateX(4px);
+  }
+}
+
+@keyframes ghost-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ghost * {
+    animation: none !important;
+    transition: opacity 200ms ease-out !important;
+  }
+  .ghost .ghost__rig {
+    animation: ghost-fade 300ms ease-out both !important;
+  }
+}

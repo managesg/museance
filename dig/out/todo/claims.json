@@ -1,0 +1,395 @@
+[
+ {
+  "id": "c01",
+  "app": "todo",
+  "screen": "add",
+  "text": "Typing 'Buy milk' into #item and clicking #add creates a todo item with text 'Buy milk' in #todo.",
+  "test": {
+   "steps": [
+    "type:#item:Buy milk",
+    "click:#add"
+   ],
+   "observe": "#todo li",
+   "expect": "Buy milk"
+  },
+  "tier": "B",
+  "label": "SEEN",
+  "evidence": [
+   "e043"
+  ],
+  "confidence": 0.9775,
+  "bond": 239,
+  "medium_confidence": 0.95,
+  "commit": "68380db843f980a5e863cf11899d033855de2a6e1bc63e0e4742af4c107a84a0"
+ },
+ {
+  "id": "c02",
+  "app": "todo",
+  "screen": "add",
+  "text": "Typing 'Walk dog' into #item and pressing Enter creates a todo item with text 'Walk dog' in #todo.",
+  "test": {
+   "steps": [
+    "type:#item:Walk dog",
+    "key:Enter"
+   ],
+   "observe": "#todo li",
+   "expect": "Walk dog"
+  },
+  "tier": "B",
+  "label": "SEEN",
+  "evidence": [
+   "e044"
+  ],
+  "confidence": 0.9761,
+  "bond": 238,
+  "medium_confidence": 0.9,
+  "commit": "e14ef3f60c35af5574879686780a544c27f3ade14f29017445d62b4dd224a79b"
+ },
+ {
+  "id": "c03",
+  "app": "todo",
+  "screen": "add",
+  "text": "New items appear at the top of #todo: after adding 'Buy milk' then 'Walk dog', the list shows 'Walk dog' above 'Buy milk'.",
+  "test": {
+   "steps": [
+    "type:#item:Buy milk",
+    "click:#add",
+    "type:#item:Walk dog",
+    "click:#add"
+   ],
+   "observe": "#todo",
+   "expect": "Walk dog\nBuy milk"
+  },
+  "tier": "B",
+  "label": "SEEN",
+  "evidence": [
+   "e045"
+  ],
+  "confidence": 0.9944,
+  "bond": 247,
+  "medium_confidence": 0.85,
+  "commit": "e8e571f70c9a991d8ca4fcb2b30e6f3563dc35555b18d16663330f9dc1210fb7"
+ },
+ {
+  "id": "c04",
+  "app": "todo",
+  "screen": "add",
+  "text": "Duplicate items are allowed: adding 'Buy milk' twice results in #todo containing 2 items both reading 'Buy milk'.",
+  "test": {
+   "steps": [
+    "type:#item:Buy milk",
+    "click:#add",
+    "type:#item:Buy milk",
+    "click:#add"
+   ],
+   "observe": "#todo",
+   "expect": "Buy milk\nBuy milk"
+  },
+  "tier": "B",
+  "label": "SEEN",
+  "evidence": [
+   "e051"
+  ],
+  "confidence": 0.9958,
+  "bond": 248,
+  "medium_confidence": 0.9,
+  "commit": "43d099cffc6e24192af34bd9ddf6b4ab7c03b043e0fba8d7f0aa001f6470d105"
+ },
+ {
+  "id": "c05",
+  "app": "todo",
+  "screen": "add",
+  "text": "Submitting a whitespace-only value ('   ') via #add creates a todo item with no visible text (one #todo item whose visible text is empty).",
+  "test": {
+   "steps": [
+    "type:#item:   ",
+    "click:#add"
+   ],
+   "observe": "#todo li",
+   "expect": ""
+  },
+  "tier": "B",
+  "label": "SEEN",
+  "evidence": [
+   "e052"
+  ],
+  "confidence": 0.9919,
+  "bond": 246,
+  "medium_confidence": 0.8,
+  "commit": "b68dfa30279c7779192a9f2351ddaa5c2f8f4dfb0aef3b85bdfea1686b1c2c2c"
+ },
+ {
+  "id": "c06",
+  "app": "todo",
+  "screen": "add",
+  "text": "Clicking #add with an empty input creates no todo item (#todo remains empty).",
+  "test": {
+   "steps": [
+    "click:#add",
+    "wait:200"
+   ],
+   "observe": "#todo",
+   "expect": ""
+  },
+  "tier": "B",
+  "label": "SEEN",
+  "evidence": [
+   "e048"
+  ],
+  "confidence": 0.9567,
+  "bond": 229,
+  "medium_confidence": 0.5,
+  "commit": "56fddf1c9d6cbf207a02453df02347e9333654e561c0911ae84c893865f82142"
+ },
+ {
+  "id": "c07",
+  "app": "todo",
+  "screen": "add",
+  "text": "An empty task can be created (reported as a bug): clicking #add with an empty input shows an item with no text in the list.",
+  "test": {
+   "steps": [
+    "click:#add",
+    "wait:200"
+   ],
+   "observe": "#todo li",
+   "expect": ""
+  },
+  "tier": "C",
+  "label": "SEEN",
+  "evidence": [
+   "e007"
+  ],
+  "confidence": 0.8906,
+  "bond": 198,
+  "medium_confidence": 0.5,
+  "commit": "adf01318940cb84aeea2dd1ad80cca87a3a3b44544fdfd34b8e56fef09599f3d"
+ },
+ {
+  "id": "c08",
+  "app": "todo",
+  "screen": "add",
+  "text": "Adding a very long single-word item is accepted and displayed as one #todo item with the full text intact (word-break styling prevents overflow).",
+  "test": {
+   "steps": [
+    "type:#item:Supercalifragilisticexpialidocious-and-then-some-more-text",
+    "click:#add"
+   ],
+   "observe": "#todo li",
+   "expect": "Supercalifragilisticexpialidocious-and-then-some-more-text"
+  },
+  "tier": "B",
+  "label": "SEEN",
+  "evidence": [
+   "e053",
+   "e037"
+  ],
+  "confidence": 0.9771,
+  "bond": 239,
+  "medium_confidence": 0.8,
+  "commit": "55d1f81a42dea93808692c8b03f7dafba0a0353f525e353fae13132c3fd06c4a"
+ },
+ {
+  "id": "c09",
+  "app": "todo",
+  "screen": "add",
+  "text": "Enter on the numeric keypad (NumpadEnter) also submits a new todo item, not just the main Enter key.",
+  "test": {
+   "steps": [
+    "type:#item:Walk dog",
+    "key:NumpadEnter"
+   ],
+   "observe": "#todo li",
+   "expect": "Walk dog"
+  },
+  "tier": "C",
+  "label": "GUESSED",
+  "evidence": [
+   "e036"
+  ],
+  "confidence": 0.4307,
+  "bond": 46,
+  "medium_confidence": 0.4,
+  "commit": "c9d282bdfe9eeecec48361176af5d716f3534bb04f4d571b1e0aba4ca4afb48c"
+ },
+ {
+  "id": "c10",
+  "app": "todo",
+  "screen": "todo",
+  "text": "Clicking the .complete control on an item in #todo moves it out of #todo into #completed with the same text 'Buy milk'.",
+  "test": {
+   "steps": [
+    "type:#item:Buy milk",
+    "click:#add",
+    "click:#todo li .complete",
+    "wait:200"
+   ],
+   "observe": "#completed",
+   "expect": "Buy milk"
+  },
+  "tier": "B",
+  "label": "SEEN",
+  "evidence": [
+   "e046"
+  ],
+  "confidence": 0.9957,
+  "bond": 248,
+  "medium_confidence": 0.9,
+  "commit": "229dc971d85a1eae39aaef48929a30a15a5da2e9483b0ff989a55d90a0c8d5b5"
+ },
+ {
+  "id": "c11",
+  "app": "todo",
+  "screen": "todo",
+  "text": "With two items ('Buy milk' added first, 'Walk dog' on top), clicking .complete on the top item leaves #todo with 'Buy milk' and puts 'Walk dog' into #completed.",
+  "test": {
+   "steps": [
+    "type:#item:Buy milk",
+    "click:#add",
+    "type:#item:Walk dog",
+    "click:#add",
+    "click:#todo li .complete",
+    "wait:200"
+   ],
+   "observe": "#completed li",
+   "expect": "Walk dog"
+  },
+  "tier": "B",
+  "label": "SEEN",
+  "evidence": [
+   "e054"
+  ],
+  "confidence": 0.9698,
+  "bond": 235,
+  "medium_confidence": 0.85,
+  "commit": "f529667744d94c74ddbbc7a1504d68f3a6eabed327fca46521c791dbd9c8c5e3"
+ },
+ {
+  "id": "c12",
+  "app": "todo",
+  "screen": "todo",
+  "text": "Clicking the .remove control on a #todo item deletes it: after adding 'Buy milk' then 'Walk dog', removing the top item leaves #todo with 1 item 'Buy milk'.",
+  "test": {
+   "steps": [
+    "type:#item:Buy milk",
+    "click:#add",
+    "type:#item:Walk dog",
+    "click:#add",
+    "click:#todo li .remove",
+    "wait:200"
+   ],
+   "observe": "#todo",
+   "expect": "Buy milk"
+  },
+  "tier": "B",
+  "label": "SEEN",
+  "evidence": [
+   "e047"
+  ],
+  "confidence": 0.914,
+  "bond": 209,
+  "medium_confidence": 0.9,
+  "commit": "3926fe79b0ef9cd43af7461d83dd9e33e6b4ed99cf4981ab3f8f5f1282038091"
+ },
+ {
+  "id": "c13",
+  "app": "todo",
+  "screen": "completed",
+  "text": "Clicking the .complete control on an item in #completed moves it back into #todo: after completing 'Buy milk' then clicking .complete on the completed item, #todo has 1 item 'Buy milk' and #completed is empty.",
+  "test": {
+   "steps": [
+    "type:#item:Buy milk",
+    "click:#add",
+    "click:#todo li .complete",
+    "click:#completed li .complete",
+    "wait:200"
+   ],
+   "observe": "#todo",
+   "expect": "Buy milk"
+  },
+  "tier": "B",
+  "label": "SEEN",
+  "evidence": [
+   "e049"
+  ],
+  "confidence": 0.9388,
+  "bond": 220,
+  "medium_confidence": 0.85,
+  "commit": "45c25884e091d0e9aa197846a8f206317aec2e75b79fbeae45a8a6a8fa5465f9"
+ },
+ {
+  "id": "c14",
+  "app": "todo",
+  "screen": "completed",
+  "text": "Clicking the .remove control on an item in #completed deletes it permanently: after completing 'Buy milk' then clicking .remove in #completed, both lists are empty.",
+  "test": {
+   "steps": [
+    "type:#item:Buy milk",
+    "click:#add",
+    "click:#todo li .complete",
+    "click:#completed li .remove",
+    "wait:200"
+   ],
+   "observe": "#completed",
+   "expect": ""
+  },
+  "tier": "B",
+  "label": "SEEN",
+  "evidence": [
+   "e050"
+  ],
+  "confidence": 0.9067,
+  "bond": 206,
+  "medium_confidence": 0.9,
+  "commit": "76c749ea2c6e335f50c703d27343fc49f46d09a87e724a72fe1f40fba82e9b48"
+ },
+ {
+  "id": "c15",
+  "app": "todo",
+  "screen": "completed",
+  "text": "Completed items stack with the most recently completed on top: completing 'Buy milk' then 'Walk dog' results in #completed showing 'Walk dog' above 'Buy milk' (2 items).",
+  "test": {
+   "steps": [
+    "type:#item:Buy milk",
+    "click:#add",
+    "click:#todo li .complete",
+    "type:#item:Walk dog",
+    "click:#add",
+    "click:#todo li .complete",
+    "wait:200"
+   ],
+   "observe": "#completed",
+   "expect": "Walk dog\nBuy milk"
+  },
+  "tier": "B",
+  "label": "SEEN",
+  "evidence": [
+   "e055"
+  ],
+  "confidence": 0.9714,
+  "bond": 236,
+  "medium_confidence": 0.85,
+  "commit": "b41ce80b8c5963d7e46c3500b743976b338648a07ea345e89e82e1826aeb1ffa"
+ },
+ {
+  "id": "c16",
+  "app": "todo",
+  "screen": "list",
+  "text": "The app starts with an empty state: #todo contains 0 items.",
+  "test": {
+   "steps": [
+    "wait:200"
+   ],
+   "observe": "#todo",
+   "expect": ""
+  },
+  "tier": "B",
+  "label": "SEEN",
+  "evidence": [
+   "e042"
+  ],
+  "confidence": 0.9682,
+  "bond": 234,
+  "medium_confidence": 0.9,
+  "commit": "39aed557b721bbc17ba8b193924cdcb74ead6d119da23e4c2577e2b946833213"
+ }
+]

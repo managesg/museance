@@ -1,0 +1,231 @@
+/* Stenographer: the mood class on the root <svg> picks the pose; parts animate on their own groups. */
+.steno {
+  --steno-belly: color-mix(in srgb, var(--slate) 58%, var(--paper));
+  --steno-beak-deep: color-mix(in srgb, var(--beak) 72%, var(--ink));
+  --lid: 0;
+  overflow: visible;
+}
+.steno--scribbling,
+.steno--sealing {
+  --lid: 0.38;
+}
+
+.steno-owl {
+  transform-box: view-box;
+  transform-origin: 152px 338px;
+  animation: steno-breathe 3.8s ease-in-out infinite;
+}
+.steno-lid {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  transform: scaleY(var(--lid));
+  animation: steno-blink 5.2s infinite;
+}
+.steno-pupils {
+  transition: transform 220ms ease-out;
+}
+.steno--scribbling .steno-pupils {
+  transform: translate(-2px, 4px);
+}
+.steno--sealing .steno-pupils {
+  transform: translate(-4px, 5px);
+}
+
+/* Each pose part exists only in its moods. */
+.steno:not(.steno--idle) .steno-wing-rest,
+.steno--idle :is(.steno-wing-write, .steno-tape),
+.steno:not(.steno--scribbling) .steno-quill,
+.steno:not(.steno--sealing) :is(.steno-stamp, .steno-imprint, .steno-puff) {
+  display: none;
+}
+
+/* Mood-scoped so leaving a mood cancels them: Chrome keeps animations on hidden SVG, so display alone won't replay. */
+.steno-wing-rest {
+  transform-box: view-box;
+  transform-origin: 216px 162px;
+}
+.steno-wing-write,
+.steno-arm {
+  transform-box: view-box;
+  transform-origin: 232px 186px;
+}
+.steno--idle .steno-wing-rest,
+.steno:not(.steno--idle) .steno-wing-write {
+  animation: steno-flicker 260ms ease-out both, steno-settle 260ms ease-out both;
+}
+.steno-quill {
+  transform-box: view-box;
+  transform-origin: 114px 240px;
+}
+.steno--scribbling .steno-quill {
+  animation: steno-flicker 220ms ease-out both, steno-wiggle 180ms steps(1) infinite;
+}
+
+/* Scribbling: the tape unspools from the clipboard, then its marks keep feeding out. */
+.steno-tape-reveal {
+  stroke-dashoffset: 1;
+}
+.steno:not(.steno--idle) .steno-tape-reveal {
+  animation: steno-unspool 900ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+.steno--scribbling .steno-ticks {
+  animation: steno-feed 700ms linear infinite;
+}
+.steno--scribbling .steno-arm {
+  animation: steno-scribble 420ms steps(1) infinite;
+}
+
+/* Sealing: lift, slam the brass seal at 432ms, lift clear so the imprint shows. */
+.steno-imprint,
+.steno-puff {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.steno--sealing .steno-arm {
+  animation: steno-press 900ms ease both;
+}
+.steno--sealing .steno-stamp {
+  animation: steno-flicker 220ms ease-out both;
+}
+.steno--sealing .steno-imprint {
+  animation: steno-imprint 260ms 430ms ease-out both;
+}
+.steno--sealing .steno-puff {
+  animation: steno-puff 380ms 430ms ease-out both;
+}
+
+@keyframes steno-breathe {
+  50% {
+    transform: scale(0.996, 1.012);
+  }
+}
+@keyframes steno-blink {
+  0%,
+  94%,
+  100% {
+    transform: scaleY(var(--lid));
+  }
+  97% {
+    transform: scaleY(1);
+  }
+}
+@keyframes steno-flicker {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.85;
+  }
+  45% {
+    opacity: 0.35;
+  }
+  70% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes steno-settle {
+  from {
+    transform: scale(1.04);
+  }
+}
+@keyframes steno-scribble {
+  25% {
+    transform: rotate(-1.6deg);
+  }
+  50% {
+    transform: rotate(0.9deg) translate(0, 1px);
+  }
+  75% {
+    transform: rotate(-0.8deg) translate(-1px, 0);
+  }
+}
+@keyframes steno-wiggle {
+  50% {
+    transform: rotate(-5deg);
+  }
+}
+@keyframes steno-unspool {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes steno-feed {
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+@keyframes steno-press {
+  0% {
+    transform: rotate(12deg);
+  }
+  30% {
+    transform: rotate(15deg);
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  48% {
+    transform: rotate(0deg);
+  }
+  66% {
+    transform: rotate(0deg);
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  100% {
+    transform: rotate(12deg);
+  }
+}
+@keyframes steno-imprint {
+  from {
+    opacity: 0;
+    transform: scale(1.35);
+  }
+}
+@keyframes steno-puff {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+@keyframes steno-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Motion off: pose parts fade in, everything else holds its final frame. */
+@media (prefers-reduced-motion: reduce) {
+  .steno * {
+    animation: none !important;
+    transition: none !important;
+  }
+  .steno--idle .steno-wing-rest,
+  .steno:not(.steno--idle) :is(.steno-wing-write, .steno-tape),
+  .steno--scribbling .steno-quill,
+  .steno--sealing :is(.steno-stamp, .steno-imprint) {
+    animation: steno-fade 300ms ease-out both !important;
+  }
+  .steno--sealing .steno-arm {
+    transform: rotate(12deg);
+  }
+  .steno:not(.steno--idle) .steno-tape-reveal {
+    stroke-dashoffset: 0;
+  }
+  .steno .steno-puff {
+    display: none;
+  }
+}

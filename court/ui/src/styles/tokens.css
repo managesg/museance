@@ -1,0 +1,72 @@
+/* Séance stage tokens. Sizes are design px on the 1920x1080 canvas the stage scales to fit. */
+:root {
+  /* Set and props */
+  --ink: #2B211C;
+  --wall: #5E8577;
+  --wall-deep: #4B6E62;
+  --floor: #EBD9BC;
+  --floor-shadow: #CDB690;
+  --paper: #F7F1E3;
+  --paper-deep: #E6DCC6;
+  --wood: #6B3F2A;
+  --wood-light: #8A5638;
+  --terracotta: #C7674B;
+  --terracotta-deep: #A9533C;
+  --brass: #C29A45;
+  --brass-deep: #9C7A30;
+  --wax: #F3EBD6;
+  --flame: #F5A623;
+  --flame-core: #FCE38A;
+
+  /* Rulings: STRUCK crimson, UNSWORN slate, FABRICATED smoke */
+  --crimson: #C8352C;
+  --crimson-deep: #9E2620;
+  --slate: #5C7A86;
+  --slate-deep: #47616B;
+  --smoke: #9C8FA8;
+
+  /* Cast */
+  --penguin: #1F1C1D;
+  --belly: #FBF7EE;
+  --beak: #F0A030;
+  --wig: #E4DDD0;
+  --owl: #6E5848;
+  --owl-cream: #DCCDB4;
+  --ghost: #F4F4F0;
+  --ghost-shade: #D3D9D6;
+
+  /* Glitch states only */
+  --glitch-a: #3FD0C9;
+  --glitch-b: #E0457B;
+
+  /* Type */
+  --font-masthead: 'UnifrakturCook', serif;
+  --font-stamp: 'Alfa Slab One', serif;
+  --font-doc: 'Courier Prime', monospace;
+  --font-ui: 'Atkinson Hyperlegible', sans-serif;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+
+  /* Motion: flicker in, slam, deal, glitch, idle */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-in-quart: cubic-bezier(0.5, 0, 0.75, 0);
+  --ease-in-out-sine: cubic-bezier(0.37, 0, 0.63, 1);
+  --ease-jitter: steps(6, end);
+  --dur-slam: 160ms;
+  --dur-fade: 220ms;
+  --dur-flicker: 480ms;
+  --dur-deal: 520ms;
+  --dur-glitch: 600ms;
+  --dur-idle: 4s;
+}

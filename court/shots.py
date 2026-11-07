@@ -20,7 +20,7 @@ import pathlib
 import sys
 
 from court import serve
-from court.steps import run_steps
+from court.steps import launch_browser, run_steps
 
 VIEWPORT = {"width": 800, "height": 600}
 
@@ -31,7 +31,7 @@ class Shooter:
     def __enter__(self):
         from playwright.sync_api import sync_playwright
         self._pw = sync_playwright().start()
-        self._browser = self._pw.chromium.launch()
+        self._browser = launch_browser(self._pw)
         return self
 
     def shoot(self, url: str, steps: list[str], observe: str, page_png: pathlib.Path,

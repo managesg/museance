@@ -1,0 +1,764 @@
+/* HUD: masthead, phase docket, numbers bar, bankroll, stress candle, subtitles. Weights used here load here. */
+@import '@fontsource/unifrakturcook/700.css';
+@import '@fontsource/alfa-slab-one/400.css';
+@import '@fontsource/atkinson-hyperlegible/400.css';
+@import '@fontsource/atkinson-hyperlegible/700.css';
+
+.hud-masthead,
+.hud-docket,
+.hud-numbers,
+.hud-cred,
+.hud-candle,
+.hud-subs {
+  --hud-ui: var(--font-ui, 'Atkinson Hyperlegible'), sans-serif;
+  --hud-stamp: var(--font-stamp, 'Alfa Slab One'), serif;
+  --hud-mast: var(--font-masthead, 'UnifrakturCook'), serif;
+  --hud-settle: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --hud-slam: cubic-bezier(0.55, 0, 1, 0.45);
+  color: var(--ink);
+  font-family: var(--hud-ui);
+}
+
+.hud-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Alfa Slab One ships no tabular figures, so every digit gets the same cell. */
+.hud-d {
+  display: inline-block;
+  width: 0.7em;
+  text-align: center;
+}
+
+.hud-num {
+  display: inline-block;
+  white-space: nowrap;
+  animation: hud-flicker-in 420ms ease-out both;
+}
+
+/* ---------- masthead ---------- */
+
+.hud-masthead {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  height: 84px;
+}
+
+.hud-plaque {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  box-sizing: border-box;
+  width: max-content;
+  min-width: 540px;
+  max-width: 780px;
+  height: 72px;
+  padding: 0 38px;
+}
+
+.hud-plaque__bg,
+.hud-tag__bg,
+.hud-numbers__bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.hud-plaque__title {
+  margin: 0;
+  color: var(--wax);
+  font: 700 56px/1 var(--hud-mast);
+  translate: 0 -3px;
+}
+
+.hud-plaque__rule {
+  align-self: stretch;
+  width: 3px;
+  margin: 15px 0;
+  border-radius: 2px;
+  background: var(--brass);
+}
+
+.hud-plaque__case {
+  max-width: 440px;
+  margin: 0;
+  color: var(--paper-deep);
+  font: 700 22px/1.15 var(--hud-ui);
+  text-wrap: balance;
+}
+
+.hud-plaque__app {
+  color: var(--wax);
+}
+
+.hud-tack {
+  position: absolute;
+  top: 50%;
+  left: 13px;
+  width: 9px;
+  height: 9px;
+  margin-top: -7px;
+  border: 2.5px solid var(--ink);
+  border-radius: 48% 52% 50% 50%;
+  background: var(--brass);
+}
+
+.hud-tack--r {
+  left: auto;
+  right: 13px;
+}
+
+.hud-tag {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  width: 248px;
+  height: 66px;
+  padding: 0 12px 0 46px;
+  rotate: -2deg;
+}
+
+.hud-tag__text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  margin: 0;
+  font: 400 20px/1.05 var(--hud-ui);
+}
+
+.hud-tag__text b {
+  font: 400 22px/1 var(--hud-stamp);
+}
+
+.hud-tag__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.hud-tag__head b {
+  overflow: hidden;
+  font-size: 26px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hud-tag[data-status='error'] .hud-tag__head b {
+  color: var(--crimson-deep);
+}
+
+.hud-tag__dot {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.5;
+}
+
+.hud-tag__dot.is-live {
+  fill: var(--crimson);
+  animation: hud-pulse 1.8s ease-in-out infinite alternate;
+}
+
+/* ---------- phase docket ---------- */
+
+.hud-docket {
+  isolation: isolate;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  height: 84px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hud-tab {
+  position: relative;
+}
+
+.hud-tab__plate {
+  --tab: var(--brass);
+  --tab-shade: var(--brass-deep);
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 80px;
+  height: 74px;
+  margin-top: -16px;
+  padding: 0 13px 15px;
+  overflow: hidden;
+  border: 3.5px solid var(--ink);
+  border-top: 0;
+  border-radius: 0 0 14px 11px / 0 0 13px 15px;
+  background: var(--tab);
+  color: var(--ink);
+  font: 400 22px/1 var(--hud-stamp);
+  white-space: nowrap;
+  transition:
+    transform 360ms var(--hud-settle),
+    background-color 360ms ease-out,
+    color 360ms ease-out;
+}
+
+.hud-tab__plate::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 8px;
+  background: var(--tab-shade);
+  transition: background-color 360ms ease-out;
+}
+
+.hud-tab.is-past .hud-tab__plate {
+  --tab: var(--brass-deep);
+  --tab-shade: color-mix(in srgb, var(--brass-deep), var(--ink) 30%);
+  color: color-mix(in srgb, var(--ink) 78%, var(--brass-deep));
+  transform: translateY(-7px);
+}
+
+.hud-tab.is-now .hud-tab__plate {
+  --tab: var(--flame-core);
+  --tab-shade: var(--flame);
+  transform: translateY(8px);
+}
+
+/* the lit tab's candle glow; z-index -1 keeps it under the neighbouring tabs */
+.hud-tab__glow {
+  position: absolute;
+  z-index: -1;
+  top: -10px;
+  right: -40px;
+  bottom: -52px;
+  left: -40px;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    var(--flame-core),
+    color-mix(in srgb, var(--flame) 62%, transparent) 50%,
+    transparent
+  );
+  opacity: 0;
+  pointer-events: none;
+}
+
+.hud-tab.is-now .hud-tab__glow {
+  opacity: 1;
+  animation:
+    hud-light 560ms ease-out both,
+    hud-breathe 2.2s ease-in-out 560ms infinite alternate;
+}
+
+/* ---------- numbers bar ---------- */
+
+.hud-numbers {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 96px;
+  padding: 11px 22px 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.hud-numbers__row {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+}
+
+.hud-plate {
+  position: relative;
+  display: flex;
+  flex-direction: column-reverse;
+  box-sizing: border-box;
+  height: 79px;
+  padding: 3px 5px 0;
+  overflow: hidden;
+  border: 3px solid var(--ink);
+  border-radius: 9px 11px 10px 8px / 10px 9px 11px 10px;
+  background: var(--brass);
+}
+
+.hud-plate::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 5px;
+  background: var(--brass-deep);
+}
+
+.hud-plate__label {
+  margin: 0;
+  padding: 0 9px 4px;
+  font: 700 20px/20px var(--hud-ui);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.hud-plate__win {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0 10px;
+  overflow: hidden;
+  border: 2px solid var(--ink);
+  border-radius: 5px 6px 5px 7px;
+  background: var(--paper);
+}
+
+.hud-plate__stripes {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+}
+
+.hud-plate .hud-num {
+  font: 400 40px/1 var(--hud-stamp);
+  translate: 0 1.5px; /* Alfa's tall ascent leaves digits 1.5px above centre at line-height 1 */
+}
+
+.hud-num--from {
+  color: var(--wood);
+}
+
+.hud-num.is-down {
+  color: var(--crimson-deep);
+}
+
+.hud-num--none {
+  animation: none;
+}
+
+.hud-plate__note {
+  width: min-content;
+  color: var(--wood);
+  font: 400 20px/1 var(--hud-ui);
+}
+
+.hud-arrow {
+  flex: none;
+  width: 34px;
+  height: 22px;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* unsworn and fabricated keep the dashed rims of their stamps */
+.hud-plate--unsworn .hud-plate__win {
+  border: 3px dashed var(--slate-deep);
+}
+
+.hud-plate--fabricated .hud-plate__win {
+  border: 3px dashed color-mix(in oklab, var(--smoke), var(--ink) 40%);
+}
+
+.hud-plate--unsworn.is-flagged .hud-num {
+  color: var(--slate-deep);
+}
+
+.hud-plate--fabricated.is-flagged .hud-num {
+  color: color-mix(in oklab, var(--smoke), var(--ink) 45%);
+}
+
+.hud-numbers__src {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: var(--paper-deep);
+  font: 700 20px/1.1 var(--hud-ui);
+}
+
+.hud-numbers__src > span {
+  display: flex;
+  flex-direction: column;
+}
+
+.hud-swatch {
+  flex: none;
+  width: 26px;
+  height: 36px;
+}
+
+/* ---------- credibility meter ---------- */
+
+.hud-cred {
+  display: block;
+  overflow: visible;
+}
+
+.hud-cred__num {
+  fill: var(--ink);
+  font: 400 50px var(--hud-stamp);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hud-flicker-in 420ms ease-out both;
+}
+
+.hud-cred__num.is-down {
+  fill: var(--crimson-deep);
+}
+
+.hud-coin__real {
+  transition:
+    transform 380ms cubic-bezier(0.3, 1.35, 0.6, 1),
+    opacity 200ms ease-out;
+}
+
+.hud-coin:not(.is-on) .hud-coin__real {
+  opacity: 0;
+  transform: translateY(-34px);
+  transition-timing-function: ease-in;
+}
+
+.hud-cred__ghost {
+  animation: hud-flicker-op 520ms ease-out 160ms both;
+}
+
+.hud-banner {
+  transform: rotate(-6deg);
+  animation: hud-slam 160ms var(--hud-slam) both;
+}
+
+.hud-banner__word {
+  fill: var(--paper);
+  font: 400 22px var(--hud-stamp);
+}
+
+.hud-puff {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hud-puff 560ms ease-out 140ms both;
+}
+
+/* ---------- stress candle ---------- */
+
+.hud-candle {
+  display: block;
+  overflow: visible;
+}
+
+/* each group is placed by a transform attribute, so origin 0 0 is the wick */
+.hud-flame-light,
+.hud-flame-lean,
+.hud-flame-flicker,
+.hud-drip,
+.hud-smoke path {
+  transform-box: view-box;
+  transform-origin: 0 0;
+}
+
+.hud-flame-light {
+  animation: hud-light 640ms ease-out both;
+}
+
+.hud-flame-lean {
+  transition: transform 700ms var(--hud-settle);
+}
+
+.hud-drip {
+  transition: transform 900ms var(--hud-settle);
+}
+
+.hud-flame-flicker {
+  animation: hud-flicker 1.6s ease-in-out infinite alternate;
+}
+
+.hud-flame-glow {
+  animation: hud-glow 1.6s ease-in-out infinite alternate;
+}
+
+.hud-candle[data-level='uneasy'] .hud-flame-flicker {
+  animation: hud-flicker-hard 0.8s ease-in-out infinite alternate;
+}
+
+.hud-candle[data-level='uneasy'] .hud-flame-glow {
+  animation-duration: 0.8s;
+}
+
+.hud-candle[data-level='panic'] .hud-flame-flicker {
+  animation: hud-gutter 0.62s linear infinite;
+}
+
+.hud-candle[data-level='panic'] .hud-flame-glow {
+  animation: hud-glow 0.31s steps(2, end) infinite alternate;
+}
+
+.hud-candle[data-level='out'] .hud-flame-light {
+  opacity: 0;
+  transform: scale(0.25, 0.1);
+  transition:
+    opacity 260ms ease-in,
+    transform 260ms ease-in;
+  animation: none;
+}
+
+.hud-smoke,
+.hud-ember {
+  opacity: 0;
+}
+
+.hud-candle[data-level='out'] .hud-smoke {
+  opacity: 1;
+}
+
+.hud-smoke path {
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: 1;
+}
+
+.hud-candle[data-level='out'] .hud-smoke path {
+  animation: hud-smoke 2.8s ease-out infinite;
+}
+
+.hud-candle[data-level='out'] .hud-smoke path + path {
+  animation-delay: 1.4s;
+}
+
+.hud-candle[data-level='out'] .hud-ember {
+  animation: hud-ember 1.6s ease-out both;
+}
+
+/* ---------- subtitles ---------- */
+
+.hud-subs {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 64px;
+  pointer-events: none;
+}
+
+.hud-sub {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  box-sizing: border-box;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 8px 26px 10px;
+  border-radius: 12px 10px 13px 11px;
+  background: color-mix(in srgb, var(--ink) 90%, transparent);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--ink) 34%, transparent);
+  color: var(--paper);
+  font: 400 34px/1.2 var(--hud-ui);
+  text-align: center;
+  text-wrap: balance;
+}
+
+.hud-sub__who {
+  margin-right: 0.55em;
+  color: var(--brass);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hud-sub.is-in {
+  animation: hud-sub-in 300ms ease-out both;
+}
+
+.hud-sub.is-out {
+  opacity: 0;
+  animation: hud-sub-out 220ms ease-in both;
+}
+
+/* ---------- motion ---------- */
+
+@keyframes hud-flicker-in {
+  0% { opacity: 0; transform: scale(1.06); }
+  20% { opacity: 0.85; }
+  34% { opacity: 0.25; }
+  52% { opacity: 1; }
+  68% { opacity: 0.6; }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes hud-flicker-op {
+  0% { opacity: 0; }
+  20% { opacity: 0.85; }
+  34% { opacity: 0.25; }
+  52% { opacity: 1; }
+  68% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+@keyframes hud-light {
+  0% { opacity: 0; transform: scale(0.6); }
+  18% { opacity: 0.9; }
+  32% { opacity: 0.3; }
+  52% { opacity: 1; transform: scale(1.08); }
+  72% { opacity: 0.7; }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes hud-breathe {
+  from { opacity: 0.78; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1.04); }
+}
+
+@keyframes hud-pulse {
+  from { opacity: 1; }
+  to { opacity: 0.45; }
+}
+
+@keyframes hud-slam {
+  from { opacity: 0; transform: scale(1.6) rotate(-2deg); }
+  40% { opacity: 1; }
+  to { opacity: 1; transform: scale(1) rotate(-6deg); }
+}
+
+@keyframes hud-puff {
+  0% { opacity: 0; transform: scale(0.3); }
+  12% { opacity: 0.9; }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+
+@keyframes hud-flicker {
+  0% { transform: scale(1, 1) skewX(0deg); }
+  30% { transform: scale(0.96, 1.05) skewX(-2deg); }
+  60% { transform: scale(1.03, 0.97) skewX(1.5deg); }
+  100% { transform: scale(0.98, 1.04) skewX(-1deg); }
+}
+
+@keyframes hud-flicker-hard {
+  0% { transform: scale(1, 1) skewX(0deg); }
+  25% { transform: scale(0.9, 1.12) skewX(-5deg); }
+  50% { transform: scale(1.06, 0.9) skewX(3deg); }
+  75% { transform: scale(0.93, 1.1) skewX(-4deg); }
+  100% { transform: scale(1.04, 0.95) skewX(4deg); }
+}
+
+/* guttering: hard sways broken by sputters where the flame nearly drowns */
+@keyframes hud-gutter {
+  0% { opacity: 1; transform: scale(1, 1) skewX(0deg); }
+  14% { transform: scale(0.86, 1.18) skewX(-8deg); }
+  21% { opacity: 0.7; transform: scale(1.1, 0.62) skewX(4deg); }
+  29% { opacity: 1; transform: scale(0.9, 1.12) skewX(-6deg); }
+  46% { transform: scale(1.06, 0.86) skewX(7deg); }
+  54% { opacity: 0.55; transform: scale(0.8, 0.48) skewX(0deg); }
+  62% { opacity: 1; transform: scale(0.95, 1.1) skewX(-7deg); }
+  80% { transform: scale(1.04, 0.9) skewX(3deg); }
+  100% { opacity: 1; transform: scale(1, 1) skewX(0deg); }
+}
+
+@keyframes hud-glow {
+  from { opacity: 0.7; }
+  to { opacity: 1; }
+}
+
+@keyframes hud-smoke {
+  0% { opacity: 0; stroke-dashoffset: 1; transform: translateY(0); }
+  15% { opacity: 0.95; }
+  60% { stroke-dashoffset: 0; }
+  100% { opacity: 0; stroke-dashoffset: 0; transform: translateY(-26px); }
+}
+
+@keyframes hud-ember {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes hud-sub-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes hud-sub-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes hud-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-num,
+  .hud-cred__num,
+  .hud-cred__ghost,
+  .hud-banner,
+  .hud-flame-light {
+    animation: hud-fade 240ms ease-out both;
+  }
+
+  .hud-num--none,
+  .hud-puff,
+  .hud-tag__dot.is-live,
+  .hud-flame-flicker,
+  .hud-flame-glow,
+  .hud-candle[data-level] .hud-flame-flicker,
+  .hud-candle[data-level] .hud-flame-glow,
+  .hud-tab.is-now .hud-tab__glow {
+    animation: none;
+  }
+
+  .hud-tab__plate,
+  .hud-flame-lean,
+  .hud-drip,
+  .hud-coin__real {
+    transition-property: opacity, background-color, color;
+  }
+
+  .hud-coin:not(.is-on) .hud-coin__real {
+    transform: none;
+  }
+
+  .hud-candle[data-level='out'] .hud-flame-light {
+    transform: none;
+  }
+
+  .hud-candle[data-level='out'] .hud-smoke path {
+    opacity: 0.8;
+    stroke-dashoffset: 0;
+    animation: none;
+  }
+
+  .hud-sub.is-in {
+    animation: hud-fade 300ms ease-out both;
+  }
+}

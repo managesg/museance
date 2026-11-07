@@ -15,9 +15,13 @@ def selector_ids(selectors):
         return set().union(*(selector_ids(v) for v in selectors.values()))
     if isinstance(selectors, list):
         return set().union(*(selector_ids(v) for v in selectors))
-    if not isinstance(selectors, str) or not re.fullmatch(r"#[A-Za-z_][\w-]*", selectors):
+    if selectors == "body":
+        return set()
+    # "#todo li .complete" needs the element #todo; the li/.complete parts are created by the script
+    match = isinstance(selectors, str) and re.match(r"#([A-Za-z_][\w-]*)(?=$|[\s.:\[>+~])", selectors)
+    if not match:
         raise ValueError(f"Expected an ID selector, got {selectors!r}")
-    return {selectors[1:]}
+    return {match.group(1)}
 
 
 def make_prompt(sheet, selectors):
@@ -31,6 +35,7 @@ def make_prompt(sheet, selectors):
         "Use plain JavaScript, inline CSS and classic inline scripts; no imports, libraries, "
         "external assets, fetches or dependencies. Keep every selector ID as a real HTML element. "
         "Show results as text in the observe element. Put scripts after the markup. "
+        "A selector like '#list li .btn' names elements your script creates: give them exactly those tags and classes. "
         "For compatibility with the stub DOM evaluator, bind each button using "
         "document.getElementById(id).onclick and update innerText or textContent. "
         "Do not depend on DOM-ready events, inline HTML event attributes or browser-only APIs.\n"
