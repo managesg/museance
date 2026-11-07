@@ -103,7 +103,7 @@ def main(argv=None):
         s.row("traps flagged (diverged)", f"{row['traps_flagged']}/{row['traps_of']}", BA)
         s.row("false strikes", f"{row['false_strikes']}/{row['false_strikes_of']}", BA)
         s.row("attack mismatches", f"{row['attack_mismatches']}/{len(load(SEAL)['attacks'])}", BA)
-        s.row("fidelity", row["fidelity"], BA)
+        s.row("fidelity (attacks only)", row["fidelity"], BA)
         if ver in live:
             s.row("LIVE regression re-run", "%d/%d" % live[ver], "court.regression on this machine")
 
@@ -126,7 +126,8 @@ def main(argv=None):
 
     s.head(5, "FINAL NUMBERS")
     CF = rel(C / "todo.case.yml")
-    s.row("fidelity", f"{v1['fidelity']} -> {case['fidelity']}", f"{BA} / {CF}")
+    s.row("fidelity (attacks only)", f"{v1['fidelity']} -> {case['fidelity']}", f"{BA} / {CF}")
+    print("      (all-verdict fidelity per CONTRACTS.md, 105 attacks + 16 claims: 41 -> 100, as on the stage and in DEMO.md)")
     s.row("attack mismatches", f"{v1['attack_mismatches']} -> {v2['attack_mismatches']}", BA)
     s.row("regression", f"{v1['regression_passed']} -> {v2['regression_passed']} of {v2['regression_total']}", BA)
     s.row("claims locked / struck", f"{case['counts']['locked']} / {case['counts']['struck']} of {case['counts']['claims']}", CF)
