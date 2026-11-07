@@ -1,0 +1,1448 @@
+[
+ {
+  "id": "a001",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "click:#add"
+  ],
+  "observe": "#todo",
+  "commit": "74edc1e24425b7ea1f271da28dce4d950130bcb7b3c7ffe1bd72346eb3000ea4"
+ },
+ {
+  "id": "a002",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "key:Enter"
+  ],
+  "observe": "#todo",
+  "commit": "93ccd4dc94b94d2992997ba8f949f0a2dcac81775cc80cc36f80a7aac0ae1d8e"
+ },
+ {
+  "id": "a003",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:   ",
+   "click:#add"
+  ],
+  "observe": "#todo",
+  "commit": "0999177d02fa61a57529663d7671841f5369c4d39f7abaaed29c2279b17fbf8c"
+ },
+ {
+  "id": "a004",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:a    b",
+   "click:#add"
+  ],
+  "observe": "#todo",
+  "commit": "cb91f349eadc16f5e8ab3b9bdc3d699db26284bb4ff8e6c62cebcc33fd0f7b07"
+ },
+ {
+  "id": "a005",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:0",
+   "click:#add"
+  ],
+  "observe": "#todo",
+  "commit": "3cde518f82227956c7bb0fecd6977b23ff7f813ca9fe41d6af284c71d0944291"
+ },
+ {
+  "id": "a006",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "click:#add"
+  ],
+  "observe": "#todo",
+  "commit": "efbfb00b3fb02e1ba68b1a8a0d7bebd606da9dca76878d7733621e1c21925099"
+ },
+ {
+  "id": "a007",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:<b>bold</b><script>1</script>",
+   "click:#add"
+  ],
+  "observe": "#todo",
+  "commit": "c24255b236e508136e2c5cafe5ab9ac1e89a205aef9d6d9647dfd8e4b7b40604"
+ },
+ {
+  "id": "a008",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:&amp; &lt; &#65;",
+   "click:#add"
+  ],
+  "observe": "#todo",
+  "commit": "d92a51901e40649b0afad269cbd78dd292274d6b02a69eaa6d08eca81f0a59ac"
+ },
+ {
+  "id": "a009",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:a:b:c: 10:30",
+   "click:#add"
+  ],
+  "observe": "#todo",
+  "commit": "0706a82a0716b92726474870027d651df13ba5a7c4c443aa49f6ebc74d828142"
+ },
+ {
+  "id": "a010",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:\u00f1 \u2615 \u65e5\u672c \ud83d\ude00",
+   "click:#add"
+  ],
+  "observe": "#todo",
+  "commit": "75569c08011ced05c5ff985d827451a733a8e73633edf2bf857ac4b84aa0fe7b"
+ },
+ {
+  "id": "a011",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:A",
+   "click:#add"
+  ],
+  "observe": "#todo",
+  "commit": "5d78cbe7fc9018258052c1a663f7836b76684f07bb96b7b983fd30ab7ecb73b9"
+ },
+ {
+  "id": "a012",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:A",
+   "key:Enter",
+   "type:#item:B",
+   "key:NumpadEnter"
+  ],
+  "observe": "#todo",
+  "commit": "037177d45a592eee6d25eec6308a81ffc6467d45fae03709324f4bf0dcb2a716"
+ },
+ {
+  "id": "a013",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:A",
+   "key:Shift+Enter"
+  ],
+  "observe": "#todo",
+  "commit": "6a60ed4c56203f35ff36f4e23202a10550a2ee503ccf0df276f10b02d7f31e3e"
+ },
+ {
+  "id": "a014",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:A",
+   "key:Enter",
+   "key:Enter"
+  ],
+  "observe": "#todo",
+  "commit": "75eb0fc64f16f0904e93aff721573d8d96bcfea728439fa79068943213e6fb9d"
+ },
+ {
+  "id": "a015",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#add"
+  ],
+  "observe": "#todo",
+  "commit": "6b5227ffa03e363423a1f056c091a224de0dfc894ca33e806f7d8599af37bcac"
+ },
+ {
+  "id": "a016",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "click:#add",
+   "type:#item:yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "click:#add",
+   "type:#item:yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "click:#add",
+   "type:#item:yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "click:#add",
+   "type:#item:yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "click:#add",
+   "type:#item:yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "click:#add"
+  ],
+  "observe": "#todo",
+  "commit": "478938e967990d8722b3dbeb8913d658c932e3ab4eab50258a9af96f443be950"
+ },
+ {
+  "id": "a017",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:0",
+   "click:#add",
+   "type:#item:1",
+   "click:#add",
+   "type:#item:2",
+   "click:#add",
+   "type:#item:3",
+   "click:#add",
+   "type:#item:4",
+   "click:#add",
+   "type:#item:5",
+   "click:#add",
+   "type:#item:6",
+   "click:#add",
+   "type:#item:7",
+   "click:#add",
+   "type:#item:8",
+   "click:#add",
+   "type:#item:9",
+   "click:#add",
+   "type:#item:10",
+   "click:#add",
+   "type:#item:11",
+   "click:#add"
+  ],
+  "observe": "#todo",
+  "commit": "6aa718729409161e86d0d10ff23837e51bd822d778c2944f25c30857f0bf8e51"
+ },
+ {
+  "id": "a018",
+  "app": "todo",
+  "screen": "complete",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete"
+  ],
+  "observe": "#todo",
+  "commit": "b580a2169389eb4faea9c082f7687ca34fc5f7fa61539ada69ee285c37d7e22a"
+ },
+ {
+  "id": "a019",
+  "app": "todo",
+  "screen": "complete",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .complete"
+  ],
+  "observe": "#todo",
+  "commit": "55d1df56789d430ce70c46dad3c341fd4850020d372c712e151da2d31cb7cd23"
+ },
+ {
+  "id": "a020",
+  "app": "todo",
+  "screen": "complete",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .complete",
+   "click:#todo li .complete",
+   "click:#completed li .complete",
+   "click:#todo li .complete"
+  ],
+  "observe": "#todo",
+  "commit": "7c3255e57e7d234f8ea214d7ce9bf809d8bcfce9628a6b36d7b5313164ecc9bc"
+ },
+ {
+  "id": "a021",
+  "app": "todo",
+  "screen": "complete",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:B",
+   "click:#add",
+   "type:#item:C",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#todo li .complete"
+  ],
+  "observe": "#todo",
+  "commit": "8f0c7f3e8a53067e300ac2a9ccb14d6a202679f9289ff8ccb2acb218b8a70524"
+ },
+ {
+  "id": "a022",
+  "app": "todo",
+  "screen": "complete",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:B",
+   "click:#add",
+   "type:#item:C",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#todo li .complete",
+   "click:#completed li .complete"
+  ],
+  "observe": "#todo",
+  "commit": "4af0a6917c5b0daeeae0dbe3e4054209090b4ce4dc842f742f678e445b764cbd"
+ },
+ {
+  "id": "a023",
+  "app": "todo",
+  "screen": "complete",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete"
+  ],
+  "observe": "#todo",
+  "commit": "d21838eda78c589cc47164f8756b9db8b57addec24a5da5bd22a7c74041c769d"
+ },
+ {
+  "id": "a024",
+  "app": "todo",
+  "screen": "complete",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .complete"
+  ],
+  "observe": "#todo",
+  "commit": "3ba0e9c91d4c44e32d5cefae26233fb30b50fbbc61b369f1e221896a8e186dfe"
+ },
+ {
+  "id": "a025",
+  "app": "todo",
+  "screen": "complete",
+  "steps": [
+   "type:#item:a    b",
+   "click:#add",
+   "click:#todo li .complete"
+  ],
+  "observe": "#todo",
+  "commit": "f8284bf6008e88b43bec57f915eb3d7c38f962cfc9de2a8782d5cc211b4c570d"
+ },
+ {
+  "id": "a026",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .remove"
+  ],
+  "observe": "#todo",
+  "commit": "24571655cda99e319ff01cadb012f923d76e3c362aa25cf1acd8becc0df3c3a0"
+ },
+ {
+  "id": "a027",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .remove",
+   "type:#item:B",
+   "click:#add"
+  ],
+  "observe": "#todo",
+  "commit": "ecf2df074d1b6e4dcfed6c0247ad8f90eeef419569f3e027a1187c577147f209"
+ },
+ {
+  "id": "a028",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:B",
+   "click:#add",
+   "click:#todo li .remove"
+  ],
+  "observe": "#todo",
+  "commit": "18844eae089600a80e9035635a5b532797ef1055f1cafd7212b2e955e52f4eb9"
+ },
+ {
+  "id": "a029",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:B",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .remove"
+  ],
+  "observe": "#todo",
+  "commit": "39a0626519cfbca3ae7b81ea8e75db6e7261ca89677c3f606a6cba92ef2e06f3"
+ },
+ {
+  "id": "a030",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .remove",
+   "type:#item:B",
+   "click:#add"
+  ],
+  "observe": "#todo",
+  "commit": "af990f5b16d979b295750e0d84b66a19d464344b784149a80d12ad5b8c5372d2"
+ },
+ {
+  "id": "a031",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .remove"
+  ],
+  "observe": "#todo",
+  "commit": "bb24b869fa8a35a32cb80618c85a5c23f21a128b7fed6f007047e8925f43626a"
+ },
+ {
+  "id": "a032",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .remove"
+  ],
+  "observe": "#todo",
+  "commit": "2c90e43aa465bd20789f3696a1131cac1395c942e25685c2ca0de0aa2989b756"
+ },
+ {
+  "id": "a033",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:B",
+   "click:#add",
+   "type:#item:C",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#todo li .remove",
+   "click:#completed li .remove"
+  ],
+  "observe": "#todo",
+  "commit": "73735de924f632aa9371db16197fa26f7351650826a59683981b523e66af81d9"
+ },
+ {
+  "id": "a034",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:   ",
+   "click:#add",
+   "click:#todo li .remove"
+  ],
+  "observe": "#todo",
+  "commit": "2f6a07fb6760dbe9f9e6b457cb54cecc60967d8c9da03d6ba0d978463f1d1b18"
+ },
+ {
+  "id": "a035",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .remove",
+   "click:#todo li .remove"
+  ],
+  "observe": "#todo",
+  "commit": "2c36d1e73de3782e22e645e0d3f01732f8d69748e5e0dcc46beb3712bd10f137"
+ },
+ {
+  "id": "a036",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "click:#add"
+  ],
+  "observe": "#completed",
+  "commit": "b0994a60c3f472deafb9895a193607f1a59b27b90df4aa31a216d5c3894eee3e"
+ },
+ {
+  "id": "a037",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "key:Enter"
+  ],
+  "observe": "#completed",
+  "commit": "0250f42b73319019e37175f9d1faededb043753fe35054fbcf3cd63a4a55a3e3"
+ },
+ {
+  "id": "a038",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:   ",
+   "click:#add"
+  ],
+  "observe": "#completed",
+  "commit": "a6e98d6d49b07d51a32cf2078de385b594169607253c028969052f718f8b0f52"
+ },
+ {
+  "id": "a039",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:a    b",
+   "click:#add"
+  ],
+  "observe": "#completed",
+  "commit": "ff4214d0cb60cee72a968868ba6efaeab6523c385e6881d5d882fc5e3f69ebcf"
+ },
+ {
+  "id": "a040",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:0",
+   "click:#add"
+  ],
+  "observe": "#completed",
+  "commit": "2b74ce00aae8f3ef0ce0dac839c8a9dfb62e02d25e8cfe4d89ebd4b4443a4265"
+ },
+ {
+  "id": "a041",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "click:#add"
+  ],
+  "observe": "#completed",
+  "commit": "5f1fa6c9c9192f1f3d3f97200b7e1744dd8281c46b97391205ee5c0670c24550"
+ },
+ {
+  "id": "a042",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:<b>bold</b><script>1</script>",
+   "click:#add"
+  ],
+  "observe": "#completed",
+  "commit": "5df77b7cfd8654f4ccf1b0a6b6fb3f4b28f9816a7b7419e2abcd4f3418294ee8"
+ },
+ {
+  "id": "a043",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:&amp; &lt; &#65;",
+   "click:#add"
+  ],
+  "observe": "#completed",
+  "commit": "1f5feaeba4259a041adab940367ceb9bbe656979466a3965c1f432f5077c38f6"
+ },
+ {
+  "id": "a044",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:a:b:c: 10:30",
+   "click:#add"
+  ],
+  "observe": "#completed",
+  "commit": "71395388d69b76af666d451e2145910f20f8231f9287910a47cfc66e987b810d"
+ },
+ {
+  "id": "a045",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:\u00f1 \u2615 \u65e5\u672c \ud83d\ude00",
+   "click:#add"
+  ],
+  "observe": "#completed",
+  "commit": "1040ec89c36a56787a6504e0600b953f62fe5188f443fbbf52b7b4b0a3abb65b"
+ },
+ {
+  "id": "a046",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:A",
+   "click:#add"
+  ],
+  "observe": "#completed",
+  "commit": "d1d399068841d4f24a9fa508c754dc7bbebfbb76746205e08efe7bf518eecc40"
+ },
+ {
+  "id": "a047",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:A",
+   "key:Enter",
+   "type:#item:B",
+   "key:NumpadEnter"
+  ],
+  "observe": "#completed",
+  "commit": "5c873d48322f32852bcd410909250b2f7471094ad525763235bb89d82798c288"
+ },
+ {
+  "id": "a048",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:A",
+   "key:Shift+Enter"
+  ],
+  "observe": "#completed",
+  "commit": "59cd35e5a9fa3929da2a1524ee7b3df97460572413387c5fb19c07f8bbf72a3f"
+ },
+ {
+  "id": "a049",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:A",
+   "key:Enter",
+   "key:Enter"
+  ],
+  "observe": "#completed",
+  "commit": "d8337242481b705ebf819aee38446e099b87375ae0787d2eca49d94f06ccd47a"
+ },
+ {
+  "id": "a050",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#add"
+  ],
+  "observe": "#completed",
+  "commit": "52bd3953d9dc595019ed683b290969802c55438d61df8b4a16cc629e46b5f46b"
+ },
+ {
+  "id": "a051",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "click:#add",
+   "type:#item:yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "click:#add",
+   "type:#item:yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "click:#add",
+   "type:#item:yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "click:#add",
+   "type:#item:yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "click:#add",
+   "type:#item:yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "click:#add"
+  ],
+  "observe": "#completed",
+  "commit": "14da57ef82e913ce854a1e5172d65eca64d438f178cec940477e054cd4659bb2"
+ },
+ {
+  "id": "a052",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:0",
+   "click:#add",
+   "type:#item:1",
+   "click:#add",
+   "type:#item:2",
+   "click:#add",
+   "type:#item:3",
+   "click:#add",
+   "type:#item:4",
+   "click:#add",
+   "type:#item:5",
+   "click:#add",
+   "type:#item:6",
+   "click:#add",
+   "type:#item:7",
+   "click:#add",
+   "type:#item:8",
+   "click:#add",
+   "type:#item:9",
+   "click:#add",
+   "type:#item:10",
+   "click:#add",
+   "type:#item:11",
+   "click:#add"
+  ],
+  "observe": "#completed",
+  "commit": "f462f0f8d5f0b01f1783c5f68025deb4b13e8f4098299ba3f6af889cc364adae"
+ },
+ {
+  "id": "a053",
+  "app": "todo",
+  "screen": "complete",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete"
+  ],
+  "observe": "#completed",
+  "commit": "1b69b8aa3b7717d418e1332bfdb8adbb55c9f5c7886ac30e7d7e8fa1d9d4b50d"
+ },
+ {
+  "id": "a054",
+  "app": "todo",
+  "screen": "complete",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .complete"
+  ],
+  "observe": "#completed",
+  "commit": "d74e46b91e7a51a365b5ef31918e3e0a672bc128810ff55ff93db3b8b7ec8bab"
+ },
+ {
+  "id": "a055",
+  "app": "todo",
+  "screen": "complete",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .complete",
+   "click:#todo li .complete",
+   "click:#completed li .complete",
+   "click:#todo li .complete"
+  ],
+  "observe": "#completed",
+  "commit": "ca1ea7d82ca88e15d19289ec0ec1687fa0470c6eb588b64f5c6b01e20aecb2ad"
+ },
+ {
+  "id": "a056",
+  "app": "todo",
+  "screen": "complete",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:B",
+   "click:#add",
+   "type:#item:C",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#todo li .complete"
+  ],
+  "observe": "#completed",
+  "commit": "ded179f91000ccfe710b4dc9099ba813b44ebba39aa58c80b8584f77d843a9cc"
+ },
+ {
+  "id": "a057",
+  "app": "todo",
+  "screen": "complete",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:B",
+   "click:#add",
+   "type:#item:C",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#todo li .complete",
+   "click:#completed li .complete"
+  ],
+  "observe": "#completed",
+  "commit": "980b31db8b572ed419d5365f9e5dd43332f18b498aa4b50315f43ced0cbf74ab"
+ },
+ {
+  "id": "a058",
+  "app": "todo",
+  "screen": "complete",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete"
+  ],
+  "observe": "#completed",
+  "commit": "96da7aa1e56a2d3a368715358dac6f1ef4265356187b1f763775b1be92323463"
+ },
+ {
+  "id": "a059",
+  "app": "todo",
+  "screen": "complete",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .complete"
+  ],
+  "observe": "#completed",
+  "commit": "d3099867fa3e57dbe8ce1935d7483768cce96d958d3cdda58d41d4ea6ef67f2a"
+ },
+ {
+  "id": "a060",
+  "app": "todo",
+  "screen": "complete",
+  "steps": [
+   "type:#item:a    b",
+   "click:#add",
+   "click:#todo li .complete"
+  ],
+  "observe": "#completed",
+  "commit": "c24e21d972d051891bfecd30cd19fa867c1539bf75316886c5fded6385012e5e"
+ },
+ {
+  "id": "a061",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .remove"
+  ],
+  "observe": "#completed",
+  "commit": "79806d72dbeab5d30bf4f20431e6bbc32efb5d38b142ba0f1f00f88e6291aabd"
+ },
+ {
+  "id": "a062",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .remove",
+   "type:#item:B",
+   "click:#add"
+  ],
+  "observe": "#completed",
+  "commit": "ce2be66eb6e776754136be7ece800387cd27541eb98ae1998709f22f045cb407"
+ },
+ {
+  "id": "a063",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:B",
+   "click:#add",
+   "click:#todo li .remove"
+  ],
+  "observe": "#completed",
+  "commit": "b967d0b48ba62ae236bb63b8d4c8e3fd76f5c53b5c8e12f313387fe72664f6df"
+ },
+ {
+  "id": "a064",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:B",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .remove"
+  ],
+  "observe": "#completed",
+  "commit": "f07f23858f302cb276da0675ebe2e647e5395f5a233ee6890adf83b2884ccaa4"
+ },
+ {
+  "id": "a065",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .remove",
+   "type:#item:B",
+   "click:#add"
+  ],
+  "observe": "#completed",
+  "commit": "b323276d72db2983fa18b717e22a1c3868a94597c98795e07227de2c747984bd"
+ },
+ {
+  "id": "a066",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .remove"
+  ],
+  "observe": "#completed",
+  "commit": "336cf5e1ca36cfe4f6921e3a62f924b487e64c09df64f303f5d9d61ade11991f"
+ },
+ {
+  "id": "a067",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .remove"
+  ],
+  "observe": "#completed",
+  "commit": "09c580f765a4d18b9715f8a4d3d6fecdc8b72064b5a10fbe5dd19756a996418f"
+ },
+ {
+  "id": "a068",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:B",
+   "click:#add",
+   "type:#item:C",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#todo li .remove",
+   "click:#completed li .remove"
+  ],
+  "observe": "#completed",
+  "commit": "8d6eb564dd8b785f5a2b03208a2af19b672cf353c3f416bb2022e0b19c01cab7"
+ },
+ {
+  "id": "a069",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:   ",
+   "click:#add",
+   "click:#todo li .remove"
+  ],
+  "observe": "#completed",
+  "commit": "d0f785753c7fee3e17e920903245008461a4aee59c6ee890034eb506cdc560b5"
+ },
+ {
+  "id": "a070",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .remove",
+   "click:#todo li .remove"
+  ],
+  "observe": "#completed",
+  "commit": "dfab69522bb364d58fb8fb85bbf5073c1a85bee6e78f1ed23a5c5868670b8148"
+ },
+ {
+  "id": "a071",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "click:#add"
+  ],
+  "observe": "body",
+  "commit": "2d569d0aa3917e613376dc65b98334c92a4f418cf370e349dc9c7c0ce6721192"
+ },
+ {
+  "id": "a072",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "key:Enter"
+  ],
+  "observe": "body",
+  "commit": "974b45eacfadbd2174ad52a82d5f7b9f58f644d64fba8a303c67ca7db11d8222"
+ },
+ {
+  "id": "a073",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:   ",
+   "click:#add"
+  ],
+  "observe": "body",
+  "commit": "edf012591df20cf3f646eb860a6e0afe1e88c727cc8997ba30e95ea2bacb5f6e"
+ },
+ {
+  "id": "a074",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:a    b",
+   "click:#add"
+  ],
+  "observe": "body",
+  "commit": "4b6cff8eed2653dd51778cc64c3c9843da33f97aa35c0c5cf1ba6e931aeb41b9"
+ },
+ {
+  "id": "a075",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:0",
+   "click:#add"
+  ],
+  "observe": "body",
+  "commit": "aec63eec89435069fb825c618dc053fcc79b90fb02be1853d9cef789dee36ed2"
+ },
+ {
+  "id": "a076",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "click:#add"
+  ],
+  "observe": "body",
+  "commit": "747fac967ecea6bc10011031ce1c7fdb026630301662dea2d36486128a10177c"
+ },
+ {
+  "id": "a077",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:<b>bold</b><script>1</script>",
+   "click:#add"
+  ],
+  "observe": "body",
+  "commit": "94ab7dec47c7c10697fee5c4aecb7218a2486dd7a268313686103f7de41269c3"
+ },
+ {
+  "id": "a078",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:&amp; &lt; &#65;",
+   "click:#add"
+  ],
+  "observe": "body",
+  "commit": "fdb41d39c209d09867050a5f77bf4ff1e6c7fe6c8677d52419ad60862e2fad88"
+ },
+ {
+  "id": "a079",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:a:b:c: 10:30",
+   "click:#add"
+  ],
+  "observe": "body",
+  "commit": "316816d11dac560b62affa1e193cce25eb9addd7b24ee6f72cd576559d73cc5a"
+ },
+ {
+  "id": "a080",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:\u00f1 \u2615 \u65e5\u672c \ud83d\ude00",
+   "click:#add"
+  ],
+  "observe": "body",
+  "commit": "e56204dced17644e1db0663210e2c1ab6f3cb874026936252113ca10703a81ad"
+ },
+ {
+  "id": "a081",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:A",
+   "click:#add"
+  ],
+  "observe": "body",
+  "commit": "100462ee2f64942018e0dacdc5c2d8bb3f9420b888542ea368c2d183de4d4bdb"
+ },
+ {
+  "id": "a082",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:A",
+   "key:Enter",
+   "type:#item:B",
+   "key:NumpadEnter"
+  ],
+  "observe": "body",
+  "commit": "a474c97ed9fedeeeacde7f2f7b269cfedde55a34de167f8f61352efa03507eb4"
+ },
+ {
+  "id": "a083",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:A",
+   "key:Shift+Enter"
+  ],
+  "observe": "body",
+  "commit": "c2e8859786a0bea3574866a195c11df0f4dbc97195b83067c3fedb79a3299d04"
+ },
+ {
+  "id": "a084",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:A",
+   "key:Enter",
+   "key:Enter"
+  ],
+  "observe": "body",
+  "commit": "54e7b7019543329712ada0ff86667229081588622f03c3f6f9b9e2a1b9a36724"
+ },
+ {
+  "id": "a085",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#add"
+  ],
+  "observe": "body",
+  "commit": "9c3383c0feb07930692d17b5e94d1e88c6dfb99d0fafc16e76a0cb307810149c"
+ },
+ {
+  "id": "a086",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "click:#add",
+   "type:#item:yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "click:#add",
+   "type:#item:yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "click:#add",
+   "type:#item:yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "click:#add",
+   "type:#item:yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "click:#add",
+   "type:#item:yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+   "click:#add"
+  ],
+  "observe": "body",
+  "commit": "fcde19972f0e0ba527da2c5ecd1ad3dafdbfe83b16f9f228932f75b09c8fa3d1"
+ },
+ {
+  "id": "a087",
+  "app": "todo",
+  "screen": "add",
+  "steps": [
+   "type:#item:0",
+   "click:#add",
+   "type:#item:1",
+   "click:#add",
+   "type:#item:2",
+   "click:#add",
+   "type:#item:3",
+   "click:#add",
+   "type:#item:4",
+   "click:#add",
+   "type:#item:5",
+   "click:#add",
+   "type:#item:6",
+   "click:#add",
+   "type:#item:7",
+   "click:#add",
+   "type:#item:8",
+   "click:#add",
+   "type:#item:9",
+   "click:#add",
+   "type:#item:10",
+   "click:#add",
+   "type:#item:11",
+   "click:#add"
+  ],
+  "observe": "body",
+  "commit": "33670b76c48a78654416ea7dcb3366f38ac53b48f8a46083c73b86298dbbfa15"
+ },
+ {
+  "id": "a088",
+  "app": "todo",
+  "screen": "complete",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete"
+  ],
+  "observe": "body",
+  "commit": "381589f5d766d8316dbe2d1e0fec6091ab25aa565114bc84bb7436941b00d824"
+ },
+ {
+  "id": "a089",
+  "app": "todo",
+  "screen": "complete",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .complete"
+  ],
+  "observe": "body",
+  "commit": "777f1fffa7ffcdcb73c8ebc64bcae6a266246d119a5d8e8e5108321b791a7113"
+ },
+ {
+  "id": "a090",
+  "app": "todo",
+  "screen": "complete",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .complete",
+   "click:#todo li .complete",
+   "click:#completed li .complete",
+   "click:#todo li .complete"
+  ],
+  "observe": "body",
+  "commit": "1356fc3f4e52a29b9117056e189298cfc7a53807bbfb2adf689fc4373ec45365"
+ },
+ {
+  "id": "a091",
+  "app": "todo",
+  "screen": "complete",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:B",
+   "click:#add",
+   "type:#item:C",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#todo li .complete"
+  ],
+  "observe": "body",
+  "commit": "b170dc84f3770d8f896b1df839a18c75d0a92bd57818f4025ae076b294fc9d94"
+ },
+ {
+  "id": "a092",
+  "app": "todo",
+  "screen": "complete",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:B",
+   "click:#add",
+   "type:#item:C",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#todo li .complete",
+   "click:#completed li .complete"
+  ],
+  "observe": "body",
+  "commit": "7edaa75347919101c7e95f09912b2490d0f7170a42b4573c5c2091ea27ca4e3f"
+ },
+ {
+  "id": "a093",
+  "app": "todo",
+  "screen": "complete",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete"
+  ],
+  "observe": "body",
+  "commit": "65e779cd5d9c732e023a6fd907a15e3159603d01e05b75b029cb09e3787c8ddc"
+ },
+ {
+  "id": "a094",
+  "app": "todo",
+  "screen": "complete",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .complete"
+  ],
+  "observe": "body",
+  "commit": "7a650d7515990326501b00a6f3c81bdf1e4e9f724adbcfb6b3d550ceae4aa09d"
+ },
+ {
+  "id": "a095",
+  "app": "todo",
+  "screen": "complete",
+  "steps": [
+   "type:#item:a    b",
+   "click:#add",
+   "click:#todo li .complete"
+  ],
+  "observe": "body",
+  "commit": "b0b7f1a23b74690878893090f6fb56396fe60d40c46cd4e8e18e5fa10692ca36"
+ },
+ {
+  "id": "a096",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .remove"
+  ],
+  "observe": "body",
+  "commit": "804c3fbb902cee83160b902edb724f452b9228b3265f5e88f581fb4e62abd528"
+ },
+ {
+  "id": "a097",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .remove",
+   "type:#item:B",
+   "click:#add"
+  ],
+  "observe": "body",
+  "commit": "706d6d397e4dda9d7d5fa3f3b8915d24598e5cb49512496f945ade99c8419e89"
+ },
+ {
+  "id": "a098",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:B",
+   "click:#add",
+   "click:#todo li .remove"
+  ],
+  "observe": "body",
+  "commit": "609fb31322783fe8700fcaf63c191e2d775fe4d96bfb99bcf10492d8ec370ace"
+ },
+ {
+  "id": "a099",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:B",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .remove"
+  ],
+  "observe": "body",
+  "commit": "32b2e09da27cefe5a9787d8d010f9a76831995bd68892a4fbb728ab8c6418666"
+ },
+ {
+  "id": "a100",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .remove",
+   "type:#item:B",
+   "click:#add"
+  ],
+  "observe": "body",
+  "commit": "f1f6139a4e80737c0dcc85dd4958f038065586fe2c304634d4516cae428ce946"
+ },
+ {
+  "id": "a101",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .remove"
+  ],
+  "observe": "body",
+  "commit": "e79feec8967d94b2a3c960d48ecb839fda700c85546e923dcf6887955d32f2f7"
+ },
+ {
+  "id": "a102",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#completed li .remove"
+  ],
+  "observe": "body",
+  "commit": "cdc9e18a344296eb30d8b4b493aa27c17324cfa1ab9a6ac34aa695b711f488fc"
+ },
+ {
+  "id": "a103",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "type:#item:B",
+   "click:#add",
+   "type:#item:C",
+   "click:#add",
+   "click:#todo li .complete",
+   "click:#todo li .remove",
+   "click:#completed li .remove"
+  ],
+  "observe": "body",
+  "commit": "03a34db5347644a7df289fcd4b2cec9a78f875c79dbbaf2973bc868dc50cf94b"
+ },
+ {
+  "id": "a104",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:   ",
+   "click:#add",
+   "click:#todo li .remove"
+  ],
+  "observe": "body",
+  "commit": "68ced2c18935d3176c22b1ca82fab8ab8f46bed72b8814fbaec3bffee7eccb90"
+ },
+ {
+  "id": "a105",
+  "app": "todo",
+  "screen": "remove",
+  "steps": [
+   "type:#item:A",
+   "click:#add",
+   "click:#todo li .remove",
+   "click:#todo li .remove"
+  ],
+  "observe": "body",
+  "commit": "d01042a067ad6d67a5fb424495ab9ad87bba8375503c7b69073c707cb46b4dc5"
+ }
+]

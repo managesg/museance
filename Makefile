@@ -16,3 +16,8 @@ test-p4:
 	$(PY) -m pytest -q eval revive
 
 .PHONY: check serve-fixture test-p1 test-p2 test-p3 test-p4
+
+demo-p4:          ## offline stage replay of the P4 todo story (add ARGS=--live to re-run the court)
+	$(PY) eval/demo_p4.py $(ARGS)
+
+.PHONY: demo-p4
