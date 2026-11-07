@@ -139,7 +139,7 @@ function chooseOperator(value) {
     show();
     return;
   }
-  saved = Number(entry);
+  saved = fresh && operation !== null ? 0 : Number(entry);
   operation = value;
   fresh = true;
   show();
