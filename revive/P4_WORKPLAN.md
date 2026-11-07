@@ -26,6 +26,7 @@ No Gemini. Author and reviewer must be different vendors.
 ## Task queue (do in order; each has a done-check)
 | ID | By | Task | Agent | Done when |
 |---|---|---|---|---|
+| L1 | now | Liaison: send Roshni the answers (Atlas: Alejandro DMs the connection string, JSON files under `runs/<app>/` meanwhile; claim `commit` via `eval/commit.py`; use main's `contracts/claim.schema.json`; app1 locked by P1+P2 by 12:20) | liaison via WhatsApp Web in Orca's browser | message delivered in AIE Hack |
 | T1 | 12:30 | Revival builder: `revive/build.py`, `check_revival.py`, `run_revival.js`, tests, testdata sheet; first real build of the fixture app | Codex (box), review by Claude subagent | tests green; score x/20 recorded; branch `p4-revival` pushed and merged to main |
 | T2 | 12:30 | P4 fixture pipeline: one command `python eval/p4_fixture.py` = skeptic attacks -> revival check -> score -> case file | Claude subagent | prints numbers from fixtures; checkpoint status posted |
 | T3 | 13:00 | Seal: `eval/seal.py` writes `cases/<app>.commits.json` (sha256 of regression set + attacks) before the Medium's claims are revealed; commit it | Claude subagent | hashes committed to git with a timestamp before claims exist |
