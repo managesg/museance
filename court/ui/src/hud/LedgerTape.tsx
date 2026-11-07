@@ -48,6 +48,7 @@ export function LedgerTape({ events, max = 6 }: { events: LedgerEvent[]; max?: n
         <path d={PAPER} fill="var(--paper)" stroke="var(--ink)" strokeWidth="2.5" vectorEffect="non-scaling-stroke" />
       </svg>
       <ol className="hud-tape__feed">
+        {rows.length === 0 && <li className="hud-tape__empty">awaiting the first commit</li>}
         {rows.map((ev, i) => (
           <li key={`${ev.seq}:${ev.hash}`} className="hud-tape__row">
             <div className="hud-tape__inner">

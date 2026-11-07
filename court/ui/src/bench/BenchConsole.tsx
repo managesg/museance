@@ -11,6 +11,8 @@ interface BenchConsoleProps {
   observe: string;
   originalFrame: HTMLIFrameElement | null;
   revivalFrame: HTMLIFrameElement | null;
+  originalSrc: string;
+  revivalSrc: string;
   suggestions: BenchSuggestion[];
   onVerdict: (v: Verdict) => void;
   onClose: () => void;
@@ -130,7 +132,7 @@ function Ruling({ v, labelOf }: { v: Verdict; labelOf: (step: string) => string 
   );
 }
 
-export function BenchConsole({ open, app, observe, originalFrame, revivalFrame, suggestions, onVerdict, onClose }: BenchConsoleProps) {
+export function BenchConsole({ open, app, observe, originalFrame, revivalFrame, originalSrc, revivalSrc, suggestions, onVerdict, onClose }: BenchConsoleProps) {
   const id = useId();
   const field = useRef<HTMLInputElement>(null);
   const [keys, setKeys] = useState<BenchKey[]>(FIXTURE_KEYS);
@@ -180,7 +182,7 @@ export function BenchConsole({ open, app, observe, originalFrame, revivalFrame, 
     setRunning(true);
     setError(null);
     try {
-      const v = await benchRun(originalFrame, revivalFrame, steps, observe, app);
+      const v = await benchRun(originalFrame, revivalFrame, steps, observe, app, { original: originalSrc, revival: revivalSrc });
       setRuling((r) => ({ v, n: (r?.n ?? 0) + 1 }));
       onVerdict(v);
     } catch (e) {
@@ -251,7 +253,7 @@ export function BenchConsole({ open, app, observe, originalFrame, revivalFrame, 
               ref={field}
               className="bench-field"
               value={draft}
-              placeholder="7/0="
+              placeholder={keys.some((k) => k.label === "7") ? "7/0=" : ""}
               readOnly={running}
               autoComplete="off"
               spellCheck={false}

@@ -55,15 +55,11 @@ export async function synthesizeLedger(bundle: CaseBundle): Promise<LedgerEvent[
         return status ? [{ claim_id: c.id, status }] : [];
       });
   const entries: [string, unknown][] = [];
-  for (const c of bundle.claims) entries.push(['claim_committed', { kind: 'claim', ref: c.id, commit: await commitOf(c) }]);
-  for (const a of bundle.attacks) entries.push(['attack_committed', { kind: 'attack', ref: a.id, commit: await commitOf(a) }]);
+  // court/ledger.py order and names: every commit, then verdicts, then locks. Repairs stay off the chain.
+  for (const c of bundle.claims) entries.push(['commit', { kind: 'claim', ref: c.id, commit: await commitOf(c) }]);
+  for (const a of bundle.attacks) entries.push(['commit', { kind: 'attack', ref: a.id, commit: await commitOf(a) }]);
   for (const v of bundle.verdicts) entries.push(['verdict', v]);
   for (const l of locks) entries.push(['lock', l]);
-  for (const r of bundle.repairs) {
-    const ids = { struck_id: r.struck_id, claim_id: r.claim.id };
-    entries.push(['repair', { ...ids, status: deriveLock(r.claim, r.verdict), note: r.note }]);
-    if (r.rollback) entries.push(['rollback', { ...ids, note: r.note }]);
-  }
   const ts = nowTs();
   const chain: LedgerEvent[] = [];
   for (const [type, payload] of entries) chain.push(await appendEvent(chain, type, payload, ts));

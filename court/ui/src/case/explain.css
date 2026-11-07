@@ -1,0 +1,42 @@
+.explain {
+  position: relative;
+  cursor: help;
+  text-decoration: underline dotted;
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+}
+.explain:focus-visible {
+  outline: 3px solid var(--brass);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+.explain__tip {
+  position: fixed;
+  z-index: 1000;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: 320px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--paper);
+  font: 400 18px/1.4 var(--font-ui);
+  text-align: left;
+  text-decoration: none;
+  white-space: normal;
+  letter-spacing: 0;
+  text-transform: none;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.28);
+  pointer-events: none;
+  animation: explain-in 160ms ease-out;
+}
+.explain__tip b {
+  color: var(--flame-core);
+}
+@keyframes explain-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .explain__tip { animation: none; }
+}

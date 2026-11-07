@@ -3,7 +3,7 @@ import type { CaseFile, Claim, LockStatus, Tier } from '../contracts';
 import type { CardView, LeaderRow, StageState } from '../engine/types';
 import { Leaderboard } from '../bets/Leaderboard';
 import { BOTS, STAKE } from '../engine/bets';
-import { loadFixtureBundle } from '../fixtures';
+import { prettyOutput } from '../engine/format';
 import './sentence.css';
 
 type Group = 'struck' | 'locked' | 'fabricated' | 'unsworn';
@@ -43,22 +43,14 @@ const PUFFS = [
 
 const claimEntry = (c: Claim, note?: string): Entry => ({ id: c.id, tier: c.tier, text: `${c.screen}: ${c.text}`, note });
 
-// shortcut: a repair replaces its struck card, so the struck claim's text is only reachable for the fixture bundle
-// (runs and atlas carry no repairs today); upgrade when CardView keeps the claim it repaired.
-const replacedClaim = (id: string, source: StageState['source']) =>
-  source === 'fixture' ? loadFixtureBundle().claims.find((c) => c.id === id) : undefined;
-
 const isLock = (s: CardView['status']): s is LockStatus => GROUPS.some(([, status]) => status === s);
 
-/** Every claim the stage can name, with its ruling. A repair takes over its struck card, but the strike stays on record. */
-function recordRows(cards: CardView[], source: StageState['source']): { status: CardView['status']; entry: Entry }[] {
-  const onStage = new Set(cards.map((c) => c.claim.id));
-  return cards.flatMap(({ claim, status, repairedFrom: id }) => {
-    const own = { status, entry: claimEntry(claim, id && `repairs ${id}`) };
-    if (!id || onStage.has(id)) return [own];
-    const note = `repaired as ${claim.id}`;
-    const struck = replacedClaim(id, source);
-    return [{ status: 'STRUCK' as const, entry: struck ? claimEntry(struck, note) : { id, note } }, own];
+/** Every claim the stage can name, with its ruling. P4 repairs patch the revival, never a claim, so one row per card. */
+function recordRows(cards: CardView[]): { status: CardView['status']; entry: Entry }[] {
+  return cards.map(({ claim, status, verdict }) => {
+    // A strike names what the court saw on the revival, in the stage's words rather than raw ERROR: text.
+    const saw = status === 'STRUCK' && verdict ? `revival showed ${JSON.stringify(prettyOutput(verdict.revival))}` : undefined;
+    return { status, entry: claimEntry(claim, saw) };
   });
 }
 
@@ -93,7 +85,7 @@ export function SentenceScreen({
   // state.scores already takes the case file's numbers once every claim is ruled, and re-measures after repairs
   // and bench runs, so the sheet agrees with the numbers bar and the clerk's subtitle.
   const { fidelity, brier, credibilityStart: start, credibility: end } = state.scores;
-  const record = recordRows(cards, state.source);
+  const record = recordRows(cards);
   const groups = GROUPS.map(([key, status]) => ({
     key,
     list: caseFile

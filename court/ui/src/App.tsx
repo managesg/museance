@@ -28,6 +28,7 @@ import { CourtroomBackdrop } from './set/Courtroom';
 import { GUY_SLOTS, place, ZONES } from './stage/layout';
 import { Stage } from './stage/Stage';
 import { useKeyboard } from './stage/useKeyboard';
+import { CaseView } from './case/CaseView';
 
 type Tag = NonNullable<ComponentProps<typeof ExhibitFrame>['output']>;
 
@@ -41,9 +42,10 @@ const RULED: Record<LockStatus, string> = {
 };
 const isRuled = (s: CardStatus): s is LockStatus => s in RULED;
 
+// A bare URL opens the real todo case; useCaseFeed reads the location at first render, after this runs.
+if (!location.search) history.replaceState(null, '', '?source=runs&app=todo');
+// Same reading as useCaseFeed, for the masthead before the bundle lands.
 const QUERY = new URLSearchParams(location.search);
-// A live case names its revival page with ?revival=<same-origin path>; the fixture's pages come from the director.
-const REVIVAL_SRC = QUERY.get('revival');
 
 // A replay leaves focus on the exhibit key it clicked last. useKeyboard hears keys inside the frames, but not while
 // one reloads, so focus goes back to the stage before the next replay reloads them.
@@ -61,6 +63,11 @@ function tagsOf(v: Verdict): { original: Tag; revival: Tag } {
 }
 
 export default function App() {
+  return QUERY.get('view') === 'stage' ? <CourtStage /> : <CaseView />;
+}
+
+// The courtroom show, kept whole behind ?view=stage.
+function CourtStage() {
   const feed = useCaseFeed();
   const director = useDirector(feed.bundle, { autoplay: true });
   const { state } = director;
@@ -151,19 +158,20 @@ export default function App() {
           which="original"
           mode={state.exhibits.original}
           src={state.exhibits.originalSrc}
+          scale={state.exhibits.scale}
           title={`${state.appLabel}, the original`}
           output={tags?.original}
           frameRef={setOriginal}
         >
-          <DigTicker items={state.evidenceShown} />
+          <DigTicker items={state.evidenceShown} total={feed.bundle?.evidence.length ?? state.evidenceShown.length} />
         </ExhibitFrame>
       </div>
       <div className="stage-zone" style={place(ZONES.revival)}>
         <ExhibitFrame
           which="revival"
           mode={state.exhibits.revival}
-          // The director's revival pages are the fixture's; a live case without ?revival= shows an empty frame, not them.
-          src={fixture ? state.exhibits.revivalSrc : (REVIVAL_SRC ?? '')}
+          src={state.exhibits.revivalSrc}
+          scale={state.exhibits.scale}
           title={`${state.appLabel}, the revival`}
           output={tags?.revival}
           frameRef={setRevival}
@@ -196,7 +204,7 @@ export default function App() {
         <Stenographer mood={state.moods.steno} />
       </div>
       <div className="stage-zone" style={place(ZONES.cards)}>
-        <ClaimSpread cards={state.cards} focusId={state.focusId} width={ZONES.cards[2]} height={ZONES.cards[3]} />
+        <ClaimSpread cards={state.cards} focusId={state.focusId} showBets={state.phase === 'swear'} width={ZONES.cards[2]} height={ZONES.cards[3]} />
       </div>
       {/* shortcut: screens past the sixth get no little guy; add floor slots if a case has more */}
       {state.guys.slice(0, GUY_SLOTS.length).map((g, i) => (
@@ -217,6 +225,8 @@ export default function App() {
         observe={feed.bundle?.claims[0]?.test.observe ?? 'body'}
         originalFrame={original}
         revivalFrame={revival}
+        originalSrc={state.exhibits.originalSrc}
+        revivalSrc={state.exhibits.revivalSrc}
         suggestions={fixture ? BENCH_SUGGESTIONS : []}
         onVerdict={director.submitBench}
         onClose={director.next}

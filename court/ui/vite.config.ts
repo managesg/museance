@@ -27,53 +27,63 @@ const TYPES: Record<string, string> = {
   '.ttf': 'font/ttf',
 }
 
-// The original exhibit frame loads the dead app from ORIGINAL_DIR, or the fixture calculator.
-function originalExhibit(): Plugin {
-  const dir = resolve(process.env.ORIGINAL_DIR ?? join(REPO_ROOT, 'fixtures/app1'))
-  const serve: Connect.NextHandleFunction = async (req, res) => {
-    try {
-      const root = await realpath(dir)
-      // realpath before the prefix check, so neither ../ nor a symlink reaches outside the exhibit.
-      const within = async (path: string) => {
-        const real = await realpath(path)
-        if (real !== root && !real.startsWith(root + sep)) throw new Error('outside the exhibit')
-        return real
-      }
-      const { pathname, search } = new URL(req.url ?? '/', 'http://stage')
-      let file = await within(join(root, decodeURIComponent(pathname)))
-      if ((await stat(file)).isDirectory()) {
-        // The page's relative asset URLs only resolve under a trailing slash.
-        const asked = new URL(req.originalUrl ?? '/', 'http://stage').pathname
-        if (!asked.endsWith('/')) {
-          res.writeHead(301, { Location: `${asked}/${search}` }).end()
-          return
-        }
-        file = await within(join(file, 'index.html'))
-      }
-      const body = await readFile(file)
-      res.writeHead(200, {
-        'Content-Type': TYPES[extname(file).toLowerCase()] ?? 'application/octet-stream',
-        'Cache-Control': 'no-cache',
-      })
-      res.end(body)
-    } catch {
-      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }).end('Not found')
+// /exhibits/<app>/<side>/* serves each case's builds same-origin, so the stage can drive them from the iframes.
+const EXHIBITS: Record<string, Record<string, string>> = {
+  app1: { original: 'fixtures/app1', revival: 'revive/out/app1' },
+  todo: { original: 'apps/todo/original', revival: 'revive/out/todo' },
+}
+
+const serveExhibits: Connect.NextHandleFunction = async (req, res) => {
+  try {
+    const { pathname, search } = new URL(req.url ?? '/', 'http://stage')
+    const [, app, side, ...rest] = pathname.split('/')
+    const dir = Object.hasOwn(EXHIBITS, app) && Object.hasOwn(EXHIBITS[app], side) ? EXHIBITS[app][side] : null
+    if (!dir) throw new Error('unknown exhibit')
+    const root = await realpath(join(REPO_ROOT, dir))
+    // realpath before the prefix check, so neither ../ nor a symlink reaches outside the exhibit.
+    const within = async (path: string) => {
+      const real = await realpath(path)
+      if (real !== root && !real.startsWith(root + sep)) throw new Error('outside the exhibit')
+      return real
     }
+    let file = await within(join(root, decodeURIComponent(rest.join('/'))))
+    if ((await stat(file)).isDirectory()) {
+      // The page's relative asset URLs only resolve under a trailing slash.
+      const asked = new URL(req.originalUrl ?? '/', 'http://stage').pathname
+      if (!asked.endsWith('/')) {
+        res.writeHead(301, { Location: `${asked}/${search}` }).end()
+        return
+      }
+      file = await within(join(file, 'index.html'))
+    }
+    const body = await readFile(file)
+    res.writeHead(200, {
+      'Content-Type': TYPES[extname(file).toLowerCase()] ?? 'application/octet-stream',
+      'Cache-Control': 'no-cache',
+    })
+    res.end(body)
+  } catch {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }).end('Not found')
   }
+}
+
+function exhibits(): Plugin {
   return {
-    name: 'seance-original-exhibit',
+    name: 'seance-exhibits',
     configureServer(server) {
-      if (!existsSync(dir)) server.config.logger.warn(`exhibits/original: ${dir} does not exist, so that frame will 404`)
-      server.middlewares.use('/exhibits/original', serve)
+      for (const [app, sides] of Object.entries(EXHIBITS))
+        for (const [side, dir] of Object.entries(sides))
+          if (!existsSync(join(REPO_ROOT, dir))) server.config.logger.warn(`exhibits/${app}/${side}: ${dir} does not exist, so that frame will 404`)
+      server.middlewares.use('/exhibits', serveExhibits)
     },
     configurePreviewServer(server) {
-      server.middlewares.use('/exhibits/original', serve)
+      server.middlewares.use('/exhibits', serveExhibits)
     },
   }
 }
 
 export default defineConfig({
-  plugins: [react(), originalExhibit()],
+  plugins: [react(), exhibits()],
   server: {
     // The fixture bundle imports JSON from the repo's fixtures/ folder, outside this Vite root.
     fs: { allow: [REPO_ROOT] },

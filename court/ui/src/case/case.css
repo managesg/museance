@@ -1,0 +1,192 @@
+/* The case screen: calm paper, plain 1px ink frames, small brass labels, projector-sized text. */
+.case {
+  --case-left: 300px;
+  --case-right: 460px;
+  display: grid;
+  grid-template-columns: var(--case-left) minmax(0, 1fr) var(--case-right);
+  grid-template-rows: 88px minmax(0, 1fr) 96px;
+  grid-template-areas:
+    'head head head'
+    'left mid right'
+    'nums nums nums';
+  height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font: 18px/1.4 var(--font-ui);
+  overflow: hidden;
+}
+@media (max-width: 1600px) {
+  .case { --case-left: 260px; --case-right: 400px; }
+}
+
+.case-label {
+  display: block;
+  margin: 0 0 var(--space-2);
+  color: var(--brass-deep);
+  font: 700 16px/1.2 var(--font-ui);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Header band */
+.case-head {
+  grid-area: head;
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  padding: 0 var(--space-5);
+  background: var(--wall-deep);
+  color: var(--paper);
+  border-bottom: 1px solid var(--ink);
+  min-width: 0;
+}
+.case-head__mark { margin: 0; font: 700 48px/1 var(--font-masthead); color: var(--paper); }
+.case-head__tag { margin: 0; font-size: 20px; flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.case-head__pick { flex: 0 0 auto; position: relative; margin-left: auto; }
+/* The one big Play / Pause, with the intro line under it until the show starts. */
+.case-play { flex: 0 1 auto; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.case-play__btn {
+  min-width: 160px; min-height: 48px; padding: 0 var(--space-5);
+  background: var(--brass); color: var(--ink); border: 1px solid var(--ink);
+  font: 700 24px/1 var(--font-ui); letter-spacing: 0.04em; cursor: pointer;
+}
+.case-play__btn:hover { background: var(--paper); }
+.case-play__btn:focus-visible { outline: 3px solid var(--paper); outline-offset: 3px; }
+.case-play__intro { margin: 0; font-size: 18px; line-height: 1.2; white-space: nowrap; }
+/* The picker sits on one line in the band; its note drops below the band. */
+.case-head .apppicker { flex-wrap: nowrap; align-items: center; }
+.case-head .apppicker .tryit-type { flex-direction: row; align-items: center; gap: var(--space-2); flex: 0 0 auto; }
+.case-head .apppicker input { width: 200px; padding: 6px 10px; }
+.case-head .apppicker button { padding: 6px 14px; }
+.case-head .apppicker-note {
+  position: absolute; top: calc(100% + 18px); right: 0; z-index: 3; width: 420px;
+  padding: var(--space-2) var(--space-3); background: var(--paper); color: var(--ink); border: 1px solid var(--ink);
+}
+.case-badge {
+  border: 1px solid var(--brass);
+  color: var(--brass);
+  padding: 2px var(--space-3);
+  font: 700 16px var(--font-ui);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.case-badge--live { background: var(--brass); color: var(--ink); }
+.case-try-btn {
+  flex: 0 0 auto;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  padding: var(--space-2) var(--space-4);
+  font: 700 18px var(--font-ui);
+  cursor: pointer;
+}
+.case-try-btn[aria-expanded='true'] { background: var(--brass); }
+
+.case-wait { grid-area: mid; align-self: center; justify-self: center; font-size: 22px; }
+
+/* Columns */
+.case-left,
+.case-mid,
+.case-right { min-height: 0; overflow: auto; padding: var(--space-4); }
+.case-left { grid-area: left; border-right: 1px solid var(--ink); }
+.case-right { grid-area: right; border-left: 1px solid var(--ink); display: flex; flex-direction: column; gap: var(--space-4); }
+.case-right > :last-child { flex: 1 1 auto; min-height: 0; overflow: auto; }
+.case-mid { grid-area: mid; display: flex; flex-direction: column; gap: var(--space-3); overflow: hidden; }
+
+/* The two builds */
+.case-builds { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+.build { position: relative; margin: 0; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.build__box {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  border: 1px solid var(--ink);
+  background: #fff;
+  overflow: hidden;
+}
+.build__app {
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: calc(100% / var(--build-scale, 1));
+  height: calc(100% / var(--build-scale, 1));
+  border: 0;
+  transform: scale(var(--build-scale, 1));
+  transform-origin: 0 0;
+}
+/* The output sits over the frame's foot, so the frame keeps the full height down to the narrator line. */
+.build__out {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--ink);
+  font: 18px/1.3 var(--font-doc);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.build__out--match { background: var(--brass); }
+.build__out--diverge { background: var(--crimson); color: var(--paper); }
+.build__out--neutral { background: var(--paper-deep); }
+.build__out--none { display: none; }
+
+/* Divergence line */
+.case-diverge {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--crimson);
+  font-size: 18px;
+}
+.case-diverge .case-label { color: var(--crimson); }
+.case-diverge b { font: 700 18px var(--font-doc); }
+.case-diverge .is-struck { color: var(--crimson); }
+.case-diverge__steps { font-family: var(--font-doc); }
+
+/* Narrators */
+.narrators { flex: 0 0 120px; display: grid; grid-template-columns: 96px minmax(0, 1fr) 96px; align-items: end; gap: var(--space-4); }
+.narrators__who { height: 120px; }
+.narrators__line {
+  margin: 0;
+  align-self: center;
+  font-size: 20px;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.narrators__speaker { color: var(--brass-deep); font-weight: 700; letter-spacing: 0.06em; }
+
+/* Try it: a side panel over the right column, never over the numbers */
+.case-try {
+  grid-area: right;
+  position: relative;
+  z-index: 2;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--space-4);
+  background: var(--paper);
+  border-left: 1px solid var(--ink);
+  box-shadow: -8px 0 0 color-mix(in srgb, var(--ink) 12%, transparent);
+}
+.case-try__close {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  width: 40px;
+  height: 40px;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  font: 24px/1 var(--font-ui);
+  cursor: pointer;
+}
+
+.case-numbers { grid-area: nums; min-width: 0; overflow: hidden; }
+/* NumbersBar is drawn for 1920 px; below that it shrinks whole instead of clipping its last plates. */
+@media (max-width: 1919px) {
+  .case { grid-template-rows: 88px minmax(0, 1fr) 72px; }
+  .case-numbers .hud-numbers { zoom: 0.75; }
+}

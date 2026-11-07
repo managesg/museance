@@ -161,8 +161,22 @@ export async function runSteps(
   return (el instanceof (doc.defaultView as Win).HTMLElement ? el.innerText : (el.textContent ?? '')).trim();
 }
 
-/** Reloads the exhibit's page and resolves on its load event. */
+// Each replay starts from a fresh app, as the court's fresh browser does; the stage's own 'seance:' keys stay.
+function clearStorage(frame: HTMLIFrameElement) {
+  try {
+    const win = frame.contentWindow;
+    if (!win || frame.contentDocument?.URL === 'about:blank') return;
+    for (const store of [win.localStorage, win.sessionStorage]) {
+      for (const k of Object.keys(store)) if (!k.startsWith('seance:')) store.removeItem(k);
+    }
+  } catch {
+    // Cross-origin or storage-blocked frames keep what they have.
+  }
+}
+
+/** Reloads the exhibit's page, with its storage cleared, and resolves on its load event. */
 export function reloadFrame(frame: HTMLIFrameElement): Promise<void> {
+  clearStorage(frame);
   const loaded = nextLoad(frame);
   reloading.set(frame, loaded);
   const settle = () => {

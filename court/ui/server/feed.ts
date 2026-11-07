@@ -1,6 +1,6 @@
 // Stage feed: streams one CaseBundle per app as server-sent events, read from runs/<app>/ files or MongoDB Atlas,
 // and relays the judge's bench input to the court. Run from court/ui with `node server/feed.ts` (Node 24 strips the types).
-// Env, from the shell first and then the repo .env: PORT (8787), COURT_URL, MONGODB_URI, MONGODB_DB (default: the URI's database).
+// Env, from the shell first and then the repo .env: PORT (8787), COURT_URL (http://127.0.0.1:8798), MONGODB_URI, MONGODB_DB (default: the URI's database).
 import { createHash } from 'node:crypto';
 import { existsSync, watch } from 'node:fs';
 import type { FSWatcher } from 'node:fs';
@@ -10,13 +10,17 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { join, resolve } from 'node:path';
 import type { MongoClient } from 'mongodb';
 import type { CaseBundle } from '../src/contracts.ts';
+import { buildsFor } from '../src/feed/builds.ts';
+import { fromLedger, jsonLines, parseCase, parseRepairs } from '../src/feed/parse.ts';
 
 const ROOT = resolve(import.meta.dirname, '../../..');
 const ENV_FILE = join(ROOT, '.env');
 if (existsSync(ENV_FILE)) process.loadEnvFile(ENV_FILE);
 
 const PORT = Number(process.env.PORT) || 8787;
-const COURT_URL = process.env.COURT_URL?.replace(/\/+$/, '') || undefined;
+const COURT_URL = process.env.COURT_URL?.replace(/\/+$/, '') || 'http://127.0.0.1:8798';
+const STAGE_ORIGIN = 'http://127.0.0.1:5175'; // where the court loads the exhibits when the request names no usable Host
+const HOST_RE = /^([a-z0-9.-]+|\[[0-9a-f:]+\])(:\d{1,5})?$/i;
 const MONGODB_URI = process.env.MONGODB_URI || undefined;
 const RUNS = join(ROOT, 'runs');
 const POLL_MS = 1500;
@@ -60,15 +64,29 @@ async function readJson(path: string): Promise<unknown> {
   }
 }
 
-// The court appends one event per line; a half-written last line is skipped until it lands.
-const jsonLines = (text: string | null): unknown[] =>
-  (text ?? '').split('\n').flatMap((line) => {
+async function readCase(...paths: string[]) {
+  for (const path of paths) {
+    const text = await readText(path);
+    if (text === null) continue;
     try {
-      return line.trim() ? [JSON.parse(line) as unknown] : [];
-    } catch {
-      return [];
+      return parseCase(text);
+    } catch (e) {
+      throw new Error(`${rel(path)}: ${errText(e)}`);
     }
-  });
+  }
+  return null;
+}
+
+// One judging of the claims and attacks: P1's verdicts and locks, or while live, the latest of each in the ledger.
+async function judged(dir: string, ...caseFallback: string[]) {
+  const [verdicts, locks, ledgerText, caseFile] = await Promise.all([
+    readJson(join(dir, 'verdicts.json')), readJson(join(dir, 'locks.json')), readText(join(dir, 'ledger.jsonl')),
+    readCase(join(dir, 'case.yml'), ...caseFallback),
+  ]);
+  const ledger = jsonLines(ledgerText); // a half-written last line is skipped until it lands
+  const live = verdicts === null || locks === null ? fromLedger(ledger) : null;
+  return { verdicts: verdicts ?? live?.verdicts, locks: locks ?? live?.locks, caseFile, ledger, found: ledgerText !== null || verdicts !== null };
+}
 
 async function appLabel(app: string): Promise<string> {
   const apps = await readJson(join(ROOT, 'fixtures', 'apps.json')).catch(() => null);
@@ -79,13 +97,17 @@ async function appLabel(app: string): Promise<string> {
 async function fromRuns(app: string): Promise<Wire> {
   const dir = join(RUNS, app);
   const file = (name: string) => readJson(join(dir, name));
-  const [evidence, sheet, claims, attacks, verdicts, locks, ledger, caseFile, label] = await Promise.all([
-    file('evidence.json'), file('sheet.json'), file('claims.json'), file('attacks.json'), file('verdicts.json'),
-    file('locks.json'), readText(join(dir, 'ledger.jsonl')), file('case.json'), appLabel(app),
+  const [evidence, sheet, claims, attacks, now, after, repairs, label] = await Promise.all([
+    file('evidence.json'), file('sheet.json'), file('claims.json'), file('attacks.json'),
+    judged(dir, join(ROOT, 'cases', `${app}.case.yml`)), judged(join(dir, 'after')),
+    readText(join(dir, 'repairs.jsonl')).then((t) => t ?? readText(join(ROOT, 'cases', app, 'repairs.jsonl'))),
+    appLabel(app),
   ]);
   return {
     app, appLabel: label, source: 'runs', evidence: evidence ?? [], sheet, claims: claims ?? [], attacks: attacks ?? [],
-    verdicts: verdicts ?? [], locks: locks ?? [], ledger: jsonLines(ledger), caseFile, repairs: [],
+    verdicts: now.verdicts, locks: now.locks, ledger: now.ledger, caseFile: now.caseFile,
+    repairs: parseRepairs(repairs), builds: buildsFor(app),
+    after: after.found ? { verdicts: after.verdicts, locks: after.locks, caseFile: after.caseFile } : null,
   };
 }
 
@@ -108,7 +130,10 @@ async function fromAtlas(app: string): Promise<Wire> {
     all('evidence'), latest('behavior_sheet'), all('claims'), all('attacks'), all('verdicts'), all('locks'),
     all('ledger', { seq: 1 }), latest('cases'), appLabel(app),
   ]);
-  return { app, appLabel: label, source: 'atlas', evidence, sheet, claims, attacks, verdicts, locks, ledger, caseFile, repairs: [] };
+  return {
+    app, appLabel: label, source: 'atlas', evidence, sheet, claims, attacks, verdicts, locks, ledger, caseFile, repairs: [],
+    builds: buildsFor(app), after: null,
+  };
 }
 
 function stream(res: ServerResponse, app: string, source: Source) {
@@ -189,6 +214,20 @@ function stream(res: ServerResponse, app: string, source: Source) {
   void refresh();
 }
 
+// The registry for the stage's app picker (src/feed/apps.ts AppEntry): a broken case file reads as no fidelity, not an error.
+async function apps() {
+  const list = await readJson(join(ROOT, 'fixtures', 'apps.json'));
+  if (!Array.isArray(list)) return [];
+  return Promise.all(list.filter((a) => typeof a?.id === 'string' && APP_RE.test(a.id)).map(async (a) => {
+    const caseFile = await readCase(join(RUNS, a.id, 'case.yml'), join(ROOT, 'cases', `${a.id}.case.yml`)).catch(() => null);
+    return {
+      id: a.id, name: typeof a.name === 'string' ? a.name : a.id,
+      license: typeof a.license === 'string' ? a.license : undefined, source: typeof a.source === 'string' ? a.source : undefined,
+      hasRun: existsSync(join(RUNS, a.id, 'claims.json')), fidelity: caseFile?.fidelity ?? null,
+    };
+  }));
+}
+
 function reply(res: ServerResponse, status: number, body: unknown) {
   res.writeHead(status, { 'content-type': 'application/json' }).end(JSON.stringify(body));
 }
@@ -210,7 +249,7 @@ async function bench(req: IncomingMessage, res: ServerResponse) {
   } catch {
     return reply(res, 400, { error: 'body must be JSON' });
   }
-  const { app, steps, observe } = (typeof body === 'object' && body !== null ? body : {}) as Record<string, unknown>;
+  const { app, steps, observe, original, revival } = (typeof body === 'object' && body !== null ? body : {}) as Record<string, unknown>;
   if (typeof app !== 'string' || !APP_RE.test(app)) return reply(res, 400, { error: 'app must match ^[a-z0-9-]+$' });
   if (!Array.isArray(steps) || steps.length > 50 || !steps.every((s) => typeof s === 'string' && s.length <= 200)) {
     return reply(res, 400, { error: 'steps must be a list of at most 50 strings of at most 200 characters' });
@@ -218,18 +257,40 @@ async function bench(req: IncomingMessage, res: ServerResponse) {
   if (typeof observe !== 'string' || observe.length > 200) {
     return reply(res, 400, { error: 'observe must be a string of at most 200 characters' });
   }
-  if (!COURT_URL) return reply(res, 501, { error: 'no court endpoint' });
+  // The court loads these builds, so they may only name the stage's own exhibits, never another site.
+  // Vite's proxy rewrites Host to this feed's own port, so trust the browser's Origin first (local http only).
+  const LOCAL_ORIGIN = /^http:\/\/(127\.0\.0\.1|localhost):\d{2,5}$/;
+  const sent = typeof req.headers.origin === 'string' && LOCAL_ORIGIN.test(req.headers.origin) ? req.headers.origin : null;
+  const host = req.headers.host ?? '';
+  const viaHost = HOST_RE.test(host) && !host.endsWith(`:${PORT}`) ? `http://${host}` : null;
+  const origin = sent ?? process.env.STAGE_ORIGIN ?? viaHost ?? STAGE_ORIGIN;
+  const exhibit = (p: unknown) => {
+    if (typeof p !== 'string' || p.length > 200 || !p.startsWith('/exhibits/')) return null;
+    const url = new URL(p, origin);
+    return url.origin === origin && url.pathname.startsWith('/exhibits/') ? url.href : null;
+  };
+  const originalUrl = exhibit(original);
+  const revivalUrl = exhibit(revival);
+  if (!originalUrl || !revivalUrl) {
+    return reply(res, 400, { error: "original and revival must be same-origin paths starting with '/exhibits/'" });
+  }
+  let court: Response;
   try {
-    // Only the checked fields go on: the court also takes original/revival URL overrides, which callers must not set.
-    const court = await fetch(`${COURT_URL}/bench`, {
+    court = await fetch(`${COURT_URL}/${app}/bench`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ app, steps, observe }),
+      body: JSON.stringify({ app, steps, observe, original: originalUrl, revival: revivalUrl }),
       signal: AbortSignal.timeout(BENCH_TIMEOUT_MS),
     });
+  } catch (e) {
+    // Unreachable court: 501, so the stage drives both exhibits itself instead.
+    const timeout = e instanceof Error && e.name === 'TimeoutError';
+    return reply(res, timeout ? 504 : 501, { error: `court: ${errText(e)}` });
+  }
+  try {
     reply(res, court.status, await court.json());
   } catch (e) {
-    reply(res, e instanceof Error && e.name === 'TimeoutError' ? 504 : 502, { error: `court: ${errText(e)}` });
+    reply(res, 502, { error: `court: ${errText(e)}` });
   }
 }
 
@@ -248,6 +309,7 @@ const server = createServer(async (req, res) => {
       return stream(res, app, source);
     }
     if (route === 'POST /api/bench') return await bench(req, res);
+    if (route === 'GET /api/apps') return reply(res, 200, await apps());
     reply(res, 404, { error: 'not found' });
   } catch (e) {
     console.error('feed:', errText(e));

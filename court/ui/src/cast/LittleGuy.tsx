@@ -26,6 +26,9 @@ const RIGS: Record<GuyKind, Rig> = {
   keycap: { arms: [[33, 98], [127, 98]], hips: [62, 98, 131], eyes: [67, 93, 102, 7], mouth: [80, 118], chest: [113, 124], crack: 'M90 40L84 52L92 60L85 72L91 87M92 60L101 63', patch: [88, 62], spark: [130, 32] },
   brush: { arms: [[49, 88], [111, 88]], hips: [70, 90, 132], eyes: [68, 92, 80, 7], mouth: [80, 90], chest: [80, 117], crack: 'M72 102L80 110L73 118L83 129', patch: [77, 115], spark: [120, 22] },
   clock: { arms: [[39, 100], [121, 100]], hips: [64, 96, 132], eyes: [69, 91, 81, 6], mouth: [80, 113], chest: [108, 125], crack: 'M54 88L63 96L57 104L68 115', patch: [61, 101], spark: [126, 50] },
+  checkbox: { arms: [[40, 92], [120, 92]], hips: [62, 98, 128], eyes: [66, 94, 94, 7], mouth: [80, 111], chest: [108, 114], crack: 'M110 38L103 50L110 58L101 72', patch: [52, 117], spark: [128, 28] },
+  trash: { arms: [[46, 84], [114, 84]], hips: [64, 96, 131], eyes: [68, 92, 80, 7], mouth: [80, 96], chest: [102, 118], crack: 'M100 60L93 72L100 80L92 94', patch: [96, 114], spark: [132, 22] },
+  listitem: { arms: [[24, 92], [136, 92]], hips: [62, 98, 122], eyes: [68, 92, 98, 6], mouth: [80, 110], chest: [116, 106], crack: 'M122 52L115 62L122 70L114 84', patch: [44, 102], spark: [128, 34] },
 };
 
 // glitch entry is the pre-break look; the held broken pose is fixed below
@@ -133,6 +136,17 @@ const lcd = (t: string) => <text className="lg-lcd" x={108} y={61} textAnchor="e
 const KEY_FILLS = ['paper-deep', 'paper-deep', 'paper-deep', 'paper-deep', 'brass', 'terracotta'];
 const CALC = 'M47 30C62 27 98 27 113 30Q120 31 120 38L121 122Q121 130 113 130C96 132 64 132 47 130Q40 129 40 122L41 38Q41 31 47 30Z';
 const BELL = 'M-15 3C-15 -13 15 -13 15 3Z';
+const BOX = 'M46 34C66 32 94 32 114 34Q120 35 120 41L120 121Q120 127 114 128C94 130 66 130 46 128Q40 127 40 121L40 41Q40 35 46 34Z';
+const ROW = 'M30 50C60 48 100 48 130 50Q136 51 136 57L136 115Q136 122 130 122C100 124 60 124 30 122Q24 122 24 115L24 57Q24 51 30 50Z';
+const tick = (d: string) => (
+  <g fill="none" strokeLinecap="round" strokeLinejoin="round">
+    <path d={d} stroke={INK} strokeWidth={13} />
+    <path d={d} stroke="var(--wall)" strokeWidth={6} />
+  </g>
+);
+const TICK = 'M56 62L72 78L106 32';
+const lines = (d: string) => <path d={d} fill="none" stroke="var(--wood-light)" strokeWidth={4.5} strokeLinecap="round" strokeLinejoin="round" />;
+const SCRAMBLE = ['M64 60H96M80 70H128M56 80H74', 'M56 67L124 61M60 77H90', 'M88 64H124M56 64H78M70 78H112', 'M56 71H124'];
 
 function Body({ kind, glitch, glyph }: { kind: GuyKind; glitch: boolean; glyph: string }) {
   const ink = { stroke: INK, strokeWidth: 5, strokeLinejoin: 'round' as const, strokeLinecap: 'round' as const };
@@ -192,8 +206,41 @@ function Body({ kind, glitch, glyph }: { kind: GuyKind; glitch: boolean; glyph: 
           <circle cx={80} cy={94} r={3.2} fill={INK} />
         </>
       );
+    case 'checkbox':
+      return (
+        <>
+          <path d={BOX} transform="translate(5 4)" fill="var(--floor-shadow)" {...ink} />
+          <path className="lg-sil" d={BOX} fill="var(--paper)" {...ink} />
+          <path d="M50 44C68 43 92 43 110 44" fill="none" stroke="var(--paper-deep)" strokeWidth={4} strokeLinecap="round" />
+          <Glitchy on={glitch} pre={tick(TICK)} cycle={[tick(TICK), null, tick(TICK), null]} post={tick('M54 64L66 77M76 72L102 40')} />
+        </>
+      );
+    case 'trash':
+      return (
+        <>
+          <path className="lg-sil" d="M44 56L116 56L110 129Q80 134 50 129Z" fill="var(--slate)" {...ink} />
+          <path d="M62 106L63 124M80 106V126M98 106L97 124" fill="none" stroke="var(--slate-deep)" strokeWidth={4} strokeLinecap="round" />
+          <g className="lg-lid">
+            <path d="M68 42C68 33 92 33 92 42" fill="none" {...ink} strokeWidth={4.5} />
+            <path className="lg-sil" d="M42 42C68 40 92 40 118 42Q123 43 123 48L122 52Q122 56 117 56L43 56Q38 56 38 52L38 48Q38 43 42 42Z" fill="var(--slate-deep)" {...ink} strokeWidth={4.5} />
+          </g>
+        </>
+      );
+    case 'listitem':
+      return (
+        <>
+          <path d={ROW} transform="translate(4 4)" fill="var(--floor-shadow)" {...ink} />
+          <path className="lg-sil" d={ROW} fill="var(--paper)" {...ink} />
+          <circle cx={42} cy={70} r={6} fill={INK} />
+          <Glitchy on={glitch} pre={lines('M56 64H124M56 78H104')} cycle={SCRAMBLE.map(lines)} post={lines('M56 64l8 -5l8 9l8 -9l8 9l8 -9l8 9l8 -5M56 79H70M84 77H104')} />
+        </>
+      );
   }
 }
+
+// crumpled paper that spills out when the trash lid flies open
+const SPILL: [number, number, number][] = [[126, 30, 0], [140, 54, 40], [110, 12, -25], [140, 86, 15], [96, 20, 60]];
+const BALL = 'M-6 -4L-1 -7L5 -5L7 1L3 6L-4 6L-7 1Z';
 
 const SPLAT: [number, number, number][] = [[36, 26, 4], [124, 18, 3], [132, 54, 5], [28, 66, 3], [24, 110, 4.5], [136, 104, 3], [120, 150, 4], [40, 150, 3], [60, 8, 2.5], [104, 6, 3.5]];
 
@@ -270,6 +317,18 @@ export function LittleGuy({ kind, glyph, state, label }: { kind: GuyKind; glyph?
       {kind === 'brush' && glitch && (
         <g className="lg-splat">
           {SPLAT.map(([x, y, r], i) => <circle key={i} cx={x} cy={y} r={r} fill={INK} style={{ animationDelay: `${i * 55}ms` }} />)}
+        </g>
+      )}
+      {kind === 'trash' && glitch && (
+        <g className="lg-spill">
+          {SPILL.map(([x, y, a], i) => (
+            <g key={i} transform={`translate(${x} ${y}) rotate(${a})`}>
+              <g className="lg-bit" style={{ animationDelay: `${600 + i * 55}ms` }}>
+                <path d={BALL} fill="var(--paper)" stroke={INK} strokeWidth={2.5} strokeLinejoin="round" />
+                <path d="M-3 -2L1 1L4 -2M-2 3L1 1" fill="none" stroke={INK} strokeWidth={1.5} strokeLinecap="round" />
+              </g>
+            </g>
+          ))}
         </g>
       )}
       {label && <Tag text={label} />}

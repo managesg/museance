@@ -1,16 +1,9 @@
 // Turns a CaseBundle into the show: timed beats, each a pure step from one stage state to the next.
 import type { Attack, CaseBundle, Claim, LedgerEvent, LockStatus, Verdict } from '../contracts';
 import { betTotals, placeBets, settle, type Bet } from './bets';
-import { line, type LineCtx } from './lines';
+import { line, meshLine, type LineCtx } from './lines';
 import { claimVerdicts, computeScores, credibilityDelta, deriveLock, fidelity } from './scoring';
 import type { Beat, CardStatus, CardView, GuyKind, GuyState, Phase, Scores, StageState } from './types';
-
-/** Fixture-mode exhibit pages; the stage may override the src fields when it renders. */
-export const EXHIBIT_SRC = {
-  original: '/exhibits/original/index.html',
-  revival: '/revival-fixture/index.html',
-  repaired: '/revival-fixture-repaired/index.html',
-};
 
 /** Bench runs submitted during the show; they land at the bench beat. */
 export interface BenchRuns { verdicts: Verdict[]; events: LedgerEvent[]; }
@@ -18,8 +11,19 @@ const NO_BENCH: BenchRuns = { verdicts: [], events: [] };
 
 const TAIL = 8;
 const FAINT = 300;
-const KEYCAPS: Record<string, string> = { add: '+', subtract: '-', multiply: '×', divide: '÷', clear: 'C' };
+const KEYCAPS: Record<string, string> = { add: '+', subtract: '−', multiply: '×', divide: '÷', clear: 'C' };
+const KINDS: Record<string, GuyKind> = { complete: 'checkbox', remove: 'trash', list: 'listitem' };
+const SYNONYMS: Record<string, string> = { completed: 'complete', todo: 'list', delete: 'remove' };
 const CYCLE: GuyKind[] = ['calculator', 'brush', 'clock'];
+const MAX_GUYS = 4;
+const MAX_ATTACKS = 4;
+/** One little guy per screen, so the todo app's 'completed' and 'complete' share one. */
+const norm = (screen: string) => {
+  const s = screen.toLowerCase();
+  return SYNONYMS[s] ?? s;
+};
+const mismatched = (v: Verdict | null | undefined) => !!v && !v.flaky && !v.match;
+const outcomeOf = (v: Verdict | null | undefined) => (!v ? 'pending' : v.flaky ? 'flaky' : v.match ? 'match' : 'mismatch');
 const LOCKS: ReadonlySet<CardStatus> = new Set<CardStatus>(['LOCKED', 'STRUCK', 'UNSWORN', 'FABRICATED']);
 const isLock = (st: CardStatus): st is LockStatus => LOCKS.has(st);
 
@@ -35,44 +39,47 @@ interface Ctx { bundle: CaseBundle; claims: Map<string, Claim>; verdicts: Map<st
 const patchCards = (cards: CardView[], match: (k: CardView) => boolean, patch: Partial<CardView>): CardView[] =>
   cards.map((k) => (match(k) ? { ...k, ...patch } : k));
 
-function guysFor(claims: Claim[]): StageState['guys'] {
+function guysFor(claims: Claim[], attacks: Attack[]): StageState['guys'] {
   let other = 0;
-  return [...new Set(claims.map((c) => c.screen))].map((screen): StageState['guys'][number] => {
-    const glyph = KEYCAPS[screen.toLowerCase()];
-    return glyph ? { screen, kind: 'keycap', glyph, state: 'idle' } : { screen, kind: CYCLE[other++ % CYCLE.length], state: 'idle' };
+  const screens = [...new Set([...claims, ...attacks].map((c) => norm(c.screen)))].slice(0, MAX_GUYS);
+  return screens.map((screen): StageState['guys'][number] => {
+    const glyph = KEYCAPS[screen];
+    if (glyph) return { screen, kind: 'keycap', glyph, state: 'idle' };
+    return { screen, kind: KINDS[screen] ?? CYCLE[other++ % CYCLE.length], state: 'idle' };
   });
 }
 
-// One screen can carry several claims; an unrepaired strike outranks everything but the claim under cross.
-function guyState(screen: string, cards: CardView[]): GuyState {
-  const mine = cards.filter((k) => k.claim.screen === screen);
+// One screen carries several claims and attacks. A mismatch in force glitches it; a guy the re-ruling repaired
+// stays repaired; a strike with matching builds (the medium was wrong, not the revival) glitches it too.
+function guyState(screen: string, s: StageState, prev: GuyState): GuyState {
+  const mine = s.cards.filter((k) => norm(k.claim.screen) === screen);
   if (mine.some((k) => k.status === 'under-cross')) return 'nervous';
+  if (mine.some((k) => mismatched(k.verdict)) || s.attacks.some((a) => a.opened && norm(a.attack.screen) === screen && mismatched(a.verdict))) return 'glitch';
+  if (prev === 'repaired') return 'repaired';
   if (mine.some((k) => k.status === 'STRUCK')) return 'glitch';
-  if (mine.some((k) => k.repairedFrom && isLock(k.status))) return 'repaired';
   if (mine.some((k) => k.status === 'FABRICATED')) return 'fabricated';
   if (mine.some((k) => k.status === 'LOCKED')) return 'locked';
   return 'idle';
 }
 
-// A repaired card was STRUCK when ruled: the repair narrows the claim, it does not refund the bond.
 function swornStatuses(cards: CardView[]): Record<string, LockStatus> {
   const out: Record<string, LockStatus> = {};
-  for (const k of cards) {
-    if (k.repairedFrom) out[k.repairedFrom] = 'STRUCK';
-    else if (isLock(k.status)) out[k.claim.id] = k.status;
-  }
+  for (const k of cards) if (isLock(k.status)) out[k.claim.id] = k.status;
   return out;
 }
 
-function rescore(x: Ctx, s: StageState, statuses: Record<string, LockStatus>, ruled: Verdict[]): Scores {
+/** The verdicts in force on stage: ruled cards and opened attacks (swapped for the repaired revival's after the re-ruling), plus bench runs. */
+function inForce(x: Ctx, s: StageState): Verdict[] {
+  const shown = s.cards.flatMap((k) => (isLock(k.status) && k.verdict ? [k.verdict] : []));
   const attacks = s.attacks.flatMap((a) => (a.opened && a.verdict ? [a.verdict] : []));
-  const bench = x.bench.verdicts.slice(0, s.bench.runs);
-  const sworn = s.cards.map((k) => x.claims.get(k.repairedFrom ?? k.claim.id) ?? k.claim);
-  const scores = computeScores({ ...x.bundle, claims: sworn, verdicts: [...ruled, ...attacks, ...bench] }, statuses, { rollbacks: s.scores.rollbacks });
-  if (!bench.length && !s.cards.some((k) => k.repairedFrom && isLock(k.status))) return scores;
-  // The case file predates repairs and bench runs, so fidelity is re-measured over the verdicts the stage has shown.
-  const shown = s.cards.flatMap((k) => (isLock(k.status) ? k.verdict : k.repairedFrom ? x.verdicts.get(k.repairedFrom) : null) ?? []);
-  return { ...scores, fidelity: fidelity([...shown, ...attacks, ...bench]) };
+  return [...shown, ...attacks, ...x.bench.verdicts.slice(0, s.bench.runs)];
+}
+
+// Credibility and Brier come from the original ruling; fidelity is re-measured over the verdicts in force,
+// since the case file's number predates repairs and bench runs.
+function rescore(x: Ctx, s: StageState, statuses: Record<string, LockStatus>, ruled: Verdict[]): Scores {
+  const scores = computeScores({ ...x.bundle, claims: s.cards.map((k) => k.claim), verdicts: ruled }, statuses, { rollbacks: s.scores.rollbacks });
+  return { ...scores, fidelity: fidelity(inForce(x, s)) };
 }
 
 function finish(x: Ctx, prev: StageState, next: StageState, kind: string): StageState {
@@ -87,7 +94,7 @@ function finish(x: Ctx, prev: StageState, next: StageState, kind: string): Stage
     ...next,
     scores,
     stress,
-    guys: next.guys.map((g) => ({ ...g, state: guyState(g.screen, next.cards) })),
+    guys: next.guys.map((g) => ({ ...g, state: guyState(g.screen, next, g.state) })),
     leaderboard: settle(x.bets, ruled),
   };
 }
@@ -116,10 +123,11 @@ function ruling(s: StageState, c: Claim, v: Verdict | null, status: LockStatus |
 const payloadOf = (e: LedgerEvent): Record<string, unknown> => (e.payload && typeof e.payload === 'object' ? (e.payload as Record<string, unknown>) : {});
 const hasRef = (e: LedgerEvent, id: string) => {
   const p = payloadOf(e);
-  return p.ref === id || p.claim_id === id || p.struck_id === id;
+  return p.ref === id || p.claim_id === id;
 };
-// court/ledger.py writes type "commit" with payload.kind; the synthesized ledger puts the kind in the type.
-const commitKind = (e: LedgerEvent) => (e.type === 'commit' ? payloadOf(e).kind : e.type.endsWith('_committed') ? e.type.slice(0, -'_committed'.length) : null);
+// court/ledger.py writes type "commit" with payload.kind (claim or attack).
+const commitKind = (e: LedgerEvent) => (e.type === 'commit' ? payloadOf(e).kind : null);
+const isMesh = (e: LedgerEvent) => meshLine(e) !== null;
 
 /** Hands each ledger event to the first beat that asks for it, so the tail never repeats an event. */
 function ledgerTaker(ledger: LedgerEvent[]) {
@@ -137,11 +145,19 @@ function ledgerTaker(ledger: LedgerEvent[]) {
   };
 }
 
-const reveal = (s: StageState, events: LedgerEvent[]): StageState => (events.length ? { ...s, ledgerTail: [...s.ledgerTail, ...events].slice(-TAIL) } : s);
+// A revealed mesh.* event's caption takes the subtitle: the agent narrates its own step.
+const reveal = (s: StageState, events: LedgerEvent[]): StageState => {
+  if (!events.length) return s;
+  const said = events.map(meshLine).filter((l) => l !== null).at(-1);
+  return { ...s, ledgerTail: [...s.ledgerTail, ...events].slice(-TAIL), subtitle: said ?? s.subtitle };
+};
 
 // The quip lands mid-phase so it stays up for half the run instead of one short beat.
 const phaseLine = (kind: string, i: number, n: number, ctx: LineCtx) =>
   i === 0 ? line(kind, 'first', ctx) : i === Math.floor(n / 2) ? line(kind, 'quip', ctx) : null;
+
+// The dig and read phases take about 4 s each however many items there are; never under 60 ms a beat.
+export const pace = (ms: number, n: number) => Math.max(60, Math.min(ms, Math.round(4000 / Math.max(1, n))));
 
 export function buildScript(bundle: CaseBundle, bench: BenchRuns = NO_BENCH): Beat[] {
   const x: Ctx = {
@@ -161,34 +177,35 @@ export function buildScript(bundle: CaseBundle, bench: BenchRuns = NO_BENCH): Be
 
   const evidence = bundle.evidence;
   evidence.forEach((e, i) =>
-    add('dig', 'dig', 700, (s) => ({
+    add('dig', 'dig', pace(700, evidence.length), (s) => ({
       ...s,
       evidenceShown: [...s.evidenceShown, e],
       exhibits: { ...s.exhibits, original: 'evidence' },
       moods: { ...s.moods, steno: 'scribbling' },
       subtitle: phaseLine('dig', i, evidence.length, { n: evidence.length }) ?? s.subtitle,
-    })),
+    }), take(isMesh, 1)),
   );
 
   const sheet = bundle.sheet?.lines ?? [];
   const words = evidence.reduce((n, e) => n + (e.text?.split(/\s+/).filter(Boolean).length ?? 0), 0);
   sheet.forEach((l, i) =>
-    add('read', 'read', 600, (s) => ({
+    add('read', 'read', pace(600, sheet.length), (s) => ({
       ...s,
       sheetShown: [...s.sheetShown, l],
       wordCount: words,
       exhibits: { ...s.exhibits, revival: 'reading' },
       moods: { ...s.moods, steno: 'scribbling' },
       subtitle: phaseLine('read', i, sheet.length, { n: sheet.length, words }) ?? s.subtitle,
-    })),
+    }), take(isMesh, 1)),
   );
 
+  // Mesh captions the dig and read beats had no room for land here.
   add('raise', 'raise', 2500, (s) => ({
     ...s,
     exhibits: { ...s.exhibits, original: 'live', revival: 'booting' },
     moods: { ...s.moods, ghost: 'hopeful', steno: 'idle' },
     subtitle: line('raise', null, { start: s.scores.credibilityStart }),
-  }));
+  }), take(isMesh));
   add('raise', 'risen', 1200, (s) => ({ ...s, exhibits: { ...s.exhibits, revival: 'live' }, subtitle: line('risen', null, {}) }));
 
   const bonds = bundle.claims.reduce((n, c) => n + c.bond, 0);
@@ -210,11 +227,18 @@ export function buildScript(bundle: CaseBundle, bench: BenchRuns = NO_BENCH): Be
     subtitle: line('seal', null, { n: bundle.attacks.length }),
   }), take((e) => commitKind(e) === 'attack'));
 
+  // A real case has a hundred attacks: a few play one by one (mismatches first, then one match), a tally lands the rest.
+  const attackVerdicts = new Map(bundle.verdicts.filter((v) => v.kind === 'attack').map((v) => [v.ref, v]));
+  const verdictOf = (a: Attack) => attackVerdicts.get(a.id) ?? null;
+  const by = (o: string) => bundle.attacks.filter((a) => outcomeOf(verdictOf(a)) === o);
+  const ranked = [...by('mismatch').slice(0, MAX_ATTACKS - 1), ...by('match').slice(0, 1)];
+  // Unjudged attacks (the repo fixtures have no attack verdicts) still get their beats.
+  const picks = ranked.length ? ranked : bundle.attacks.slice(0, MAX_ATTACKS);
   const opened = new Set<string>();
   const openAttack = (a: Attack) => {
     opened.add(a.id);
-    const v = bundle.verdicts.find((w) => w.kind === 'attack' && w.ref === a.id) ?? null;
-    const outcome = !v ? 'pending' : v.flaky ? 'flaky' : v.match ? 'match' : 'mismatch';
+    const v = verdictOf(a);
+    const outcome = outcomeOf(v);
     add('cross', 'attack', 900, (s) => ({
       ...s,
       attacks: s.attacks.map((r) => (r.attack.id === a.id ? { ...r, opened: true, verdict: v } : r)),
@@ -243,40 +267,68 @@ export function buildScript(bundle: CaseBundle, bench: BenchRuns = NO_BENCH): Be
       ...take((e) => e.type === 'verdict' && hasRef(e, c.id), 1),
       ...take((e) => e.type === 'lock' && hasRef(e, c.id), 1),
     ]);
-    // Hoot's sealed attacks on this screen open right after its first ruling.
-    for (const a of bundle.attacks) if (a.screen === c.screen && !opened.has(a.id)) openAttack(a);
+    // Hoot's picked attacks on this screen open right after its first ruling.
+    for (const a of picks) if (a.screen === c.screen && !opened.has(a.id)) openAttack(a);
   });
-  for (const a of bundle.attacks) if (!opened.has(a.id)) openAttack(a);
+  for (const a of picks) if (!opened.has(a.id)) openAttack(a);
 
+  const rest = bundle.attacks.filter((a) => !opened.has(a.id));
+  if (rest.length) {
+    const ids = new Set(rest.map((a) => a.id));
+    const diverge = rest.filter((a) => outcomeOf(verdictOf(a)) === 'mismatch').length;
+    const flaky = rest.filter((a) => outcomeOf(verdictOf(a)) === 'flaky').length;
+    add('cross', 'tally', 2200, (s) => ({
+      ...s,
+      focusId: null,
+      attacks: s.attacks.map((r) => (ids.has(r.attack.id) ? { ...r, opened: true, verdict: verdictOf(r.attack) } : r)),
+      moods: { ...s.moods, hoot: diverge ? 'satisfied' : 'unimpressed' },
+      subtitle: line('attack', 'tally', { n: rest.length, diverge, flaky }),
+    }), take((e) => e.type === 'verdict' && ids.has(String(payloadOf(e).ref))));
+  }
+
+  // P4 patches the revival, never a claim: patched leaves every status as ruled; rollback or unsworn unswears the claim it names.
+  const after = bundle.after;
+  const afterClaims = claimVerdicts(after?.verdicts ?? []);
+  const afterAttacks = new Map((after?.verdicts ?? []).filter((v) => v.kind === 'attack').map((v) => [v.ref, v]));
   for (const r of bundle.repairs) {
-    const status = deriveLock(r.claim, r.verdict) ?? 'UNSWORN';
-    const mine = (k: CardView) => (k.repairedFrom ?? k.claim.id) === r.struck_id;
+    const claim = x.claims.get(r.claim_id);
     add('repair', 'repair', 2500, (s) => ({
       ...s,
-      focusId: r.claim.id,
+      focusId: claim?.id ?? null,
       divergence: null,
-      cards: patchCards(s.cards, mine, { claim: r.claim, repairedFrom: r.struck_id, status: 'under-cross' }),
-      exhibits: {
-        ...s.exhibits,
-        original: 'live',
-        revival: 'booting',
-        revivalSrc: bundle.source === 'fixture' ? EXHIBIT_SRC.repaired : s.exhibits.revivalSrc,
-      },
+      exhibits: { ...s.exhibits, original: 'live', revival: 'booting', revivalSrc: bundle.builds.revivalAfter ?? s.exhibits.revivalSrc },
       moods: { ...s.moods, mcclusky: 'nervous', hoot: 'idle', ghost: 'hopeful', faux: 'hidden', steno: 'idle' },
-      subtitle: line('repair', null, { id: r.struck_id, claim: r.claim }),
+      subtitle: line('repair', null, { reason: r.reason }),
     }));
-    add('repair', 'repaired', 2200, (s) => {
-      const rollbacks = s.scores.rollbacks + (r.rollback ? 1 : 0);
-      const ok = status === 'LOCKED';
+    add('repair', 'repaired', 1500, (s) => {
+      const unsworn = claim && r.decision !== 'patched';
+      const rollbacks = s.scores.rollbacks + (r.decision === 'rollback' ? 1 : 0);
       return {
         ...s,
-        cards: patchCards(s.cards, mine, { status, verdict: r.verdict }),
+        cards: unsworn ? patchCards(s.cards, (k) => k.claim.id === claim.id, { status: 'UNSWORN' }) : s.cards,
         exhibits: { ...s.exhibits, revival: 'live' },
         scores: { ...s.scores, rollbacks },
-        moods: { ...s.moods, mcclusky: ok ? 'relieved' : 'nervous', ghost: ok ? 'relieved' : 'sad', faux: 'hidden', steno: 'scribbling' },
-        subtitle: line('repaired', status, { claim: r.claim, struck: x.claims.get(r.struck_id), rollbacks }),
+        moods: { ...s.moods, steno: 'scribbling' },
+        subtitle: r.decision === 'patched' ? s.subtitle : line('repaired', r.decision, { id: r.claim_id, rollbacks }),
       };
-    }, take((e) => ['repair', 'rollback', 'verdict', 'lock'].includes(e.type) && (hasRef(e, r.struck_id) || hasRef(e, r.claim.id))));
+    });
+    if (!after) continue;
+    add('repair', 'rerule', 2500, (s) => {
+      const screens = new Set([
+        ...s.cards.filter((k) => mismatched(k.verdict)).map((k) => norm(k.claim.screen)),
+        ...s.attacks.filter((a) => a.opened && mismatched(a.verdict)).map((a) => norm(a.attack.screen)),
+      ]);
+      const next: StageState = {
+        ...s,
+        focusId: null,
+        divergence: null,
+        cards: s.cards.map((k) => (k.verdict ? { ...k, verdict: afterClaims.get(k.claim.id) ?? k.verdict } : k)),
+        attacks: s.attacks.map((a) => (a.verdict ? { ...a, verdict: afterAttacks.get(a.attack.id) ?? a.verdict } : a)),
+        guys: s.guys.map((g) => (screens.has(g.screen) ? { ...g, state: 'repaired' } : g)),
+        moods: { ...s.moods, mcclusky: 'relieved', ghost: 'relieved', hoot: 'unimpressed', faux: 'hidden', steno: 'sealing' },
+      };
+      return { ...next, subtitle: line('rerule', null, { fidelity: fidelity(inForce(x, next)) }) };
+    });
   }
 
   add('bench', 'bench', 6000, (s) => {
@@ -325,12 +377,12 @@ export function initialState(bundle: CaseBundle): StageState {
     phase: 'dig', beat: 0, beats: 0, playing: false,
     app: bundle.app, appLabel: bundle.appLabel, source: bundle.source,
     evidenceShown: [], sheetShown: [], wordCount: 0,
-    exhibits: { original: 'dark', revival: 'dark', originalSrc: EXHIBIT_SRC.original, revivalSrc: EXHIBIT_SRC.revival },
+    exhibits: { original: 'dark', revival: 'dark', originalSrc: bundle.builds.original, revivalSrc: bundle.builds.revival, scale: bundle.builds.scale },
     cards: [], focusId: null, attacks: [], divergence: null,
     scores: computeScores({ ...bundle, claims: [], verdicts: [] }, {}),
     stress: 0,
     moods: { ghost: 'idle', mcclusky: 'idle', hoot: 'idle', faux: 'hidden', steno: 'idle' },
-    guys: guysFor(bundle.claims),
+    guys: guysFor(bundle.claims, bundle.attacks),
     ledgerTail: [], subtitle: null, banner: null,
     bench: { open: false, last: null, runs: 0 },
     leaderboard: settle(placeBets(bundle.claims, bundle.app), []),

@@ -1,6 +1,6 @@
 // Fixture material for fixtures/app1 (fixture-calc), written today for lane testing: an invented evidence pile,
-// behavior sheet and repair. Nothing here was dug up from a real dead app; sources are plain descriptions, not links.
-import type { BehaviorSheet, Evidence, Repair, SheetLine, Tier } from '../contracts';
+// behavior sheet. Nothing here was dug up from a real dead app; sources are plain descriptions, not links.
+import type { BehaviorSheet, Evidence, SheetLine, Tier } from '../contracts';
 
 const ev = (id: string, tier: Tier, kind: Evidence['kind'], source: string, text: string): Evidence => ({
   id, app: 'app1', tier, kind, source, text, license: 'MIT',
@@ -50,19 +50,3 @@ export const APP1_SHEET: BehaviorSheet = {
     line('b009', 'divide', 'Dividing by zero shows Error', 'GUESSED', []),
   ],
 };
-
-// c03 was struck because the original truncates 1 / 8 to 0.12; public/revival-fixture-repaired truncates too.
-export const APP1_REPAIRS: Repair[] = [
-  {
-    struck_id: 'c03',
-    claim: {
-      id: 'c03r', app: 'app1', screen: 'divide', text: '1 / 8 truncates to 0.12',
-      test: { steps: ['click:#k1', 'click:#kdiv', 'click:#k8', 'click:#keq'], observe: '#display', expect: '0.12' },
-      tier: 'C', label: 'GUESSED', evidence: ['issue-008'], confidence: 0.74, bond: 50,
-    },
-    verdict: { ref: 'c03r', kind: 'claim', original: '0.12', revival: '0.12', claim_true: true, match: true, flaky: false, shrunk_steps: [] },
-    // revive/repair.py: a rollback drops the patch and keeps the old build; this patch was kept (cases/app1/repairs.jsonl: patched).
-    rollback: false,
-    note: 'rounds -> truncates',
-  },
-];

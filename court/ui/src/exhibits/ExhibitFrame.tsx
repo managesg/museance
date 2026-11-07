@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type ReactNode, type Ref } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type Ref } from 'react';
+import { prettyOutput } from '../engine/format';
 import type { ExhibitMode } from '../engine/types';
 import './exhibits.css';
 
@@ -269,7 +270,8 @@ function Cross({ spot, output }: { spot: Spot; output: Output | null }) {
   const [hx, hy] = polar(0, 0, r * 0.62, 250);
   const [sx, sy] = polar(0, 0, r + 2, -20);
   const [tx, ty] = polar(0, 0, r + 2, 110);
-  const len = output?.text.length ?? 0;
+  const text = output ? prettyOutput(output.text) : '';
+  const len = text.length;
   const size = len <= 6 ? 'l' : len <= 10 ? 'm' : 's';
   // The tag may run from the handle's end to the frame's edge, less a margin; longer text ends in an ellipsis.
   const room = (angle === 0 ? W - ex : ex) + 21 - 6;
@@ -300,7 +302,7 @@ function Cross({ spot, output }: { spot: Spot; output: Output | null }) {
           style={{ left: `${(ex / W) * 100}%`, top: `${(ey / H) * 100}%`, maxWidth: `${(room / W) * 100}%` }}
         >
           <span className="exhibit__tag-verb">shows</span>
-          <span className="exhibit__tag-value">{output.text || '(blank)'}</span>
+          <span className="exhibit__tag-value">{text || '(blank)'}</span>
         </p>
       )}
     </>
@@ -312,6 +314,7 @@ export function ExhibitFrame({
   which,
   mode,
   src,
+  scale,
   title,
   output = null,
   children,
@@ -320,6 +323,8 @@ export function ExhibitFrame({
   which: Which;
   mode: ExhibitMode;
   src: string;
+  // How much to magnify the app inside the frame: the iframe renders at window/scale, then scales up.
+  scale: number;
   title: string;
   output?: Output | null;
   children?: ReactNode;
@@ -349,6 +354,7 @@ export function ExhibitFrame({
     <figure
       ref={rootRef}
       className={`exhibit exhibit--${which} exhibit--${mode}`}
+      style={{ '--exhibit-zoom': scale } as CSSProperties}
       aria-label={`${which === 'original' ? 'Exhibit O, the original' : 'Exhibit R, the revival'}: ${title}`}
     >
       {art.back}
