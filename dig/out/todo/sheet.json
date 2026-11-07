@@ -1,0 +1,183 @@
+{
+ "app": "todo",
+ "lines": [
+  {
+   "id": "b001",
+   "screen": "add",
+   "text": "Typing 'Buy milk' into the #item input and clicking the #add button adds 'Buy milk' to the #todo list (list shows 1 item: 'Buy milk').",
+   "label": "SEEN",
+   "citations": [
+    "e043"
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "b002",
+   "screen": "add",
+   "text": "Typing 'Walk dog' into the #item input and pressing the Enter key adds 'Walk dog' to the #todo list (list shows 1 item: 'Walk dog').",
+   "label": "SEEN",
+   "citations": [
+    "e044"
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "b003",
+   "screen": "add",
+   "text": "Newly added items appear at the top of the #todo list: after adding 'Buy milk' then 'Walk dog' via #add, the list displays ['Walk dog', 'Buy milk'] (most recent first).",
+   "label": "SEEN",
+   "citations": [
+    "e045"
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "b004",
+   "screen": "todo",
+   "text": "Clicking the .complete control on a #todo list item moves it to the #completed list: with only 'Buy milk' in #todo, clicking #todo li .complete results in #todo: 0 items and #completed: 1 item ['Buy milk'].",
+   "label": "SEEN",
+   "citations": [
+    "e046"
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "b005",
+   "screen": "todo",
+   "text": "Clicking the .remove control on a #todo list item deletes it: with ['Walk dog', 'Buy milk'] in #todo, clicking #todo li .remove leaves #todo with 1 item ['Buy milk'] (the top/first item is removed).",
+   "label": "SEEN",
+   "citations": [
+    "e047"
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "b006",
+   "screen": "add",
+   "text": "Clicking the #add button with an empty #item input adds no item (#todo and #completed both remain 0 items).",
+   "label": "SEEN",
+   "citations": [
+    "e048"
+   ],
+   "conflicts": [
+    "e007",
+    "e006"
+   ]
+  },
+  {
+   "id": "b007",
+   "screen": "todo",
+   "text": "Deleting one of several identical todo items removes the wrong record from storage: with todos added in order aa, bb, cc, dd, aa, bb, cc, dd (stored as {\"todo\":[\"aa\",\"bb\",\"cc\",\"dd\",\"aa\",\"bb\",\"cc\",\"dd\"],\"completed\":[]}), deleting the fifth item (aa) removes it from the DOM, but the stored data becomes {\"todo\":[\"bb\",\"cc\",\"dd\",\"aa\",\"bb\",\"cc\",\"dd\"],\"completed\":[]}; after a page refresh the list re-renders as bb, cc, dd, aa, bb, cc, dd instead of aa, bb, cc, dd, bb, cc, dd.",
+   "label": "SEEN",
+   "citations": [
+    "e003"
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "b008",
+   "screen": "todo",
+   "text": "Clicking .complete on a duplicate item has the same first-instance mismatch: completing the fifth record (aa) removes the first 'aa' from the stored todo array (data.todo.splice(data.todo.indexOf(value), 1)), causing a disorder between the rendered list and stored data on refresh.",
+   "label": "SEEN",
+   "citations": [
+    "e003"
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "b009",
+   "screen": "storage",
+   "text": "The todo list is stored locally in the browser (as a JSON structure with 'todo' and 'completed' arrays) and is not synced to a server: items entered on a Mac do not appear when the app is opened on an iPhone (the list is empty there).",
+   "label": "SEEN",
+   "citations": [
+    "e040",
+    "e003"
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "b010",
+   "screen": "todo",
+   "text": "The todo list persists across page reloads within the same browser: after refresh, the page re-renders the todos from the stored todoList records.",
+   "label": "GUESSED",
+   "citations": [
+    "e003",
+    "e040"
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "b011",
+   "screen": "todo",
+   "text": "Todo items can be edited in place (e.g., to correct a typo) — an edit capability was contributed, along with tooltip tips for the task buttons.",
+   "label": "GUESSED",
+   "citations": [
+    "e011"
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "b012",
+   "screen": "todo",
+   "text": "Long words in todo items wrap within the item instead of overflowing the layout (word-break CSS added).",
+   "label": "GUESSED",
+   "citations": [
+    "e037"
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "b013",
+   "screen": "todo",
+   "text": "On mobile, after completing a task and un-completing it back into the list, the completed-task marker/styling remains on the item (a visual bug).",
+   "label": "SEEN",
+   "citations": [
+    "e020"
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "b014",
+   "screen": "add",
+   "text": "Pressing Numpad-Enter in the #item input adds the todo item the same as the main Enter key.",
+   "label": "GUESSED",
+   "citations": [
+    "e036"
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "b015",
+   "screen": "add",
+   "text": "Adding a todo consisting only of whitespace/empty content creates an empty task entry in the list (reported bug: 'Empty tasks can be created').",
+   "label": "GUESSED",
+   "citations": [
+    "e007",
+    "e006"
+   ],
+   "conflicts": [
+    "e048"
+   ]
+  },
+  {
+   "id": "b016",
+   "screen": "page",
+   "text": "The page includes a viewport meta tag so the app renders properly scaled on mobile devices.",
+   "label": "GUESSED",
+   "citations": [
+    "e039"
+   ],
+   "conflicts": []
+  },
+  {
+   "id": "b017",
+   "screen": "todo",
+   "text": "The app starts with an empty state: #todo shows 0 items and #completed shows 0 items.",
+   "label": "SEEN",
+   "citations": [
+    "e042"
+   ],
+   "conflicts": []
+  }
+ ]
+}
