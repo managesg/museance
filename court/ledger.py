@@ -60,3 +60,13 @@ def verify(path) -> tuple[bool, str]:
             return False, f"seq {ev['seq']}: hash mismatch (payload edited?)"
         prev, seq = ev["hash"], ev["seq"]
     return True, f"{seq} events, chain intact"
+
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) == 3 and sys.argv[1] == "verify":
+        _ok, _msg = verify(sys.argv[2])
+        print(_msg)
+        sys.exit(0 if _ok else 1)
+    print("usage: python -m court.ledger verify <path>", file=sys.stderr)
+    sys.exit(2)
