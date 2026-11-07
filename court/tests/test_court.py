@@ -245,3 +245,30 @@ def test_ledger_two_processes(tmp_path):
     procs = [subprocess.Popen([sys.executable, "-c", code, str(p), w], cwd=ROOT) for w in "ab"]
     assert [q.wait() for q in procs] == [0, 0]
     assert ledger.verify(p) == (True, "40 events, chain intact")
+
+
+def test_parse_storage_and_reload_steps():
+    assert parse("reload") == ("reload", [])
+    assert parse("storage:bestScore=0") == ("storage", ["bestScore", "0"])
+    v = '{"grid":{"size":4},"score":0,"note":"a=b"}'
+    assert parse("storage:gameState=" + v) == ("storage", ["gameState", v])  # '=' inside value kept
+    for bad in ["storage:", "storage:=x", "storage:noequals"]:
+        with pytest.raises(StepError):
+            parse(bad)
+
+
+def test_2048_seeded_merge_is_deterministic(tmp_path, bench):
+    # 2048 spawns tiles at random; tests seed localStorage, reload, then move.
+    cells = [[None] * 4 for _ in range(4)]
+    cells[0][0] = {"position": {"x": 0, "y": 0}, "value": 2}
+    cells[1][0] = {"position": {"x": 1, "y": 0}, "value": 2}
+    state = {"grid": {"size": 4, "cells": cells}, "score": 0, "over": False, "won": False, "keepPlaying": False}
+    steps = ["storage:bestScore=0", "storage:gameState=" + json.dumps(state), "reload", "key:ArrowLeft"]
+    claim = {"id": "g1", "app": "2048", "screen": "board", "text": "two 2s merge into a 4", "tier": "A",
+             "label": "SEEN", "confidence": 0.9, "bond": 100,
+             "test": {"steps": steps, "observe": ".tile-merged", "expect": "4"}}
+    app = ROOT / "apps" / "2048" / "original"
+    with serve.folder(app) as url:
+        verdicts, locks = judge([claim], [], url, url, tmp_path, clock=CLOCK, bench=bench)
+    assert verdicts[0]["original"] == "4" and verdicts[0]["flaky"] is False
+    assert locks[0]["status"] == "LOCKED"
