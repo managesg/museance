@@ -1,0 +1,5 @@
+app1-regression.json is a byte-for-byte copy of P4's regression set, for court tests only.
+Source: branch origin/p4-skeptic (commit fe2d6fe), path eval/regression/app1-fixture.json
+Git blob: 600af1ef37ace5dc4e8c02c3462188e6dbdcddae
+Owner: lane P4 (Alejandro). Do not edit here; re-copy if P4 changes it:
+  git show origin/p4-skeptic:eval/regression/app1-fixture.json > court/tests/data/app1-regression.json

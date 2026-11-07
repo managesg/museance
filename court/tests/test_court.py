@@ -69,11 +69,14 @@ def test_ledger_chain_and_tamper(tmp_path):
 
 
 def test_commit_hash_matches_p4_definition():
-    import hashlib
-    obj = {"id": "a01", "steps": ["click:#k1"], "commit": "ignored"}
-    body = {k: v for k, v in obj.items() if k != "commit"}
-    want = hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
-    assert ledger.commit_hash(obj) == want
+    # Must equal eval/commit.py on main (CONTRACTS.md canon: ensure_ascii=False, UTF-8), incl. non-ASCII.
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("p4_commit", ROOT / "eval" / "commit.py")
+    p4 = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(p4)
+    for obj in ({"id": "a01", "steps": ["click:#k1"], "commit": "ignored"},
+                {"id": "c9", "text": "7 × 8 ÷ 2 → 28", "commit": "x"}):
+        assert ledger.commit_hash(obj) == p4.commit_hash(obj)
 
 
 def test_edited_after_commit_is_refused(tmp_path):
