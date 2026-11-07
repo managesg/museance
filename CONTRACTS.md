@@ -28,7 +28,7 @@ A list of strings, run in order in a browser on the app page:
 - `claim_true` = the claim's test on the ORIGINAL returns `expect`. Feeds credibility and Brier.
 - `match` = original and revival give the same observed text. Feeds fidelity.
 - Each test runs twice per build; different results = `flaky: true` = UNSWORN, never STRUCK.
-- `commit` = sha256 of the object (without `commit`) written to the ledger before the court runs.
+- `commit` = sha256 of the object (without `commit`) written to the ledger before the court runs. Canonical form, every lane: `json.dumps(obj, sort_keys=True, separators=(",",":"), ensure_ascii=False).encode("utf-8")` (same as `court/ledger.py canon()` and `eval/commit.py`).
 
 ## Scoring (P4)
 - Credibility starts at 1000. STRUCK: lose `bond`. LOCKED: gain `round(bond * (1 - confidence))`.

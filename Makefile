@@ -9,7 +9,7 @@ serve-fixture:    ## serve the fixture app on http://localhost:8001
 test-p1:          ## each lane replaces its own target
 	@echo "P1: add court tests"
 test-p2:
-	@echo "P2: add dig/medium tests"
+	$(PY) -m pytest -q dig
 test-p3:
 	@echo "P3: add UI tests"
 test-p4:

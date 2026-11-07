@@ -1,0 +1,308 @@
+{
+ "app": "app1",
+ "created_utc": "2026-11-07T20:27:36Z",
+ "regression_sha256": "ea523aaa37eecb7ab6bb8e1686927edf6c4cf7a413eb2f2ea8342e2745db174a",
+ "attacks": [
+  {
+   "id": "a001",
+   "commit": "9ccfa2ff153de2215eae211af08af4c42aa636265a7d339f56240fee9f529c9a"
+  },
+  {
+   "id": "a002",
+   "commit": "f2b37c5be36650fcb253d457efd8d465108dc61b24ef8a9818d71d7b18d4e62f"
+  },
+  {
+   "id": "a003",
+   "commit": "2d89c8cefe46f3e2d52b3f9fc228f07c9701ffb5571aaedf0fa90a3d6c019664"
+  },
+  {
+   "id": "a004",
+   "commit": "a4b060c47ec10f64733db807ee09fcc11bdd0f10e7189aa74e87a0d957321877"
+  },
+  {
+   "id": "a005",
+   "commit": "83c1d33b9c9dd40a2036e6525ba7cc9361f4441bf84d608ff57a43d66e207c51"
+  },
+  {
+   "id": "a006",
+   "commit": "385994dbff2acd215e7a2fd7a0f209ec50a028c859602a8f351848033a0bdab5"
+  },
+  {
+   "id": "a007",
+   "commit": "7e0f778ee8c6dfe09910c7a758b2cd573e7fc94a93ac0a6e33311888b579901e"
+  },
+  {
+   "id": "a008",
+   "commit": "733fa27991967e679963331fc6609aaae8cf88d63d33b6011701ea34e42ab6b2"
+  },
+  {
+   "id": "a009",
+   "commit": "5b47533f38c858e27f6ff9638c92f65a3f5e7cd16ad948e5e13016d083f8d4a7"
+  },
+  {
+   "id": "a010",
+   "commit": "67ebace99cbd37b23517d1a3fd6e4e8ee18fc1d530647c0b39feb697e2234c3f"
+  },
+  {
+   "id": "a011",
+   "commit": "0220d60c03afd7948980cd7bd39c391dfed536a69bd7538bc1ce9d28bf9c10d6"
+  },
+  {
+   "id": "a012",
+   "commit": "09a870fc88839c00fefd7723e70322672cb70fdfe62ac66a2eccc35852d6bc94"
+  },
+  {
+   "id": "a013",
+   "commit": "1cb4e13f4d9c8051e2115d198aa548743298c4329a634c0637b221f17f2f5c56"
+  },
+  {
+   "id": "a014",
+   "commit": "12b8091546db884b1b324ed2a149450e2b5c62fd497035976425cc0e7f529ba1"
+  },
+  {
+   "id": "a015",
+   "commit": "cf950b70a61b8b632376eba6dcd6c5abc00053d807713ff530c5558711b48bed"
+  },
+  {
+   "id": "a016",
+   "commit": "297e6142e2e06f5be441efa9c77ab7a6d78eda66bb72fdd3019c5d94d174cc41"
+  },
+  {
+   "id": "a017",
+   "commit": "32b544b006f50266cce9c7fdcb9a2a6d5d04da5698efc913e2f159b9862afee4"
+  },
+  {
+   "id": "a018",
+   "commit": "58cd3ef1f6763cb9c97342d689444288123b47055d09a9a61882aeed13af8384"
+  },
+  {
+   "id": "a019",
+   "commit": "ca39b55aed7689e484fb6778664372c7ab7b6cdeb7c07b3674a8d03f53aa5118"
+  },
+  {
+   "id": "a020",
+   "commit": "90b01874ef52fb7527cd1d489052b0e22b66c626ccb2048770bbddc4ca0e1e4a"
+  },
+  {
+   "id": "a021",
+   "commit": "69aadf7cf5a7015eb8b2730a2b52c30655067fd7f841d0c61572eb0bbc770df5"
+  },
+  {
+   "id": "a022",
+   "commit": "7ae7a303253115d1442543260c45da40d35383c88d15b83bc26351c48b0bc4da"
+  },
+  {
+   "id": "a023",
+   "commit": "4b2a0bff0343031a8c1f4c7c3feff97b53e0fd0cc6ece333040232c7ef78d506"
+  },
+  {
+   "id": "a024",
+   "commit": "1fc6fa89287f2ee4507d116181ad21077373202e6d5f6e325e8a444df94febf0"
+  },
+  {
+   "id": "a025",
+   "commit": "e3f4dba490c289dbdac7c73ac5c1ec6823c650271cdf92803fcb6a02c25c5869"
+  },
+  {
+   "id": "a026",
+   "commit": "a0c4b005fca2c98fdf605f9344033445944ed56d62992475672f55f6e94959cb"
+  },
+  {
+   "id": "a027",
+   "commit": "d0a59f563b88bbe6674f5b921d800f64ca731494b32dd87e11208347509168da"
+  },
+  {
+   "id": "a028",
+   "commit": "2494cfba54d06c319971a16fde8de4153c20a2c65cebe9264261366f85c5f20c"
+  },
+  {
+   "id": "a029",
+   "commit": "316d424fe2854c487f0d04af6b09870921a85e31c571791a6f0fd819b02af2a5"
+  },
+  {
+   "id": "a030",
+   "commit": "06ed0f21af2b71eee7f49a993a3043deddd8bbb068d53a6ccde893c24341bda8"
+  },
+  {
+   "id": "a031",
+   "commit": "fc2a5a353c0f259b7dd9d7ac14a18889c58ea2a2167cd5be8bf9be4f90e4ecb1"
+  },
+  {
+   "id": "a032",
+   "commit": "310047a4f5723a6ddd22b1c1c64a471f5e92869fe2c660b440fce0483a7ca46b"
+  },
+  {
+   "id": "a033",
+   "commit": "7cfb5e0355e2811da0f283f1ef7cf635450b8f3020a6610e552978203c07cdc0"
+  },
+  {
+   "id": "a034",
+   "commit": "819c68997dc6a4c1be443b104c610b21344d6b5773eb792ee0462b955e88102e"
+  },
+  {
+   "id": "a035",
+   "commit": "5a48868d869f61fa25e74df984b9085fbffe1e95052bf9fae18006414118cd35"
+  },
+  {
+   "id": "a036",
+   "commit": "bc282372cec6b016d4b2de249ba6f52319c7682ac27e398bbed1af3b0d25b3bc"
+  },
+  {
+   "id": "a037",
+   "commit": "18571616d16ea482859ab2678460dc7560e4d95dbd35b8b670f3a36592bb8efb"
+  },
+  {
+   "id": "a038",
+   "commit": "2be9b3bf013b4690760bed4a873497f2a0062b64482ac8837f210a550a7037a4"
+  },
+  {
+   "id": "a039",
+   "commit": "cfc7fb2f8be65c6b1f2038c609019731909345fa691323ae9569b14f95d031be"
+  },
+  {
+   "id": "a040",
+   "commit": "feeb566d290490d91bbb484d510f91da04393207154298c4f656dcedf71ec2a7"
+  },
+  {
+   "id": "a041",
+   "commit": "7b292fa0cb08f91e9cfee83fded07a673c4f4ad26b7208cc5de70cffca39c38a"
+  },
+  {
+   "id": "a042",
+   "commit": "5c89be401c51a60b150ab7f86a4b37f17ba81cb61c1f665da9d3408fffeeddb3"
+  },
+  {
+   "id": "a043",
+   "commit": "8662a201bfcd7e9c8f5b7aae66d4c8c6224532ff361b2dd7b9539ceef20cb64d"
+  },
+  {
+   "id": "a044",
+   "commit": "a100f20329dcddb52b2ae34c18642d92609571ce72101385b7baa4702cb5e9e1"
+  },
+  {
+   "id": "a045",
+   "commit": "1e49f342f1ec50646a7a216602d97396a0d73d9cb205d0a2b78e2a7b61e2d34e"
+  },
+  {
+   "id": "a046",
+   "commit": "7f8228ece2674d57783c213f548885db322a9c0a1fcf8ff060f2487bc887c2f2"
+  },
+  {
+   "id": "a047",
+   "commit": "5dd9a01a375cf1320595216c3cecab8cd3db544f39fd698d1988bdd29dff8132"
+  },
+  {
+   "id": "a048",
+   "commit": "2d9feddc67e9e481681e55f5ae36dc0d19abeb75233f28a5a0f7a2ac65b217fe"
+  },
+  {
+   "id": "a049",
+   "commit": "f1c987401d54a4999aa810eb9448badc3960aeae0bd047a0eebf9d7703a0224a"
+  },
+  {
+   "id": "a050",
+   "commit": "d61c256505ad76edf11dae04c527ed6b78ac8af0f62c7dfa60047151dcdb6f10"
+  },
+  {
+   "id": "a051",
+   "commit": "1bd4c5a50cf6cdc02a4fc806025dc0c02bf5ccc9f1f2f6e76ff1e3d126d93889"
+  },
+  {
+   "id": "a052",
+   "commit": "60960fa4a0d4c5cb9562743c24ecf0d92faca12f583b8051c763b0cbee307275"
+  },
+  {
+   "id": "a053",
+   "commit": "6059b765114d22f8de9fabd67ee00497f94d3afe45c5f1e2d6b8c710e0e8d330"
+  },
+  {
+   "id": "a054",
+   "commit": "15a67ffdefa90a9043a8cf318f219fe9364ad19adbcdfb098691b350d52af74c"
+  },
+  {
+   "id": "a055",
+   "commit": "c609cd2554c912c8393418e8b6f883bf06927a8d1001ca28a2170eabcf377b27"
+  },
+  {
+   "id": "a056",
+   "commit": "16d9d5adae804b32261b76e5f5aa26db03267bd8596e51ef2d3629da045f72d2"
+  },
+  {
+   "id": "a057",
+   "commit": "b7159a5856c5a6fb3b2f26e14a329618750bcd0e0ba76d47ec90946f45d5c507"
+  },
+  {
+   "id": "a058",
+   "commit": "d6467774ce226f0cdad4632b76779e6c6f87b5fc7279952e5d8f97cea7ea4d2f"
+  },
+  {
+   "id": "a059",
+   "commit": "54084d2764d85349738902233ee347d4e9a38c2da6e12705f3f790f6fc996481"
+  },
+  {
+   "id": "a060",
+   "commit": "95b7748d31ce42fcb90aa7c0815e4b13041f9c161ad5a6136bf0a6bcedfa0040"
+  },
+  {
+   "id": "a061",
+   "commit": "9c3d3df0951b8d35a04dc04634447668de96036f200ea13d3f43808c149fe002"
+  },
+  {
+   "id": "a062",
+   "commit": "37b2383c85b33a95f96a60d21f9486e6f048ed1c6e07fad237b95c6574c4bd20"
+  },
+  {
+   "id": "a063",
+   "commit": "6c381945c5a7d09aab611a7c32cc3a3c7a44341187bf4af9d0e268de4a12d56b"
+  },
+  {
+   "id": "a064",
+   "commit": "0a22c94aa19d5ea6b7b8575a18de6e2dadba799affe41dd72778e3458d2492cd"
+  },
+  {
+   "id": "a065",
+   "commit": "8c9f6474d0bcac7d99179f089004469c4c165f15a37ad4901e608b5e07cb335b"
+  },
+  {
+   "id": "a066",
+   "commit": "058a3e1dbfc52c57a7228ba5c9a0147b51380bc423d7fed46cbfbbc89fdd46c1"
+  },
+  {
+   "id": "a067",
+   "commit": "de77a03c675a81670f50d04bf01a7884cddfb023a8a7c33015bdb1c530221b81"
+  },
+  {
+   "id": "a068",
+   "commit": "1b0ffd542aacce940877eb093c89caec4d128b40d3a525021c04695e7d8f2b76"
+  },
+  {
+   "id": "a069",
+   "commit": "d0fccb68543a1f25ff2f479416cb0eaeedac969b3b6d0858703a0ff51b13970e"
+  },
+  {
+   "id": "a070",
+   "commit": "77a1ebe62e26e6d450edfd1293ac779723fe6ed951d9244218c2bf54f64b2de2"
+  },
+  {
+   "id": "a071",
+   "commit": "63c3ab7f622f5616f10917be2b195345e81d3de35dc6ec754c859d1048fcd0a9"
+  },
+  {
+   "id": "a072",
+   "commit": "f2994ee6a3d8c1fb33383748d0b8205f69b635d62620b71874cd813cc3c84da8"
+  },
+  {
+   "id": "a073",
+   "commit": "2c2b607c6bf4d1ac458a29255e0391a8d2fe27282f8e40cfdc023b787a3e471a"
+  },
+  {
+   "id": "a074",
+   "commit": "36c8c18740cdee72275912a1a67133f84aa6bbe666ef2689ac4710e0fb4f2993"
+  },
+  {
+   "id": "a075",
+   "commit": "7797dbd035e8741a854353ddd83849510b24e14774a17f6b21bdcd2a4ef214ba"
+  }
+ ],
+ "attacks_sha256": "9d96baea1b4d95775ebaa96b883b587400ed5cbf82eefc6685194e17f5155665"
+}
