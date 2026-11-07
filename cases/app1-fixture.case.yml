@@ -1,0 +1,20 @@
+app: "app1-fixture"
+fidelity: 60
+brier: 0.173
+credibility_start: 1000
+credibility_end: 982
+locked:
+  - "add: 7 + 8 shows 15 [A]"
+  - "multiply: 7 x 8 shows 56 [A]"
+  - "clear: C returns to 0 [A]"
+struck:
+  - "divide: 1 / 8 rounds to 0.13 [C]"
+fabricated:
+  - "divide: dividing by zero shows Error [D]"
+unsworn: []
+counts:
+  claims: 5
+  locked: 3
+  struck: 1
+  fabricated: 1
+  unsworn: 0
