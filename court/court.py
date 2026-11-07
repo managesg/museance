@@ -15,7 +15,9 @@ Library (for agents/ wrappers such as the Fetch Bailiff agent):
 from __future__ import annotations
 
 import argparse
+import concurrent.futures as cf
 import json
+import os
 import pathlib
 import sys
 
@@ -78,8 +80,29 @@ def rule(bench, item: dict, kind: str, original_url: str, revival_url: str) -> d
     }
 
 
-def judge(claims, attacks, original_url, revival_url, out_dir, clock=None, bench=None):
-    """Commit everything to the ledger, rule, lock. Returns (verdicts, locks)."""
+_WORKER_BENCH = None
+
+
+def _rule_task(item: dict, kind: str, original_url: str, revival_url: str) -> dict:
+    """Top-level (picklable) pool task. Each worker process lazily owns one Bench."""
+    global _WORKER_BENCH
+    if _WORKER_BENCH is None:
+        _WORKER_BENCH = Bench().__enter__()
+        from multiprocessing import util
+        util.Finalize(None, _WORKER_BENCH.__exit__, args=(None, None, None), exitpriority=10)
+    return rule(_WORKER_BENCH, item, kind, original_url, revival_url)
+
+
+def default_workers() -> int:
+    return max(1, min(4, os.cpu_count() or 1))
+
+
+def judge(claims, attacks, original_url, revival_url, out_dir, clock=None, bench=None, workers=1):
+    """Commit everything to the ledger, rule, lock. Returns (verdicts, locks).
+
+    workers > 1 rules items concurrently in a process pool (one browser per worker);
+    verdicts and ledger events still land in input order (claims, then attacks).
+    An injected bench= always runs in-process, sequentially."""
     out = pathlib.Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     ledger = Ledger(out / "ledger.jsonl", clock=clock)
@@ -92,18 +115,31 @@ def judge(claims, attacks, original_url, revival_url, out_dir, clock=None, bench
                 raise ValueError(f"{kind} {it['id']}: commit {it['commit'][:12]} != sha256 {c[:12]} (edited after commit?)")
             ledger.append("commit", {"kind": kind, "ref": it["id"], "commit": c})
 
-    own = bench is None
-    bench = bench or Bench().__enter__()
     verdicts = []
-    try:
-        for kind, items in (("claim", claims), ("attack", attacks)):
-            for it in items:
+    work = [(kind, it) for kind, items in (("claim", claims), ("attack", attacks)) for it in items]
+    if workers > 1 and bench is None and len(work) > 1:
+        with cf.ProcessPoolExecutor(max_workers=min(workers, len(work))) as pool:
+            futs = [pool.submit(_rule_task, it, kind, original_url, revival_url) for kind, it in work]
+            try:
+                for f in futs:  # waiting in input order = append as soon as all earlier items landed
+                    v = f.result()
+                    verdicts.append(v)
+                    ledger.append("verdict", v)
+            except BaseException:
+                for f in futs:
+                    f.cancel()
+                raise
+    else:
+        own = bench is None
+        bench = bench or Bench().__enter__()
+        try:
+            for kind, it in work:
                 v = rule(bench, it, kind, original_url, revival_url)
                 verdicts.append(v)
                 ledger.append("verdict", v)  # appended as each ruling lands, so the UI can tail it live
-    finally:
-        if own:
-            bench.__exit__(None, None, None)
+        finally:
+            if own:
+                bench.__exit__(None, None, None)
 
     lock_rows = bailiff.locks(claims, verdicts)
     for row in lock_rows:
@@ -129,6 +165,8 @@ def main(argv=None) -> int:
     ap.add_argument("--original-dir")
     ap.add_argument("--revival-dir")
     ap.add_argument("--out")
+    ap.add_argument("--workers", type=int, default=default_workers(),
+                    help="parallel browser processes (default min(4, cpus))")
     a = ap.parse_args(argv)
 
     reg = {r["id"]: r for r in _load(a.apps)} if pathlib.Path(a.apps).exists() else {}
@@ -141,7 +179,7 @@ def main(argv=None) -> int:
         revival = a.revival or rd or entry.get("revival", {}).get("url")
         if not original or not revival:
             ap.error(f"need original and revival URLs for {a.app} (flags, --*-dir, or {a.apps})")
-        verdicts, lock_rows = judge(claims, attacks, original, revival, a.out or f"runs/{a.app}")
+        verdicts, lock_rows = judge(claims, attacks, original, revival, a.out or f"runs/{a.app}", workers=a.workers)
 
     counts = {}
     for r in lock_rows:
