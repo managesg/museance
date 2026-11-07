@@ -127,7 +127,8 @@ def main(argv=None):
     s.head(5, "FINAL NUMBERS")
     CF = rel(C / "todo.case.yml")
     s.row("fidelity (attacks only)", f"{v1['fidelity']} -> {case['fidelity']}", f"{BA} / {CF}")
-    print("      (all-verdict fidelity per CONTRACTS.md, 105 attacks + 16 claims: 41 -> 100, as on the stage and in DEMO.md)")
+    print("      (all-verdict fidelity per CONTRACTS.md, 105 attacks + 16 claims: 41 -> 100 as on the stage and in DEMO.md;"
+          " the 41 is from the uncommitted runs/ v1 court run. Committed v1 verdicts at 9a5877c (8 claims + 105 attacks): 36)")
     s.row("attack mismatches", f"{v1['attack_mismatches']} -> {v2['attack_mismatches']}", BA)
     s.row("regression", f"{v1['regression_passed']} -> {v2['regression_passed']} of {v2['regression_total']}", BA)
     s.row("claims locked / struck", f"{case['counts']['locked']} / {case['counts']['struck']} of {case['counts']['claims']}", CF)

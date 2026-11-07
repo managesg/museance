@@ -62,8 +62,14 @@ python eval/seal.py --app app1 --regression eval/regression/app1-fixture.json \
   --attacks runs/app1/attacks.json --out cases/app1.commits.json --verify  # verify
 ```
 
-**Builders** (`revive/build.py --builder ...`): `codex`, `claude`, `glm`, and `muse`. Muse is used once,
-for the on-stage repair (`revive/repair.py`); it has no tools and cannot write files. Details: `revive/README.md`.
+`--verify` checks content only (the files still hash to the seal). The "before reveal" part is the git history:
+`cases/todo.commits.json` was committed in 5a51fc4 (20:44 UTC), P2's todo claims in 63dc375 and 9bdd377 (21:00 and
+21:16 UTC), and the seal file has not changed since. Verify the todo seal with
+`python eval/seal.py --app todo --regression eval/regression/todo.json --attacks cases/todo/attacks.json --out cases/todo.commits.json --verify`.
+
+**Builders** (`revive/build.py --builder ...`): `codex`, `claude`, `glm`, and `muse`. Muse runs with no tools and
+cannot write files; it produced an independent repair of todo v1 (`cases/todo/repairs.jsonl`, `revive/out/todo/index.muse.html`).
+Details: `revive/README.md`.
 
 **Scoring.** Credibility, Brier and fidelity are pure functions in `eval/score.py`, defined in the
 "Scoring (P4)" section of `CONTRACTS.md`. There is no model in the court or in the scoring.

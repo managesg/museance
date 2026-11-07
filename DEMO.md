@@ -41,7 +41,7 @@ Timing rule: if running long, cut beat 2 to 8 seconds (one key press) and beat 7
 
 **Beat 5 naming note.** The struck claim is **c07** in the committed files, not c15. c15 is "Completed items stack with the most recently completed on top" and is LOCKED. The empty-task claim is the one tied to issue #38.
 
-**Muse on stage (only if rehearsed twice, workplan T9).** Replace the second half of beat 6 with a live repair: `python revive/repair.py --claims <claims.json> --verdicts <verdicts.json> --claim <struck id> --html <revival index.html> --builder muse` (usage in `revive/repair.py`; Muse is run with shell, write and web tools disabled in `revive/build.py`). No committed repair was produced by Muse (section 4). If it does not work twice in rehearsal, keep the Codex repair and say nothing about Muse repairing.
+**Muse on stage (only if rehearsed twice, workplan T9).** Replace the second half of beat 6 with a live repair in cases mode against v1: `python revive/repair.py --claims <claims.json> --verdicts <v1 verdicts.json> --attacks cases/todo/attacks.json --html revive/out/todo/index.v1.html --builder muse` (needs the box court, `revive/box_verify.py`: ssh `seabridge-pilot`). Do not use `--claim c07`: c07's committed verdict has `match: true` (the claim is false, but the revival already matches the original), so `repair.py` refuses it. Muse is run with shell, write and web tools disabled (`revive/build.py`). A Muse repair of v1 is already committed (`cases/todo/repairs.jsonl` line 2, `revive/out/todo/index.muse.html`, 68 -> 0 mismatches, 20/20); the promoted `index.html` is the Codex repair. If the live run does not work twice in rehearsal, point at the committed Muse row in `cases/BEFORE_AFTER.md` instead.
 
 ## 2. One-minute video: shot list (text cards only, 60 s)
 
@@ -73,13 +73,13 @@ All paths relative to the repo root. "Counted" means counted from the named file
 | Attacks (sealed, blind to claims) | 105 | `cases/todo/verdicts.json` (kind attack), counted; hashes `cases/todo.commits.json` |
 | Court verdicts | 121 (16 claims + 105 attacks), all revival-matches-original on v2 | `cases/todo/verdicts.json`, counted |
 | Attack mismatches, v1 to v2 | 68 to 0 | `cases/before_after.json`, `cases/todo/repairs.jsonl` |
-| Fidelity, v1 to v2 | 41 to 100: CONTRACTS.md definition over all 121 verdicts (105 attacks + P2's 16 claims; v1 had 71 mismatches → 50/121). Attacks-only view is 35 → 100 (`cases/before_after.json`); say 41. | `cases/before_after.json`, `cases/BEFORE_AFTER.md` |
+| Fidelity, v1 to v2 | 41 to 100: CONTRACTS.md definition over all 121 verdicts (105 attacks + P2's 16 claims; v1 had 71 mismatches → 50/121). **The 41 comes from the v1 court run in `runs/todo/` (gitignored), not from a committed file.** Committed v1 evidence: `cases/todo/verdicts.json` at commit 9a5877c (8 claims + 105 attacks, 72 mismatches → 36) and the attacks-only view 35 → 100 (`cases/before_after.json`). If asked for the file, say 36 (committed) or 35 (attacks only). | `cases/before_after.json`, `cases/BEFORE_AFTER.md`, git 9a5877c |
 | Regression, v1 to v2 | 19/20 to 20/20 | `cases/before_after.json`, `cases/METRICS.md` |
 | False strikes | 0/12 | `cases/METRICS.md`, `cases/todo.case.yml` |
 | Traps flagged | v1 1/8, v2 0/8 (fewer after repair means the revival now matches the original on them) | `cases/before_after.json`, `cases/BEFORE_AFTER.md` |
 | Brier | 0.071 (n=16) | `cases/todo.case.yml`, `cases/METRICS.md` |
 | Credibility | 1000 to 930 | `cases/todo.case.yml` |
-| Repairs | patched 1, rollback 0, unsworn 0 (todo) | `cases/METRICS.md` |
+| Repairs | patched 2, rollback 0, unsworn 0 (todo): Codex v1 -> v2 (promoted) and an independent Muse repair of v1 (`index.muse.html`, not promoted) | `cases/METRICS.md`, `cases/todo/repairs.jsonl` |
 | Fixture calculator (app1), if asked | 3 repairs; regression 18/20 to 20/20; fidelity 60 final; Brier 0.173 (n=5); credibility 1000 to 982 | `cases/BEFORE_AFTER.md`, `cases/METRICS.md` |
 | Stage phases | 8 (dig, read, raise, swear, cross, repair, bench, sentence) | `court/ui/src/engine/types.ts` |
 | Runs per build for the flaky check | 2 | `CONTRACTS.md`, `court/court.py` |
@@ -88,7 +88,7 @@ Do not say: any latency, token count, cost, "N models", uptime, or accuracy figu
 
 ## 4. Sponsor usage (only what the code does)
 
-- **Muse (Meta), partial.** `revive/build.py` has a `muse` builder: `muse exec` with shell, file-write and web tools disabled, prompt passed by file; `revive/repair.py --builder muse` selects it; `dig/reader.py` prefers a `META` provider when configured (`agents/llm.py first_provider`). Unit test: `revive/test_build.py`. **No committed repair or revival was produced by Muse**: the todo v1 to v2 repair is Codex (`cases/BEFORE_AFTER.md`). Claim the prize only if the live Muse repair works twice in rehearsal.
+- **Muse (Meta), partial.** `revive/build.py` has a `muse` builder: `muse exec` with shell, file-write and web tools disabled, prompt passed by file; `revive/repair.py --builder muse` selects it; `dig/reader.py` prefers a `META` provider when configured (`agents/llm.py first_provider`). Unit test: `revive/test_build.py`. **Muse produced one committed repair of todo v1** (`cases/todo/repairs.jsonl` line 2, builder `muse`: 68 -> 0 attack mismatches, regression 19 -> 20; output `revive/out/todo/index.muse.html`, row `v2-muse` in `cases/BEFORE_AFTER.md`). The promoted revival (`index.html` = v2) is the Codex repair. No revival was built from scratch by Muse. Say "Muse repaired it too, independently"; do not say the stage runs Muse.
 - **ASI-1 (Fetch.ai's model API), yes.** `agents/llm.py` defaults to `https://api.asi1.ai/v1`, model `asi1`. It is the reader (`dig/reader.py`) and the Medium (`agents/medium.py`) that wrote the todo behavior sheet and claim cards (commit 63dc375). Say "ASI-1", not "agents".
 - **Fetch uAgents / Agentverse, not in the code.** `agents/` holds `llm.py` and `medium.py` only; there is no `agents/mesh`, no `uagents` import anywhere, and the only trace of Agentverse is `AGENTVERSE_API_KEY` in `.env.example` and the words "Fetch uAgent" in `AGENTS.md`. Do not claim a uAgent mesh. For the Fetch.ai prize, the honest pitch is ASI-1 as the Medium's brain.
 - **MongoDB Atlas, optional read path only.** `court/ui/server/feed.ts` reads the case collections from Atlas when `MONGODB_URI` is set (the masthead shows "MongoDB Atlas" in that mode). Nothing in the repo writes to Atlas, and the demo run above reads `runs/` files. Say "the stage can read a case from Atlas", not "stored in Atlas".
@@ -102,13 +102,13 @@ Do not say: any latency, token count, cost, "N models", uptime, or accuracy figu
 2. **100 fidelity after repair: is that overfit?** Partly, and we say so. The repair targeted the diverging attack verdicts, so 105/105 matching is not a held-out score. The separate 20-behavior regression set (12 good, 8 traps) went 19/20 to 20/20. We did not measure fresh attacks after the repair.
 3. **Only one claim struck out of 16. Rigged?** The strike cost 198 credits at 0.89 confidence, and the court told issue #38 apart: whitespace-only input does create a blank item (locked), a truly empty input does not (struck). Brier 0.071 is the calibration score; it is not 0.
 4. **How is the Skeptic independent?** It never sees claim text. Its attacks and the regression set are hashed and committed before the claims are revealed (`eval/seal.py`, `cases/todo.commits.json`). The attacker and the reviser are different vendors by rule (`revive/P4_WORKPLAN.md`).
-5. **Is model-written code safe to run? What is real versus fixture?** Revival code is evaluated with Node permissions plus a seccomp network block, failing closed (`revive/README.md`); the stage exhibits are static pages. Everything in the repo was written today; the todo app is a vendored MIT oracle (`CREDITS.md`), and app1 is a fixture calculator.
+5. **Is model-written code safe to run? What is real versus fixture?** Revival code is evaluated with Node permissions plus a seccomp network block, failing closed on Linux (`revive/README.md`; on Windows there is no seccomp, so untrusted revivals are scored on the Linux box); the stage exhibits are static pages. Everything in the repo was written today; the todo app is a vendored MIT oracle (`CREDITS.md`), and app1 is a fixture calculator.
 6. **Where do the sponsors fit?** ASI-1 reads the evidence and writes the claims; SubQ Snap sets the confidence; Codex builds and repairs; the Muse builder is wired for the repair step (see section 4 for what has and has not run); Atlas is an optional stage data source.
 
 ## 6. Risks to settle before the demo
 
 - Beat 7 judge input works on the calculator only (see caveat). Todo bench takes button presses only.
 - Stage repair replay does not exist for `source=runs`; beat 6 uses files.
-- Muse repair has no recorded run; Fetch uAgents are absent. Do not overclaim either.
+- Muse has one committed repair of v1 (not promoted); no live Muse run on stage unless rehearsed twice. Fetch uAgents are absent. Do not overclaim either.
 - `runs/todo/` needs the P2 files copied in and possibly a `case.json`.
 - `court.feed` and the venv Chrome shim in `court/ui/RUNBOOK.md` are the P1 and P3 teams' to confirm.
