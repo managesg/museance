@@ -112,3 +112,7 @@ Do not say: any latency, token count, cost, "N models", uptime, or accuracy figu
 - Muse has one committed repair of v1 (not promoted); no live Muse run on stage unless rehearsed twice. Fetch uAgents are absent. Do not overclaim either.
 - `runs/todo/` needs the P2 files copied in and possibly a `case.json`.
 - `court.feed` and the venv Chrome shim in `court/ui/RUNBOOK.md` are the P1 and P3 teams' to confirm.
+
+## Why it matters (impact line, checked by P1 against news reports)
+"In October and November 2026, attackers hit Danfoss refrigeration controllers at supermarkets across Europe and set them to defrost overnight: up to ~700 stores in France on 11 Oct, then a second wave across ~10 EU countries on 2 Nov (SecurityWeek, The Hacker News, NPR). Much of that legacy software can't be patched anymore; the fix is to rebuild it, but a rebuild you can't verify is a new risk. MUSÉANCE is the court that checks a rebuild against the original before you swap it in: claims the original contradicts are STRUCK; anything the court can't reproduce reliably is UNSWORN, never struck. Today we demo a dead todo app and 2048, not a controller."
+Do not name specific controller models (not confirmed for these attacks), and do not link Copeland's separate Frostbyte10 disclosure to them.
