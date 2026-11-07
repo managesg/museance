@@ -75,9 +75,12 @@ class Hoot:
             self.last_app = msg.app or self.last_app
 
     async def on_remark(self, ctx, sender: str, msg: RemarkRequest):
-        """The closing taunt: deterministic, the same words as --no-mesh (case.LocalParties)."""
+        """The taunt is deterministic, the same words as --no-mesh (case.LocalParties); a rebuttal to McClusky's
+        answer (a live debate the Bailiff relays) is ASI-1."""
         if self._from_bailiff(ctx, sender, msg):
-            await ctx.send(sender, Remark(case_id=msg.case_id, speaker="hoot", text=captions.taunt(msg.ruling)))
+            text = (await asyncio.to_thread(voice.hoot_line, msg.ruling, msg.answer) if msg.answer
+                    else captions.taunt(msg.ruling))
+            await ctx.send(sender, Remark(case_id=msg.case_id, speaker="hoot", text=text))
 
     # --- chat ---------------------------------------------------------------------------------------------------
     def _app(self, named: str) -> str:
