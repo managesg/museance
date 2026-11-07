@@ -1,0 +1,122 @@
+[
+ {
+  "id": "g01",
+  "kind": "good",
+  "passed": true,
+  "observed": "Buy milk"
+ },
+ {
+  "id": "g02",
+  "kind": "good",
+  "passed": true,
+  "observed": "Buy milk"
+ },
+ {
+  "id": "g03",
+  "kind": "good",
+  "passed": true,
+  "observed": "Walk dog\nBuy milk"
+ },
+ {
+  "id": "g04",
+  "kind": "good",
+  "passed": true,
+  "observed": "C\nB\nA"
+ },
+ {
+  "id": "g05",
+  "kind": "good",
+  "passed": true,
+  "observed": "Buy milk"
+ },
+ {
+  "id": "g06",
+  "kind": "good",
+  "passed": true,
+  "observed": "A"
+ },
+ {
+  "id": "g07",
+  "kind": "good",
+  "passed": true,
+  "observed": "A\nB"
+ },
+ {
+  "id": "g08",
+  "kind": "good",
+  "passed": true,
+  "observed": "Buy milk"
+ },
+ {
+  "id": "g09",
+  "kind": "good",
+  "passed": true,
+  "observed": "A"
+ },
+ {
+  "id": "g10",
+  "kind": "good",
+  "passed": true,
+  "observed": "B"
+ },
+ {
+  "id": "g11",
+  "kind": "good",
+  "passed": true,
+  "observed": "Buy milk"
+ },
+ {
+  "id": "g12",
+  "kind": "good",
+  "passed": true,
+  "observed": "B"
+ },
+ {
+  "id": "t01",
+  "kind": "trap",
+  "passed": true,
+  "observed": "A"
+ },
+ {
+  "id": "t02",
+  "kind": "trap",
+  "passed": true,
+  "observed": ""
+ },
+ {
+  "id": "t03",
+  "kind": "trap",
+  "passed": true,
+  "observed": "Remember to water the plants and feed the cat water the plants and feed the cat water the plants and feed the cat water the plants and feed the cat water the plants and feed the cat water the plants and feed the cat water the plants and feed the cat water the plants and feed the cat water the plants and feed the cat end"
+ },
+ {
+  "id": "t04",
+  "kind": "trap",
+  "passed": true,
+  "observed": "dup\ndup"
+ },
+ {
+  "id": "t05",
+  "kind": "trap",
+  "passed": true,
+  "observed": "<b>bold</b> <i>x</i>"
+ },
+ {
+  "id": "t06",
+  "kind": "trap",
+  "passed": true,
+  "observed": "Tom & Jerry: \"2:30\" 'ok' <3 &amp; ñ ☕"
+ },
+ {
+  "id": "t07",
+  "kind": "trap",
+  "passed": false,
+  "observed": "A\nYou have yet to complete any tasks."
+ },
+ {
+  "id": "t08",
+  "kind": "trap",
+  "passed": true,
+  "observed": "Pay rent"
+ }
+]

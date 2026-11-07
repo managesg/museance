@@ -19,8 +19,8 @@ def build(app, pile_dir):
         ev = {"id": f"e{i:03d}", "app": app, **{k: it[k] for k in ("tier", "kind", "source", "license")}}
         if "text" in it:
             ev["text"] = it["text"]
-        else:
-            ev["path"] = str((pile_dir / it["path"]).relative_to(ROOT)).replace("\\", "/")
+        if "path" in it:
+            ev["path"] = str((pile_dir / it["path"]).resolve().relative_to(ROOT)).replace("\\", "/")
         out.append(ev)
     return out
 

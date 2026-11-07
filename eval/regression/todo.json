@@ -1,0 +1,287 @@
+{
+ "app": "todo",
+ "original": "runs/todo/original/index.html (themaxsandelin/todo, MIT; observed in Playwright Chromium, 3 runs each, identical)",
+ "good": [
+  {
+   "id": "g01",
+   "app": "todo",
+   "screen": "add",
+   "text": "clicking add puts the typed task in the todo list",
+   "steps": [
+    "type:#item:Buy milk",
+    "click:#add"
+   ],
+   "observe": "#todo",
+   "expect": "Buy milk"
+  },
+  {
+   "id": "g02",
+   "app": "todo",
+   "screen": "add",
+   "text": "pressing Enter in the input adds the task",
+   "steps": [
+    "type:#item:Buy milk",
+    "key:Enter"
+   ],
+   "observe": "#todo",
+   "expect": "Buy milk"
+  },
+  {
+   "id": "g03",
+   "app": "todo",
+   "screen": "add",
+   "text": "newest task is listed first",
+   "steps": [
+    "type:#item:Buy milk",
+    "click:#add",
+    "type:#item:Walk dog",
+    "click:#add"
+   ],
+   "observe": "#todo",
+   "expect": "Walk dog\nBuy milk"
+  },
+  {
+   "id": "g04",
+   "app": "todo",
+   "screen": "add",
+   "text": "three tasks are listed newest first",
+   "steps": [
+    "type:#item:A",
+    "click:#add",
+    "type:#item:B",
+    "click:#add",
+    "type:#item:C",
+    "click:#add"
+   ],
+   "observe": "#todo",
+   "expect": "C\nB\nA"
+  },
+  {
+   "id": "g05",
+   "app": "todo",
+   "screen": "complete",
+   "text": "completing a task moves it to the completed list",
+   "steps": [
+    "type:#item:Buy milk",
+    "click:#add",
+    "click:#todo li .complete"
+   ],
+   "observe": "#completed",
+   "expect": "Buy milk"
+  },
+  {
+   "id": "g06",
+   "app": "todo",
+   "screen": "complete",
+   "text": "completing a task takes it out of the todo list (the other stays)",
+   "steps": [
+    "type:#item:A",
+    "click:#add",
+    "type:#item:B",
+    "click:#add",
+    "click:#todo li .complete"
+   ],
+   "observe": "#todo",
+   "expect": "A"
+  },
+  {
+   "id": "g07",
+   "app": "todo",
+   "screen": "complete",
+   "text": "completed list shows the newest completed task first",
+   "steps": [
+    "type:#item:A",
+    "click:#add",
+    "type:#item:B",
+    "click:#add",
+    "click:#todo li .complete",
+    "click:#todo li .complete"
+   ],
+   "observe": "#completed",
+   "expect": "A\nB"
+  },
+  {
+   "id": "g08",
+   "app": "todo",
+   "screen": "complete",
+   "text": "completing again un-completes: task returns to todo",
+   "steps": [
+    "type:#item:Buy milk",
+    "click:#add",
+    "click:#todo li .complete",
+    "click:#completed li .complete"
+   ],
+   "observe": "#todo",
+   "expect": "Buy milk"
+  },
+  {
+   "id": "g09",
+   "app": "todo",
+   "screen": "remove",
+   "text": "remove deletes a task from the todo list",
+   "steps": [
+    "type:#item:A",
+    "click:#add",
+    "type:#item:B",
+    "click:#add",
+    "click:#todo li .remove"
+   ],
+   "observe": "#todo",
+   "expect": "A"
+  },
+  {
+   "id": "g10",
+   "app": "todo",
+   "screen": "remove",
+   "text": "remove deletes a task from the completed list",
+   "steps": [
+    "type:#item:A",
+    "click:#add",
+    "type:#item:B",
+    "click:#add",
+    "click:#todo li .complete",
+    "click:#todo li .complete",
+    "click:#completed li .remove"
+   ],
+   "observe": "#completed",
+   "expect": "B"
+  },
+  {
+   "id": "g11",
+   "app": "todo",
+   "screen": "add",
+   "text": "clicking add a second time on the now-empty input adds nothing more",
+   "steps": [
+    "type:#item:Buy milk",
+    "click:#add",
+    "click:#add"
+   ],
+   "observe": "#todo",
+   "expect": "Buy milk"
+  },
+  {
+   "id": "g12",
+   "app": "todo",
+   "screen": "remove",
+   "text": "deleting the last task then adding another works",
+   "steps": [
+    "type:#item:A",
+    "click:#add",
+    "click:#todo li .remove",
+    "type:#item:B",
+    "click:#add"
+   ],
+   "observe": "#todo",
+   "expect": "B"
+  }
+ ],
+ "traps": [
+  {
+   "id": "t01",
+   "app": "todo",
+   "screen": "add",
+   "text": "clicking add with an empty input adds no blank task",
+   "steps": [
+    "type:#item:A",
+    "click:#add",
+    "click:#add",
+    "type:#item:B",
+    "click:#add"
+   ],
+   "observe": "#todo li:nth-child(2)",
+   "expect": "A"
+  },
+  {
+   "id": "t02",
+   "app": "todo",
+   "screen": "add",
+   "text": "a whitespace-only task is accepted as a (blank) task",
+   "steps": [
+    "type:#item:   ",
+    "click:#add",
+    "type:#item:B",
+    "click:#add"
+   ],
+   "observe": "#todo li:nth-child(2)",
+   "expect": ""
+  },
+  {
+   "id": "t03",
+   "app": "todo",
+   "screen": "add",
+   "text": "a 300+ character task is kept whole, no truncation",
+   "steps": [
+    "type:#item:Remember to water the plants and feed the cat water the plants and feed the cat water the plants and feed the cat water the plants and feed the cat water the plants and feed the cat water the plants and feed the cat water the plants and feed the cat water the plants and feed the cat water the plants and feed the cat end",
+    "click:#add"
+   ],
+   "observe": "#todo",
+   "expect": "Remember to water the plants and feed the cat water the plants and feed the cat water the plants and feed the cat water the plants and feed the cat water the plants and feed the cat water the plants and feed the cat water the plants and feed the cat water the plants and feed the cat water the plants and feed the cat end"
+  },
+  {
+   "id": "t04",
+   "app": "todo",
+   "screen": "add",
+   "text": "duplicate tasks are both kept",
+   "steps": [
+    "type:#item:dup",
+    "click:#add",
+    "type:#item:dup",
+    "click:#add"
+   ],
+   "observe": "#todo",
+   "expect": "dup\ndup"
+  },
+  {
+   "id": "t05",
+   "app": "todo",
+   "screen": "add",
+   "text": "HTML in a task is shown as literal text, not rendered",
+   "steps": [
+    "type:#item:<b>bold</b> <i>x</i>",
+    "click:#add"
+   ],
+   "observe": "#todo",
+   "expect": "<b>bold</b> <i>x</i>"
+  },
+  {
+   "id": "t06",
+   "app": "todo",
+   "screen": "add",
+   "text": "special characters, quotes and colons survive intact",
+   "steps": [
+    "type:#item:Tom & Jerry: \"2:30\" 'ok' <3 &amp; ñ ☕",
+    "click:#add"
+   ],
+   "observe": "#todo",
+   "expect": "Tom & Jerry: \"2:30\" 'ok' <3 &amp; ñ ☕"
+  },
+  {
+   "id": "t07",
+   "app": "todo",
+   "screen": "remove",
+   "text": "complete then delete leaves the other task only",
+   "steps": [
+    "type:#item:A",
+    "click:#add",
+    "type:#item:B",
+    "click:#add",
+    "click:#todo li .complete",
+    "click:#completed li .remove"
+   ],
+   "observe": "body",
+   "expect": "A"
+  },
+  {
+   "id": "t08",
+   "app": "todo",
+   "screen": "add",
+   "text": "NumpadEnter adds a task like Enter",
+   "steps": [
+    "type:#item:Pay rent",
+    "key:NumpadEnter"
+   ],
+   "observe": "#todo",
+   "expect": "Pay rent"
+  }
+ ]
+}

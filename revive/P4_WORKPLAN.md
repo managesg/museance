@@ -25,6 +25,8 @@ No Gemini. Author and reviewer must be different vendors.
 
 Status 12:28: L1 done (delivered 3:15 PM ET). T1 done: builder merged (main ccaf0a3); first Codex revival 18/20 (fails t01 rounding, t04). Work runs LOCAL first; the box only for heavy jobs (court browser runs, Docker, many agents).
 
+Status 12:50: DONE T1 builder, T2 pipeline, T3 seal, T4 repair (first real repair 18->19/20), T7 case counts, T10 METRICS.md. RUNNING: PR #4/#5 review+merge, T5 todo regression set, T9 Muse builder. NEXT (queue order): T11a copy runs/<app>/regression-result.json and repairs.jsonl into cases/<app>/ so every METRICS.md number cites a committed file; T5b todo revival once Roshni's sheet.json lands (or from her pile if the reader is blocked); T6 todo end to end with P1 court at 13:30; T8 zero-false-strike on todo via P1 court; README P4 section + CREDITS (todo app MIT, themaxsandelin).
+
 ## Task queue (do in order; each has a done-check)
 | ID | By | Task | Agent | Done when |
 |---|---|---|---|---|

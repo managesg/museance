@@ -133,7 +133,7 @@ def main():
     ap.add_argument("--verdicts", required=True)
     ap.add_argument("--claim", required=True, help="id of the struck claim")
     ap.add_argument("--html", required=True, help="current revival html")
-    ap.add_argument("--builder", choices=["codex", "claude", "glm"], required=True)
+    ap.add_argument("--builder", choices=["codex", "claude", "glm", "muse"], required=True)
     ap.add_argument("--checks", default=str(CHECKS))
     ap.add_argument("--out", help="default: revival.v2.html next to --html")
     ap.add_argument("--log", help="default: runs/<app>/repairs.jsonl")

@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from revive.build import build, builder_command, check_selectors, extract_html, make_prompt
+from revive.build import build, builder_command, check_selectors, extract_html, make_prompt, run_builder
 from revive.check_revival import check_revival
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -62,6 +62,27 @@ def test_cli_commands():
     assert builder_command("codex") == ["codex", "exec", "-s", "read-only", "--skip-git-repo-check", "--ephemeral", "-"]
     assert builder_command("claude") == ["claude", "-p", "--output-format", "text", "--permission-mode", "plan"]
     assert builder_command("glm")[0] == str(Path.home() / ".local/bin/glm")
+
+
+def test_run_builder_resolves_executable_on_path():
+    seen = []
+    with patch("revive.build.shutil.which", return_value="C:/npm/codex.cmd"),             patch("revive.build.subprocess.run", side_effect=lambda c, **k: seen.append(c) or subprocess.CompletedProcess(c, 0, "ok", "")):
+        assert run_builder("codex", "p") == "ok"
+    assert seen[0][0] == "C:/npm/codex.cmd" and seen[0][1] == "exec"
+
+
+def test_muse_builder_command_uses_prompt_file_and_no_tools():
+    seen = {}
+
+    def fake(c, **k):
+        seen.update(cmd=c, input=k["input"], env=k["env"], prompt=(Path(k["cwd"]) / "prompt.txt").read_text(encoding="utf-8"))
+        return subprocess.CompletedProcess(c, 0, "ok", "")
+    with patch("revive.build.shutil.which", return_value="C:/muse/muse.cmd"), patch("revive.build.subprocess.run", side_effect=fake):
+        assert run_builder("muse", "the prompt") == "ok"
+    cmd = seen["cmd"]
+    assert cmd[:2] == ["C:/muse/muse.cmd", "exec"] and cmd[-2:] == ["--prompt-file", "prompt.txt"]
+    assert {"--disable-shell", "--disable-write"} <= set(cmd) and not {"--yolo", "--disable-approval", "--disable-sandbox"} & set(cmd)
+    assert seen["input"] is None and seen["prompt"] == "the prompt" and seen["env"]["TMPDIR"] != seen["env"].get("PWD")
 
 
 def test_build_isolated_and_validated(tmp_path):

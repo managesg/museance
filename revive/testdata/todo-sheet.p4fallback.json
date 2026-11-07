@@ -1,0 +1,213 @@
+{
+  "app": "todo",
+  "source": "P4 FALLBACK sheet (revive/pile_sheet.py, Codex reader over the evidence pile and screenshots). Replace with P2's sheet.json when it lands. Citation e<i> = pile.json item i.",
+  "lines": [
+    {
+      "id": "l01",
+      "screen": "add",
+      "text": "Typing 'Buy milk' and clicking Add puts 'Buy milk' in the todo list, leaves the completed list empty, and clears the input.",
+      "label": "SEEN",
+      "citations": [
+        "e42"
+      ],
+      "conflicts": []
+    },
+    {
+      "id": "l02",
+      "screen": "add",
+      "text": "Typing 'Walk dog' and pressing Enter puts 'Walk dog' in the todo list, leaves the completed list empty, and clears the input.",
+      "label": "SEEN",
+      "citations": [
+        "e43"
+      ],
+      "conflicts": []
+    },
+    {
+      "id": "l03",
+      "screen": "add",
+      "text": "Adding 'Buy milk' followed by 'Walk dog' displays todo items top to bottom as 'Walk dog', 'Buy milk', with the completed list empty.",
+      "label": "SEEN",
+      "citations": [
+        "e44"
+      ],
+      "conflicts": []
+    },
+    {
+      "id": "l04",
+      "screen": "complete",
+      "text": "Clicking the completion button on the sole todo 'Buy milk' empties the todo list and puts 'Buy milk' in the completed list.",
+      "label": "SEEN",
+      "citations": [
+        "e45"
+      ],
+      "conflicts": []
+    },
+    {
+      "id": "l05",
+      "screen": "complete",
+      "text": "Completing multiple tasks probably places the most recently completed task first in the completed list and removes each from the todo list.",
+      "label": "GUESSED",
+      "citations": [
+        "e44",
+        "e45"
+      ],
+      "conflicts": []
+    },
+    {
+      "id": "l06",
+      "screen": "complete",
+      "text": "Clicking a completed task's completion button probably removes it from the completed list and places it first in the todo list.",
+      "label": "GUESSED",
+      "citations": [
+        "e19",
+        "e44",
+        "e45"
+      ],
+      "conflicts": []
+    },
+    {
+      "id": "l07",
+      "screen": "remove",
+      "text": "Clicking the first todo's remove button in the list 'Walk dog', 'Buy milk' leaves only 'Buy milk' in todo and leaves completed empty.",
+      "label": "SEEN",
+      "citations": [
+        "e46"
+      ],
+      "conflicts": []
+    },
+    {
+      "id": "l08",
+      "screen": "remove",
+      "text": "Clicking a completed task's trash button probably removes it from completed without changing todo.",
+      "label": "GUESSED",
+      "citations": [
+        "e45",
+        "e46"
+      ],
+      "conflicts": []
+    },
+    {
+      "id": "l09",
+      "screen": "add",
+      "text": "Clicking Add with an empty input leaves both lists empty in the captured test.",
+      "label": "SEEN",
+      "citations": [
+        "e47",
+        "e6"
+      ],
+      "conflicts": [
+        "e6 reports that empty tasks can be created."
+      ]
+    },
+    {
+      "id": "l10",
+      "screen": "add",
+      "text": "Adding identical task text allows duplicate todo entries while completed remains empty, as reported in the duplicate-handling issue.",
+      "label": "SEEN",
+      "citations": [
+        "e2"
+      ],
+      "conflicts": []
+    },
+    {
+      "id": "l11",
+      "screen": "add",
+      "text": "Long task text probably wraps within its todo row while leaving the completed list unchanged.",
+      "label": "GUESSED",
+      "citations": [
+        "e36"
+      ],
+      "conflicts": []
+    },
+    {
+      "id": "l12",
+      "screen": "add",
+      "text": "HTML and special characters probably appear literally as task text in todo while leaving completed unchanged.",
+      "label": "GUESSED",
+      "citations": [
+        "e42"
+      ],
+      "conflicts": []
+    },
+    {
+      "id": "l13",
+      "screen": "add",
+      "text": "Numpad Enter probably adds the input text to todo and leaves completed unchanged.",
+      "label": "GUESSED",
+      "citations": [
+        "e35",
+        "e43"
+      ],
+      "conflicts": []
+    },
+    {
+      "id": "l14",
+      "screen": "add",
+      "text": "Submitting whitespace-only input probably creates a visually blank todo row while leaving completed unchanged.",
+      "label": "GUESSED",
+      "citations": [
+        "e5",
+        "e6",
+        "e47"
+      ],
+      "conflicts": []
+    },
+    {
+      "id": "l15",
+      "screen": "layout",
+      "text": "The teal header contains an input with placeholder 'Enter an activity..' and a white circular icon-only Add button whose plus is drawn graphics, with no text label or glyph characters.",
+      "label": "SEEN",
+      "citations": [
+        "e41",
+        "e42"
+      ],
+      "conflicts": []
+    },
+    {
+      "id": "l16",
+      "screen": "layout",
+      "text": "Each task row has icon-only trash and circular-check buttons on the right, drawn as graphics with no text labels or glyph characters in the item text.",
+      "label": "SEEN",
+      "citations": [
+        "e44",
+        "e45"
+      ],
+      "conflicts": []
+    },
+    {
+      "id": "l17",
+      "screen": "layout",
+      "text": "Todo rows show an outlined teal completion circle, while completed rows show a filled teal circle with a white check.",
+      "label": "SEEN",
+      "citations": [
+        "e42",
+        "e45"
+      ],
+      "conflicts": []
+    },
+    {
+      "id": "l18",
+      "screen": "layout",
+      "text": "The todo section appears above the completed section with a short horizontal divider between them.",
+      "label": "SEEN",
+      "citations": [
+        "e41",
+        "e44",
+        "e45"
+      ],
+      "conflicts": []
+    },
+    {
+      "id": "l19",
+      "screen": "layout",
+      "text": "An empty todo list displays 'You have nothing to-do!' and an empty completed list displays 'You have yet to complete any tasks.'.",
+      "label": "SEEN",
+      "citations": [
+        "e41",
+        "e42",
+        "e45"
+      ],
+      "conflicts": []
+    }
+  ]
+}
