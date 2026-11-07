@@ -117,8 +117,12 @@ function type(win: Win, el: Element, text: string) {
   el.dispatchEvent(new win.Event('change', { bubbles: true }));
 }
 
+// Two frames replaying at once steal focus from each other, so a key goes where this page's last press or typing was, as in Playwright's own page.
+const lastTouched = new WeakMap<Document, Element>();
+
 function key(win: Win, doc: Document, name: string) {
-  const el = doc.activeElement ?? doc.body ?? doc.documentElement;
+  const active = doc.activeElement && doc.activeElement !== doc.body ? doc.activeElement : null;
+  const el = active ?? lastTouched.get(doc) ?? doc.body ?? doc.documentElement;
   const keyCode = KEY_CODES[name] ?? (name.length === 1 ? name.toUpperCase().charCodeAt(0) : 0);
   const code = /^[a-z]$/i.test(name) ? `Key${name.toUpperCase()}` : /^\d$/.test(name) ? `Digit${name}` : name === ' ' ? 'Space' : name;
   const init = { key: name, code, keyCode, which: keyCode, bubbles: true, cancelable: true, composed: true, view: win };
@@ -147,9 +151,15 @@ export async function runSteps(
     opts.onStep?.(i, steps[i]);
     if (step.kind === 'click') {
       const el = find(doc, step.arg);
+      lastTouched.set(doc, el);
       click(win, el);
       if (delay > 0) pressFor(el, Math.min(260, delay * 0.8));
-    } else if (step.kind === 'type') type(win, find(doc, step.arg), step.text);
+    } else if (step.kind === 'type') {
+      const el = find(doc, step.arg);
+      lastTouched.set(doc, el);
+      type(win, el, step.text);
+      if (delay > 0) pressFor(el, Math.min(400, delay));
+    }
     else if (step.kind === 'key') key(win, doc, step.arg);
     else await sleep(Number(step.arg));
     // Always yield a task between steps so framework renders land before the next press, as with real input.

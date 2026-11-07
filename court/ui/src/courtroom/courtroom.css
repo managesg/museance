@@ -1,0 +1,253 @@
+/* The courtroom seen from the gallery: teal wall, sand floor in perspective, walnut bench, two angled witness stands. */
+.cr {
+  --stand-tilt: 5deg;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100vh;
+  background:
+    linear-gradient(to bottom, transparent 62%, var(--wall-deep) 62%, var(--wall-deep) calc(62% + 10px), transparent calc(62% + 10px)),
+    var(--wall);
+  color: var(--ink);
+  font: 20px/1.35 var(--font-ui);
+  overflow: hidden;
+}
+
+/* Header band: the wordmark, one line of what this is, and choice 1 (the app). */
+.cr-top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-3) var(--space-6);
+  background: var(--wood);
+  color: var(--paper);
+  box-shadow: 0 4px 12px rgb(43 33 28 / 0.35);
+  position: relative;
+  z-index: 2;
+}
+.cr-mark { margin: 0; font: 700 44px/1 var(--font-masthead); color: var(--wax); }
+.cr-tag { margin: 0; flex: 1 1 auto; min-width: 0; font-size: 20px; color: var(--paper-deep); }
+.cr-apps { display: flex; gap: var(--space-3); align-items: center; }
+.cr-app {
+  display: inline-flex; align-items: baseline; gap: var(--space-2);
+  min-height: 44px; padding: 8px 18px; box-sizing: border-box;
+  border: 1px solid var(--brass); border-radius: 6px;
+  color: var(--wax); text-decoration: none; font: 700 20px/1.3 var(--font-ui);
+}
+.cr-app:hover { background: var(--wood-light); }
+.cr-app[aria-current] { background: var(--brass); color: var(--ink); }
+.cr-app.is-off { border-style: dashed; border-color: var(--paper-deep); color: var(--paper-deep); cursor: not-allowed; }
+.cr-app small { font-size: 18px; font-weight: 400; }
+
+/* The room: stands either side, the bench in the middle, on a floor that recedes. */
+.cr-room {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(520px, 620px) minmax(0, 1fr);
+  gap: var(--space-6);
+  padding: var(--space-5) var(--space-6) var(--space-4);
+  min-height: 0;
+  perspective: 1800px;
+  perspective-origin: 50% 20%;
+}
+.cr-room::before {
+  content: '';
+  position: absolute;
+  inset: auto -20% -6% -20%;
+  height: 58%;
+  background: repeating-linear-gradient(90deg, var(--floor) 0 136px, var(--floor-shadow) 136px 139px);
+  transform: rotateX(64deg);
+  transform-origin: 50% 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Witness stands: a frame on a walnut rail, turned gently toward the bench. */
+.cr-stand {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  min-width: 0;
+  min-height: 0;
+  transform-style: preserve-3d;
+  transition: transform var(--dur-flicker) var(--ease-out-expo);
+}
+.cr-stand--original { transform: rotateY(var(--stand-tilt)); transform-origin: 0 50%; }
+.cr-stand--revival { transform: rotateY(calc(-1 * var(--stand-tilt))); transform-origin: 100% 50%; }
+.cr-stand.is-recording { transform: rotateY(0deg); }
+.cr-stand__name {
+  display: flex; align-items: baseline; gap: var(--space-3);
+  margin: 0 0 var(--space-2);
+  font: 400 30px/1.1 var(--font-stamp);
+  color: var(--wax);
+}
+.cr-stand__rec {
+  font: 700 18px/1.2 var(--font-ui); color: var(--ink);
+  background: var(--flame-core); padding: 4px 10px; border-radius: 4px;
+}
+.cr-stand__box {
+  --s: 1;
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  background: var(--paper);
+  border: 10px solid var(--wood);
+  border-radius: 6px;
+  box-shadow: 0 18px 30px rgb(43 33 28 / 0.35);
+  overflow: hidden;
+}
+.cr-stand.is-recording .cr-stand__box { border-color: var(--brass); }
+.cr-stand__box iframe {
+  position: absolute; top: 0; left: 0;
+  width: calc(100% / var(--s)); height: calc(100% / var(--s));
+  transform: scale(var(--s)); transform-origin: 0 0;
+  border: 0; background: #fff;
+}
+.cr-stand__rail {
+  margin-top: -2px;
+  padding: var(--space-3) var(--space-4);
+  background: linear-gradient(var(--wood-light), var(--wood));
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 10px 18px rgb(43 33 28 / 0.3);
+}
+.cr-out {
+  margin: 0;
+  min-height: 2.7em;
+  padding: var(--space-2) var(--space-3);
+  background: var(--paper);
+  border-radius: 4px;
+  font: 700 22px/1.25 var(--font-doc);
+  overflow-wrap: anywhere;
+}
+.cr-out small { display: block; font: 400 18px/1.2 var(--font-ui); color: var(--wood); }
+.cr-out.is-empty { color: var(--wood); font: 400 20px/1.3 var(--font-ui); }
+.cr-out.is-diff { background: var(--flame-core); outline: 3px solid var(--terracotta-deep); }
+
+/* The bench: the ruling, big and plain, with one sentence of why. */
+.cr-mid {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-height: 0;
+}
+.cr-bench {
+  padding: var(--space-4) var(--space-5) var(--space-5);
+  background: linear-gradient(var(--wood-light), var(--wood) 70%);
+  color: var(--wax);
+  border-radius: 10px 10px 4px 4px;
+  border-top: 6px solid var(--brass);
+  box-shadow: 0 16px 28px rgb(43 33 28 / 0.4);
+  text-align: center;
+  transform: translateZ(30px);
+}
+.cr-bench__word {
+  margin: 0;
+  font: 400 64px/1.05 var(--font-stamp);
+  letter-spacing: 0.02em;
+  color: var(--wax);
+}
+.cr-bench--locked .cr-bench__word,
+.cr-bench--match .cr-bench__word { color: var(--flame-core); }
+.cr-bench--perjury .cr-bench__word,
+.cr-bench--mismatch .cr-bench__word,
+.cr-bench--fabricated .cr-bench__word { color: #FFB4A6; }
+.cr-bench--unsworn .cr-bench__word,
+.cr-bench--no-ruling .cr-bench__word { color: var(--ghost-shade); }
+.cr-bench--on-the-stand .cr-bench__word,
+.cr-bench--the-court-is-ruling .cr-bench__word,
+.cr-bench--your-witness .cr-bench__word { font-size: 44px; }
+.cr-bench__why { margin: var(--space-3) 0 0; font-size: 22px; line-height: 1.35; color: var(--paper); }
+.cr-bench__note { margin: var(--space-2) 0 0; font-size: 18px; color: var(--paper-deep); }
+
+/* One small narrator reacts in one line. */
+.cr-narrator {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  background: var(--paper); border-radius: 8px;
+  box-shadow: 0 6px 14px rgb(43 33 28 / 0.25);
+}
+.cr-narrator__who { flex: 0 0 72px; height: 80px; }
+.cr-narrator__who > * { width: 100%; height: 100%; }
+.cr-narrator p { margin: 0; font-size: 20px; }
+.cr-narrator b { color: var(--wood); letter-spacing: 0.04em; margin-right: var(--space-2); }
+
+/* Choices 2 and 3. */
+.cr-choices { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.cr-btn {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  min-height: 76px; padding: var(--space-2) var(--space-3);
+  background: var(--paper); color: var(--ink);
+  border: 2px solid var(--ink); border-radius: 8px;
+  box-shadow: 0 6px 12px rgb(43 33 28 / 0.3);
+  font: 700 22px/1.15 var(--font-ui); cursor: pointer;
+  transition: transform var(--dur-fade) var(--ease-out-quart), box-shadow var(--dur-fade) var(--ease-out-quart);
+}
+.cr-btn small { font-weight: 400; font-size: 18px; color: var(--wood); }
+.cr-btn--main { background: var(--brass); }
+.cr-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 18px rgb(43 33 28 / 0.35); }
+.cr-btn:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 3px 6px rgb(43 33 28 / 0.3); }
+.cr-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.cr-btn:focus-visible { outline: 4px solid var(--flame-core); outline-offset: 3px; }
+
+/* The docket: one line per claim. */
+.cr-docket {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: var(--space-2);
+  list-style: none;
+  overflow: auto;
+  background: var(--paper);
+  border-radius: 8px;
+  box-shadow: 0 8px 16px rgb(43 33 28 / 0.25);
+}
+.cr-docket li {
+  display: grid;
+  grid-template-columns: 3.2em minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  align-items: baseline;
+  padding: 4px var(--space-2);
+  border-radius: 4px;
+  font-size: 18px;
+}
+.cr-docket li[aria-current] { background: var(--flame-core); }
+.cr-docket__id { font: 700 18px/1.3 var(--font-doc); color: var(--wood); }
+.cr-docket__text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cr-docket__status { font: 700 18px/1.3 var(--font-ui); color: var(--wood); }
+.cr-docket li.is-locked .cr-docket__status { color: var(--wall-deep); }
+.cr-docket li.is-perjury .cr-docket__status,
+.cr-docket li.is-fabricated .cr-docket__status { color: var(--crimson); }
+.cr-docket li.is-unsworn .cr-docket__status { color: var(--slate-deep); }
+
+/* Footer: three numbers and the closed case file. */
+.cr-foot {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  padding: var(--space-3) var(--space-6);
+  background: var(--wood);
+  color: var(--paper);
+}
+.cr-nums { display: flex; gap: var(--space-7); margin: 0; }
+.cr-nums div { display: flex; align-items: baseline; gap: var(--space-3); }
+.cr-nums dt { font-size: 20px; color: var(--paper-deep); }
+.cr-nums dd { margin: 0; font: 400 34px/1 var(--font-stamp); color: var(--wax); font-variant-numeric: tabular-nums; }
+.cr-file { margin-left: auto; font-size: 18px; max-width: 46%; }
+.cr-file summary { cursor: pointer; font-weight: 700; font-size: 20px; color: var(--wax); }
+.cr-file ul { margin: var(--space-2) 0 0; padding-left: 1.2em; }
+.cr-file a { color: var(--flame-core); text-underline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cr-stand, .cr-btn { transition: none; }
+}
+@media (max-width: 1100px) {
+  .cr { height: auto; min-height: 100vh; overflow: auto; }
+  .cr-room { grid-template-columns: minmax(0, 1fr); perspective: none; }
+  .cr-stand, .cr-stand--original, .cr-stand--revival { transform: none; min-height: 420px; }
+  .cr-top, .cr-foot { flex-wrap: wrap; }
+}

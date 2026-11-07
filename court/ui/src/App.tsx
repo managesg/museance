@@ -29,6 +29,7 @@ import { GUY_SLOTS, place, ZONES } from './stage/layout';
 import { Stage } from './stage/Stage';
 import { useKeyboard } from './stage/useKeyboard';
 import { CaseView } from './case/CaseView';
+import { CourtroomView } from './courtroom/CourtroomView';
 
 type Tag = NonNullable<ComponentProps<typeof ExhibitFrame>['output']>;
 
@@ -63,7 +64,8 @@ function tagsOf(v: Verdict): { original: Tag; revival: Tag } {
 }
 
 export default function App() {
-  return QUERY.get('view') === 'stage' ? <CourtStage /> : <CaseView />;
+  const view = QUERY.get('view');
+  return view === 'stage' ? <CourtStage /> : view === 'case' ? <CaseView /> : <CourtroomView />;
 }
 
 // The courtroom show, kept whole behind ?view=stage.
