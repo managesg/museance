@@ -165,3 +165,4 @@ def test_repair_cases_decisions():
     assert run_(stat(18, 0, 1)) == "rollback"
     assert run_(stat(19, 1, 1)) == "rollback"
     assert run_(stat(19, 0, 5)) == "unsworn"
+    assert run_({**stat(19, 0, 1), "flaky": 3}) == "rollback"  # fewer mismatches only because attacks went flaky

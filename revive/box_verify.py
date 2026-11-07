@@ -44,10 +44,11 @@ def verify(html_path, attacks_path, claims_path):
     rows = reg["rows"]
     att = [v for v in verdicts if v["kind"] == "attack"]
     bad = sum(1 for v in att if not v["match"] and not v["flaky"])
-    ok = sum(1 for v in att if v["match"])
+    ok = sum(1 for v in att if v["match"] and not v["flaky"])  # CONTRACTS: fidelity excludes flaky
+    flaky = sum(1 for v in att if v["flaky"])
     c = reg["counts"]
     return {"regression": sum(1 for r in rows if r["revival"] == r["expect"] and not r["flaky"]),
             "regression_of": len(rows), "false_strikes": c["false_strikes"], "traps_caught": c["traps_caught"],
-            "mismatches": bad, "attacks": len(att), "fidelity": round(100 * ok / (ok + bad)) if ok + bad else None,
+            "mismatches": bad, "flaky": flaky, "attacks": len(att), "fidelity": round(100 * ok / (ok + bad)) if ok + bad else None,
             "reg_rows": rows, "locks": {s: sum(1 for l in locks if l["status"] == s) for s in {l["status"] for l in locks}},
             "verdicts": verdicts}

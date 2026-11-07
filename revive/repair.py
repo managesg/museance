@@ -166,9 +166,9 @@ def repair_cases(app, attacks, verdicts, html, ask, verify, builder=None):
     if _ids(html) - _ids(new):
         return out("unsworn", "patch dropped element IDs: " + ", ".join(sorted(_ids(html) - _ids(new))))
     b, a = verify(html), verify(new)
-    if a["regression"] < b["regression"] or a["false_strikes"] > b["false_strikes"]:
+    if a["regression"] < b["regression"] or a["false_strikes"] > b["false_strikes"] or a.get("flaky", 0) > b.get("flaky", 0):
         return out("rollback", f"regression {b['regression']}->{a['regression']}, false strikes "
-                   f"{b['false_strikes']}->{a['false_strikes']}; old revival kept", b=b, a=a)
+                   f"{b['false_strikes']}->{a['false_strikes']}, flaky attacks {b.get('flaky', 0)}->{a.get('flaky', 0)}; old revival kept", b=b, a=a)
     if a["mismatches"] >= b["mismatches"]:
         return out("unsworn", f"attack mismatches did not fall ({b['mismatches']}->{a['mismatches']})", b=b, a=a)
     return out("patched", f"attack mismatches {b['mismatches']}->{a['mismatches']}, fidelity {b['fidelity']}->"
