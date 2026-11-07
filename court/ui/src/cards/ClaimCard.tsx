@@ -18,7 +18,7 @@ const STATUS_WORD: Record<CardStatus, string> = {
   'under-cross': 'under cross-examination',
   LOCKED: 'sworn and locked',
   STRUCK: 'struck for perjury',
-  UNSWORN: 'unsworn, the test was flaky',
+  UNSWORN: 'unsworn, the court could not rule',
   FABRICATED: 'fabricated',
 };
 
@@ -113,8 +113,6 @@ function FocusFront({ view }: { view: CardView }) {
       <dl className="cc__docket">
         <dt>EVIDENCE</dt>
         <dd className="cc__ids">{claim.evidence?.length ? claim.evidence.join(', ') : 'none'}</dd>
-        <dt>ORACLE</dt>
-        <dd>{claim.tier === 'A' ? 'yes' : 'no'}</dd>
         <dt className="cc__alarm">IF FALSE</dt>
         <dd>{guyName(claim.screen)} glitches</dd>
         {view.repairedFrom && (

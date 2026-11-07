@@ -14,7 +14,7 @@
   inset: 0;
   z-index: 60;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 500px;
+  grid-template-columns: minmax(0, 1fr) 530px;
   grid-template-rows: minmax(0, 1fr) auto;
   gap: 24px 36px;
   padding: 40px 64px 30px;
@@ -108,14 +108,14 @@
 .sn__body {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 380px;
-  gap: 36px;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 32px;
   min-height: 0;
 }
 
 /* pleading paper: numbered lines behind a double margin rule */
 .sn__yaml {
-  --size: clamp(20px, calc(720px / var(--rows) / 1.4), 25px);
+  --size: clamp(20px, calc(700px / var(--rows) / 1.4), 26px);
   position: relative;
   min-height: 0;
   margin: 0;
@@ -157,14 +157,15 @@
   text-align: right;
 }
 
-/* typed one character per step; Courier's fixed advance keeps each step a whole letter */
+/* typed one character per step (Courier's fixed advance keeps each step a whole letter); long entries wrap
+   under their own text, never cut, since the claim text is the record */
 .sn__typed {
   display: inline-block;
   max-width: 100%;
-  overflow: hidden;
+  padding-left: 6ch;
+  text-indent: -6ch;
   vertical-align: top;
-  white-space: pre;
-  text-overflow: ellipsis;
+  white-space: pre-wrap;
   animation: sn-type var(--d) steps(var(--n), end) var(--t) both;
 }
 
@@ -175,6 +176,7 @@
 .sn__note {
   color: var(--wood-light);
   font-weight: 400;
+  white-space: nowrap;
 }
 
 .sn__ln--struck {
@@ -204,7 +206,7 @@
   position: relative;
   display: grid;
   justify-items: center;
-  padding: 16px 36px 20px;
+  padding: 16px 30px 20px;
   color: var(--wall-deep);
   mix-blend-mode: multiply;
   transform: rotate(-6deg);
@@ -231,12 +233,13 @@
   display: flex;
   align-items: flex-start;
   font-family: var(--sn-stamp);
-  font-size: 190px;
+  font-size: 150px;
   line-height: 0.95;
 }
 
+/* three digits ("100") still fit the 340px column */
 .sn__fid--wide {
-  font-size: 150px;
+  font-size: 112px;
 }
 
 .sn__pct {
@@ -299,7 +302,7 @@
 
 .sn__num {
   font-family: var(--sn-stamp);
-  font-size: 46px;
+  font-size: 44px;
   line-height: 1.05;
 }
 

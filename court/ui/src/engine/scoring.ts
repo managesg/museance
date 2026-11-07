@@ -18,9 +18,10 @@ export function claimVerdicts(verdicts: Verdict[]): Map<string, Verdict> {
 /** null means the court has not ruled yet. */
 export function deriveLock(claim: Claim, verdict: Verdict | undefined): LockStatus | null {
   if (!verdict) return null;
-  // A FABRICATED label wins over every ruling except STRUCK, flaky runs included (court/bailiff.py).
-  if (verdict.flaky) return claim.label === 'FABRICATED' ? 'FABRICATED' : 'UNSWORN';
-  if (verdict.claim_true !== true) return 'STRUCK';
+  // A FABRICATED label wins over every ruling except STRUCK. A flaky run, or no claim_true (the original never
+  // loaded), is UNSWORN, never STRUCK (court/bailiff.py).
+  if (verdict.flaky || typeof verdict.claim_true !== 'boolean') return claim.label === 'FABRICATED' ? 'FABRICATED' : 'UNSWORN';
+  if (!verdict.claim_true) return 'STRUCK';
   return claim.label === 'FABRICATED' ? 'FABRICATED' : 'LOCKED';
 }
 

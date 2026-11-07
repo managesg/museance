@@ -183,6 +183,31 @@ describe('sentence moods', () => {
   });
 });
 
+describe('no perjury without a ruling the court can stand on', () => {
+  const withC03 = (patch: Partial<Verdict>) => (verdictsJson as Verdict[]).map((v) => (v.ref === 'c03' ? { ...v, ...patch } : v));
+  const c03Ruling = (b: CaseBundle) => {
+    const { script, states } = play(b);
+    return find(script, states, 'ruling', 'c03').s;
+  };
+
+  it('keeps a flaky c03 UNSWORN even when a stale lock table says STRUCK', () => {
+    const s = c03Ruling(bundle({ verdicts: withC03({ flaky: true }), locks: [{ claim_id: 'c03', status: 'STRUCK' }], repairs: [] }));
+    expect(s.cards[2].status).toBe('UNSWORN');
+    expect(s.banner).toBeNull();
+    expect(s.moods.faux).toBe('hidden');
+    expect(guy(s, 'divide')).not.toBe('glitch');
+    expect(s.scores.credibility).toBe(1000 + 10 + 18);
+    expect(s.subtitle?.text).toBe('Two runs, two answers. Unsworn. No credits move.');
+  });
+
+  it('makes a c03 the court could not judge (claim_true null) UNSWORN, and does not blame flakiness', () => {
+    const s = c03Ruling(bundle({ verdicts: withC03({ claim_true: null }), repairs: [] }));
+    expect(s.cards[2].status).toBe('UNSWORN');
+    expect(s.banner).toBeNull();
+    expect(s.subtitle?.text).toBe('The court could not rule. Unsworn. No credits move.');
+  });
+});
+
 describe('bench', () => {
   it('lands bench verdicts at the bench beat and counts them toward fidelity', () => {
     const v: Verdict = { ref: 'bench-1', kind: 'attack', original: '0.2', revival: '0.2', claim_true: null, match: true, flaky: false, shrunk_steps: [] };
@@ -235,5 +260,23 @@ describe('the shipped fixture bundle', () => {
     expect(end?.cards).toHaveLength(b.claims.length);
     expect(end?.scores.credibility).toBe(982);
     expect(end?.evidenceShown).toHaveLength(b.evidence.length);
+  });
+
+  it('shows the hand-computed numbers before and after the c03 repair, and nothing unmeasured', () => {
+    // credibility: 1000 + 10 (c01) + 18 (c02) - 60 (c03) + 7 (c04) + 7 (c05, fabricated but true) = 982; the repair refunds nothing.
+    // Brier over the five sworn claims: (.0025 + .01 + .36 + .0009 + .49) / 5 = .17268.
+    // fidelity: 3 of 5 match at the last ruling (60); c03r matches on the repaired build, so 4 of 5 after it (80).
+    const { script, states } = play(loadFixtureBundle());
+    expect(find(script, states, 'ruling', 'c05').s.scores).toMatchObject({ credibility: 982, fidelity: 60 });
+    const end = states.at(-1);
+    expect(end?.source).toBe('fixture');
+    expect(end?.scores).toMatchObject({
+      credibilityStart: 1000, credibility: 982, fidelity: 80, claimsMade: 5, claimsSurvived: 3,
+      struck: 1, unsworn: 0, fabricated: 1, rollbacks: 0, falseStrikes: null, trapsCaught: null,
+    });
+    expect(end?.scores.brier).toBeCloseTo(0.17268, 12);
+    expect(find(script, states, 'sentence').s.subtitle?.text).toBe('Fidelity 80. Credibility 982. Brier 0.173.');
+    // Credibility peaks at 1028 after c02, so no line may call the opening 1000 the peak.
+    expect(Math.max(...states.map((s) => s.scores.credibility))).toBe(1028);
   });
 });

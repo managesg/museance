@@ -61,7 +61,8 @@ export const APP1_REPAIRS: Repair[] = [
       tier: 'C', label: 'GUESSED', evidence: ['issue-008'], confidence: 0.74, bond: 50,
     },
     verdict: { ref: 'c03r', kind: 'claim', original: '0.12', revival: '0.12', claim_true: true, match: true, flaky: false, shrunk_steps: [] },
-    rollback: true,
+    // revive/repair.py: a rollback drops the patch and keeps the old build; this patch was kept (cases/app1/repairs.jsonl: patched).
+    rollback: false,
     note: 'rounds -> truncates',
   },
 ];

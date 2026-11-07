@@ -25,7 +25,8 @@ const LINES: Record<string, (c: LineCtx) => Subtitle> = {
   'dig:quip': (c) => mc(`${c.n} exhibits. I've won cases on less. Not many.`),
   'read:first': (c) => clerk(`The reader takes in ${c.words} words.`),
   'read:quip': (c) => mc(`${c.n} lines from ${c.words} words. I read the first one.`),
-  raise: (c) => mc(`Credibility ${c.start}. Savor it. This is the peak.`),
+  // No "this is the peak": a run of locks lifts credibility past the start (the fixture reaches 1028).
+  raise: (c) => mc(`Credibility ${c.start}. Savor it.`),
   risen: () => clerk('The revival is live.'),
 
   // One oath for the whole deal: a 900 ms card is too short to read a line per claim.
@@ -47,14 +48,17 @@ const LINES: Record<string, (c: LineCtx) => Subtitle> = {
     return mc(pick(i, `I said ${said}. It says ${was}. Minus ${bond}.`, `${was}, not ${said}. Minus ${bond}. Strike that. They did.`));
   },
   'ruling:FABRICATED': ({ verdict, delta }) =>
-    delta ? mc(`Made it up. It says ${clip(verdict?.original)} anyway. Plus ${delta}.`) : mc('Made it up. The court agrees. No credits move.'),
-  'ruling:UNSWORN': () => clerk('Two runs, two answers. Unsworn. No credits move.'),
+    delta ? mc(`Made it up. It says ${clip(verdict?.original)} anyway. Plus ${delta}.`) : mc('Made it up. No credits move.'),
+  // Flaky is one way to be unsworn; an original that never loaded, or no verdict at all, is another.
+  'ruling:UNSWORN': ({ verdict }) =>
+    clerk(verdict?.flaky ? 'Two runs, two answers. Unsworn. No credits move.' : 'The court could not rule. Unsworn. No credits move.'),
   'ruling:PENDING': (c) => clerk(`No verdict yet. Claim ${c.id} stays sealed.`),
 
   'attack:match': ({ id, verdict }) => hoot(`${id}: ${clip(verdict?.original)} and ${clip(verdict?.revival)}. Pity.`),
   'attack:mismatch': ({ id, verdict }) => hoot(`${id}: ${clip(verdict?.original)} against ${clip(verdict?.revival)}. Noted.`),
   'attack:flaky': (c) => hoot(`${c.id}: two answers. Discounted.`),
-  'attack:pending': (c) => hoot(`${c.id}: ${c.steps} steps. Watch.`),
+  // Nothing replays an attack on the exhibits, so there is nothing to watch.
+  'attack:pending': (c) => hoot(`${c.id}: ${c.steps} steps. No verdict yet.`),
 
   repair: ({ id, claim }) => clerk(`Claim ${id} narrowed: ${clip(claim?.text, 36)}.`),
   'repaired:LOCKED': ({ struck }) => mc(`Narrowed and locked. The ${struck?.bond ?? 0} I lost stays lost.`),

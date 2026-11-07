@@ -28,7 +28,7 @@
 
 .lb__row {
   display: grid;
-  grid-template-columns: 34px 84px minmax(0, 1fr) auto;
+  grid-template-columns: 34px 96px minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
   padding: 8px 0;
@@ -51,8 +51,8 @@
 
 .lb__avatar {
   display: block;
-  width: 84px;
-  height: 84px;
+  width: 96px;
+  height: 96px;
 }
 
 .lb__who {

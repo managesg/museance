@@ -1,7 +1,9 @@
 import { useId, type CSSProperties } from 'react';
-import type { CaseFile, LockStatus, Tier } from '../contracts';
+import type { CaseFile, Claim, LockStatus, Tier } from '../contracts';
 import type { CardView, LeaderRow, StageState } from '../engine/types';
 import { Leaderboard } from '../bets/Leaderboard';
+import { BOTS, STAKE } from '../engine/bets';
+import { loadFixtureBundle } from '../fixtures';
 import './sentence.css';
 
 type Group = 'struck' | 'locked' | 'fabricated' | 'unsworn';
@@ -19,7 +21,8 @@ const GROUPS: readonly (readonly [Group, LockStatus])[] = [
 
 const DASH = '—';
 const TYPE_START_MS = 420;
-const TYPE_BUDGET_MS = 2000; // the record types out in about this long however many lines it has
+const TYPE_BUDGET_MS = 1600; // the record types out in about this long however many lines it has
+const ROW_CHARS = 44; // characters per typed row at the largest size; long entries wrap onto more rows
 
 const PAPER =
   'M16 8C300 3 700 11 1100 5C1230 3 1330 8 1384 7Q1394 8 1393 19C1397 300 1391 700 1395 980Q1394 993 1382 992C1100 997 700 990 300 995C160 996 60 992 17 994Q7 993 7 982C3 700 9 300 5 19Q6 8 16 8Z';
@@ -38,37 +41,25 @@ const PUFFS = [
   [94, 16, 6],
 ] as const;
 
-const describe = ({ claim }: CardView) => `${claim.screen}: ${claim.text}`;
-const toEntry = (card: CardView): Entry => ({
-  id: card.claim.id,
-  tier: card.claim.tier,
-  text: describe(card),
-  note: card.repairedFrom && `repairs ${card.repairedFrom}`,
-});
+const claimEntry = (c: Claim, note?: string): Entry => ({ id: c.id, tier: c.tier, text: `${c.screen}: ${c.text}`, note });
+
+// shortcut: a repair replaces its struck card, so the struck claim's text is only reachable for the fixture bundle
+// (runs and atlas carry no repairs today); upgrade when CardView keeps the claim it repaired.
+const replacedClaim = (id: string, source: StageState['source']) =>
+  source === 'fixture' ? loadFixtureBundle().claims.find((c) => c.id === id) : undefined;
 
 const isLock = (s: CardView['status']): s is LockStatus => GROUPS.some(([, status]) => status === s);
 
-// eval/case_file.py writes each entry as "screen: text [tier]"; matching it back to its card recovers the claim id.
-function caseEntries(lines: string[], cards: CardView[]): Entry[] {
-  return lines.map((line) => {
-    const card = cards.find((c) => line === c.claim.id || line === `${describe(c)} [${c.claim.tier}]`);
-    return card ? toEntry(card) : { text: line };
+/** Every claim the stage can name, with its ruling. A repair takes over its struck card, but the strike stays on record. */
+function recordRows(cards: CardView[], source: StageState['source']): { status: CardView['status']; entry: Entry }[] {
+  const onStage = new Set(cards.map((c) => c.claim.id));
+  return cards.flatMap(({ claim, status, repairedFrom: id }) => {
+    const own = { status, entry: claimEntry(claim, id && `repairs ${id}`) };
+    if (!id || onStage.has(id)) return [own];
+    const note = `repaired as ${claim.id}`;
+    const struck = replacedClaim(id, source);
+    return [{ status: 'STRUCK' as const, entry: struck ? claimEntry(struck, note) : { id, note } }, own];
   });
-}
-
-function cardEntries(cards: CardView[], status: LockStatus): Entry[] {
-  const own = cards.filter((c) => c.status === status).map(toEntry);
-  if (status === 'STRUCK') {
-    // A repair takes over its struck card on stage, but the strike still stands in the record.
-    const onStage = new Set(cards.map((c) => c.claim.id));
-    const replaced = cards.flatMap((c) =>
-      c.repairedFrom && !onStage.has(c.repairedFrom) ? [{ id: c.repairedFrom, note: `repaired as ${c.claim.id}` }] : [],
-    );
-    return [...own, ...replaced];
-  }
-  // A claim with no ruling at sentencing is unsworn, as eval/score.py counts it.
-  if (status === 'UNSWORN') return [...own, ...cards.filter((c) => !isLock(c.status)).map((c) => ({ ...toEntry(c), note: 'no ruling' }))];
-  return own;
 }
 
 const keyLine = (key: string, value: string, tone?: Group): Line => ({ tone, segs: [['sn__k', `${key}: `], ['', value]] });
@@ -78,7 +69,8 @@ function entryLine({ id, tier, text, note }: Entry, tone: Group): Line {
   const segs: Seg[] = [['', '  - ']];
   if (id) segs.push(['sn__id', text === undefined ? id : `${id}: `]);
   if (text !== undefined) segs.push(['', JSON.stringify(tier ? `[${tier}] ${text}` : text)]);
-  if (note) segs.push(['sn__note', `  # ${note}`]);
+  // the note wraps as one piece, so a comment never splits from its #
+  if (note) segs.push(['', '  '], ['sn__note', `# ${note}`]);
   return { tone, segs };
 }
 
@@ -101,9 +93,17 @@ export function SentenceScreen({
   // state.scores already takes the case file's numbers once every claim is ruled, and re-measures after repairs
   // and bench runs, so the sheet agrees with the numbers bar and the clerk's subtitle.
   const { fidelity, brier, credibilityStart: start, credibility: end } = state.scores;
+  const record = recordRows(cards, state.source);
   const groups = GROUPS.map(([key, status]) => ({
     key,
-    list: caseFile ? caseEntries(caseFile[key], cards) : cardEntries(cards, status),
+    list: caseFile
+      ? // eval/case_file.py writes "screen: text [tier]"; matching a line back to a claim recovers its id
+        caseFile[key].map((line) => record.find(({ entry: e }) => line === e.id || line === `${e.text} [${e.tier}]`)?.entry ?? { text: line })
+      : [
+          ...record.filter((r) => r.status === status).map((r) => r.entry),
+          // a claim with no ruling at sentencing is unsworn, as eval/score.py counts it
+          ...(status === 'UNSWORN' ? record.filter((r) => !isLock(r.status)).map((r) => ({ ...r.entry, note: 'no ruling' })) : []),
+        ],
   }));
   const unsworn = groups.find((g) => g.key === 'unsworn')?.list.length ?? 0;
 
@@ -117,12 +117,13 @@ export function SentenceScreen({
     ]),
   ];
   const per = Math.min(9, TYPE_BUDGET_MS / Math.max(1, lines.reduce((sum, l) => sum + chars(l), 0)));
+  const rows = lines.reduce((sum, l) => sum + Math.max(1, Math.ceil(chars(l) / ROW_CHARS)), 0);
   let at = TYPE_START_MS;
   const typed = lines.map((line) => {
     const c = chars(line);
-    const start = at;
-    at += c * per + 40;
-    return { line, c, start, ms: c * per };
+    const from = at;
+    at += c * per + 30;
+    return { line, c, from, ms: c * per };
   });
 
   const delta = end - start;
@@ -146,12 +147,12 @@ export function SentenceScreen({
           <span className="sn__source">source: {state.source}</span>
         </header>
         <div className="sn__body">
-          <ol className="sn__yaml" style={{ '--rows': lines.length } as CSSProperties}>
-            {typed.map(({ line, c, start, ms }, i) => (
+          <ol className="sn__yaml" style={{ '--rows': rows } as CSSProperties}>
+            {typed.map(({ line, c, from, ms }, i) => (
               <li key={i} className={line.tone ? `sn__ln sn__ln--${line.tone}` : 'sn__ln'}>
                 <span
                   className="sn__typed"
-                  style={{ '--n': c, '--t': `${Math.round(start)}ms`, '--d': `${Math.round(ms)}ms` } as CSSProperties}
+                  style={{ '--n': c, '--t': `${Math.round(from)}ms`, '--d': `${Math.round(ms)}ms` } as CSSProperties}
                 >
                   {line.segs.map(([cls, text], j) => (cls ? <span key={j} className={cls}>{text}</span> : text))}
                 </span>
@@ -221,7 +222,9 @@ export function SentenceScreen({
             Top of the gallery
           </h3>
           <Leaderboard rows={podium} />
-          <p className="sn__prize">a real pastry for the top three</p>
+          <p className="sn__prize">
+            {BOTS.length} betting bots, {STAKE} credits a claim
+          </p>
         </aside>
       )}
 

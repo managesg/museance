@@ -1,0 +1,79 @@
+/* The Bailiff. No model in him: poses are plain transitions, and the only loops are a slow blink and the keys. */
+.bailiff {
+  overflow: visible; /* the glint and the swung keys may poke past the box */
+  --bailiff-deep: color-mix(in oklab, var(--slate-deep) 70%, var(--ink));
+  --bailiff-skin-deep: color-mix(in oklab, var(--owl-cream) 80%, var(--ink));
+  --bailiff-sheen: color-mix(in oklab, var(--penguin) 62%, var(--slate));
+}
+
+/* Pivots, in viewBox units */
+.bailiff-head { transform-origin: 190px 214px; }
+.bailiff-arm-r { transform-origin: 120px 250px; }
+.bailiff-arm-l { transform-origin: 260px 250px; }
+.bailiff-twist { transform-origin: 132px 345px; }
+.bailiff-plumb-arm,
+.bailiff-plumb-twist,
+.bailiff-ring-sway { transform-origin: 132px 355px; }
+.bailiff-lock-plumb { transform-origin: 244px 340px; }
+
+.bailiff-head,
+.bailiff-pupil,
+.bailiff-arm-r,
+.bailiff-arm-l,
+.bailiff-plumb-arm,
+.bailiff-lock-plumb { transition: transform 480ms var(--ease-out-expo); }
+.bailiff-twist,
+.bailiff-plumb-twist { transition: transform 260ms var(--ease-out-quart); }
+.bailiff-shackle { transform: translateY(-24px); transition: transform 240ms var(--ease-out-quart); }
+.bailiff-glint { opacity: 0; }
+
+/* idle: one very slow blink, the keys swaying on the ring */
+.bailiff--idle .bailiff-lid { animation: bailiff-blink 7.5s ease-in-out infinite; }
+.bailiff-ring-sway { animation: bailiff-sway 4.4s ease-in-out infinite alternate; }
+.bailiff-key { animation: bailiff-swing 3.1s ease-in-out infinite alternate; }
+.bailiff-key--2 { animation-duration: 2.6s; animation-delay: -1.3s; }
+.bailiff-key--3 { animation-duration: 3.5s; animation-delay: -0.6s; }
+
+/* locking: arms swing in, the fist turns the key a quarter, the shackle snaps shut, one glint */
+.bailiff--locking .bailiff-head { transform: translateY(2px) rotate(-3deg); }
+.bailiff--locking .bailiff-pupil { transform: translate(-1px, 3px); }
+.bailiff--locking .bailiff-arm-r { transform: rotate(-26deg); }
+.bailiff--locking .bailiff-plumb-arm { transform: rotate(26deg); }
+.bailiff--locking .bailiff-arm-l { transform: rotate(26deg); }
+.bailiff--locking .bailiff-lock-plumb { transform: rotate(-26deg); }
+.bailiff--locking :is(.bailiff-twist, .bailiff-plumb-twist) { transition: transform 340ms 520ms var(--ease-in-out-sine); }
+.bailiff--locking .bailiff-twist { transform: rotate(75deg); }
+.bailiff--locking .bailiff-plumb-twist { transform: rotate(-75deg); }
+.bailiff--locking .bailiff-shackle { transform: none; transition: transform 110ms 900ms var(--ease-in-quart); }
+.bailiff--locking .bailiff-ring-sway { animation: bailiff-jangle 1.5s 560ms ease-out both; }
+.bailiff--locking .bailiff-glint { animation: bailiff-glint 640ms 990ms ease-out both; }
+
+@keyframes bailiff-blink {
+  0%, 80%, 100% { transform: none; }
+  87%, 90% { transform: translateY(14px); }
+}
+@keyframes bailiff-sway {
+  from { transform: rotate(-2deg); }
+  to { transform: rotate(2deg); }
+}
+@keyframes bailiff-swing {
+  from { transform: rotate(-3deg); }
+  to { transform: rotate(3deg); }
+}
+@keyframes bailiff-jangle {
+  0%, 100% { transform: none; }
+  14% { transform: rotate(-8deg); }
+  32% { transform: rotate(6deg); }
+  52% { transform: rotate(-3.5deg); }
+  72% { transform: rotate(1.5deg); }
+}
+@keyframes bailiff-glint {
+  0% { opacity: 0; transform: scale(0.2) rotate(-45deg); }
+  30% { opacity: 1; transform: scale(1.15) rotate(0deg); }
+  100% { opacity: 0; transform: scale(0.7) rotate(30deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bailiff * { animation: none !important; transition: opacity 200ms ease-out !important; }
+  .bailiff--locking .bailiff-glint { opacity: 1; }
+}

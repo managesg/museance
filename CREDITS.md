@@ -6,3 +6,7 @@ Third-party apps, libraries and assets used, with license. Add a line when you a
 | Playwright for Python | Browser driver for the court and screenshots (`court/`) | Apache-2.0 | https://github.com/microsoft/playwright-python |
 | pytest | Test runner for `eval/`, `revive/`, `dig/` | MIT | https://github.com/pytest-dev/pytest |
 | themaxsandelin/todo | The dead app we revive; original build vendored as the oracle in apps/todo/original (never shown to revival builders) | MIT, (c) 2016 Max Sandelin | https://github.com/themaxsandelin/todo |
+| React, Vite, Vitest | Stage UI and its tests (`court/ui/`) | MIT | https://react.dev, https://vite.dev, https://vitest.dev |
+| MongoDB Node.js driver | Optional Atlas source in the stage feed (`court/ui/server/feed.ts`) | Apache-2.0 | https://github.com/mongodb/node-mongodb-native |
+| UnifrakturCook, Alfa Slab One, Courier Prime, Atkinson Hyperlegible (via Fontsource) | Stage typefaces (`court/ui/`) | SIL OFL 1.1 | https://fontsource.org |
+| SÉANCE cast and set art | SVG cast, set and avatars in `court/ui/src/cast/`, `court/ui/src/set/`, `court/ui/public/avatars/` | Ours: drawn today by P3's agents from Vi's reference illustration; avatars are renders of those SVGs | this repo |

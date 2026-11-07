@@ -39,6 +39,14 @@ describe('deriveLock', () => {
     expect(deriveLock(claim(), verdict({ flaky: true, claim_true: false, match: false }))).toBe('UNSWORN');
   });
 
+  it('makes a verdict the court could not judge (claim_true null) UNSWORN like court/bailiff.py, never STRUCK', () => {
+    const unjudged = verdict({ claim_true: null, match: false });
+    expect(deriveLock(claim(), unjudged)).toBe('UNSWORN');
+    expect(deriveLock(claim({ label: 'FABRICATED' }), unjudged)).toBe('FABRICATED');
+    const s = computeScores(bundle({ claims: [claim()], verdicts: [unjudged] }), { x: 'UNSWORN' });
+    expect(s).toMatchObject({ credibility: 1000, brier: null, unsworn: 1, struck: 0 });
+  });
+
   it('keeps a FABRICATED label through flaky runs but not through a strike', () => {
     const fab = claim({ label: 'FABRICATED' });
     expect(deriveLock(fab, verdict({ flaky: true }))).toBe('FABRICATED');

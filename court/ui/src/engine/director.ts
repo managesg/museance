@@ -235,8 +235,10 @@ export function buildScript(bundle: CaseBundle, bench: BenchRuns = NO_BENCH): Be
       subtitle: line('cross', null, { claim: c, i, n: bundle.claims.length }),
     }));
     const v = x.verdicts.get(c.id);
-    // P1's lock table wins over a status derived here.
-    const status = bundle.locks.find((l) => l.claim_id === c.id)?.status ?? deriveLock(c, v);
+    // P1's lock table wins over a status derived here, but a stale STRUCK never stamps PERJURY on a flaky or unjudged verdict.
+    const derived = deriveLock(c, v);
+    const locked = bundle.locks.find((l) => l.claim_id === c.id)?.status;
+    const status = locked === 'STRUCK' && v && derived !== 'STRUCK' ? derived : (locked ?? derived);
     add('cross', 'ruling', 2200, (s) => ruling(s, c, v ?? null, status), [
       ...take((e) => e.type === 'verdict' && hasRef(e, c.id), 1),
       ...take((e) => e.type === 'lock' && hasRef(e, c.id), 1),
