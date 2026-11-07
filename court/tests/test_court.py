@@ -70,7 +70,7 @@ def test_ledger_chain_and_tamper(tmp_path):
 
 def test_commit_hash_matches_p4_definition():
     import hashlib
-    obj = {"id": "a01", "steps": ["click:#k1"], "commit": "ignored"}
+    obj = {"id": "a01", "text": "7 × 8 ÷ 2 → 28", "steps": ["click:#k1"], "commit": "ignored"}
     body = {k: v for k, v in obj.items() if k != "commit"}
     want = hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     assert ledger.commit_hash(obj) == want

@@ -15,7 +15,7 @@ GENESIS = "0" * 64
 
 
 def canon(obj) -> str:
-    return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    return json.dumps(obj, sort_keys=True, separators=(",", ":"))  # == eval/commit.py (ensure_ascii default)
 
 
 def commit_hash(obj: dict) -> str:
