@@ -14,6 +14,7 @@ A list of strings, run in order in a browser on the app page:
 ## Objects
 | Object | Writer | File | Fields |
 |---|---|---|---|
+| app | P1 (original), P4 (revival) | `apps.json` | id, name, license, source, original {url, cmd, port}, revival {url, cmd, port}. The court runs every test on `original.url` and `revival.url`. |
 | evidence | P2 | `evidence.json` | id, app, tier (A/B/C/D), kind (page, screenshot, video, issue, doc), source, text or path, license |
 | behavior_sheet | P2 | `sheet.json` | app, lines[]: {id, screen, text, label SEEN/GUESSED, citations[], conflicts[]} |
 | claim | P2 (Medium) | `claims.json` | id, app, screen, text, test {steps, observe, expect}, tier, label SEEN/GUESSED/FABRICATED, evidence[], confidence (0-1), bond (int), commit |
@@ -27,7 +28,7 @@ A list of strings, run in order in a browser on the app page:
 - `claim_true` = the claim's test on the ORIGINAL returns `expect`. Feeds credibility and Brier.
 - `match` = original and revival give the same observed text. Feeds fidelity.
 - Each test runs twice per build; different results = `flaky: true` = UNSWORN, never STRUCK.
-- `commit` = sha256 of the object (without `commit`) written to the ledger before the court runs.
+- `commit` = sha256 of the object (without `commit`) written to the ledger before the court runs. Canonical form, every lane: `json.dumps(obj, sort_keys=True, separators=(",",":"), ensure_ascii=False).encode("utf-8")` (same as `court/ledger.py canon()` and `eval/commit.py`).
 
 ## Scoring (P4)
 - Credibility starts at 1000. STRUCK: lose `bond`. LOCKED: gain `round(bond * (1 - confidence))`.
