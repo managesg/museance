@@ -106,7 +106,7 @@ export function TryIt(p: {
       )}
       {found && found.targets.length === 0 && (
         <p className="tryit-error" role="alert">
-          Found no inputs or buttons with an id in the original. SÉANCE drives an app by #id selectors: give its controls ids, then reload.
+          Found no inputs or buttons with an id in the original. MUSÉANCE drives an app by #id selectors: give its controls ids, then reload.
         </p>
       )}
 

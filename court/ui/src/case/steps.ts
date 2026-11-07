@@ -14,6 +14,12 @@ export function stepText(step: string, label?: (sel: string) => string | null): 
     return l ? `click "${l}" (${sel})` : `click ${sel}`;
   }
   if (step.startsWith('key:')) return `press ${step.slice(4)}`;
+  if (step === 'reload') return 'reload the page';
+  const store = /^storage:([^=]+)=(.*)$/s.exec(step);
+  if (store) {
+    const [, key, value] = store;
+    return value.length <= 12 ? `set saved ${words(key).toLowerCase()} to ${value}` : `load a saved ${words(key).toLowerCase()}`;
+  }
   const wait = /^wait:(\d+(?:\.\d+)?)$/.exec(step);
   if (wait) return `wait ${Number(wait[1]) / 1000} s`;
   return step;

@@ -3,7 +3,7 @@
 python eval/demo_p4.py [--fast] [--live]
 
 Default is deterministic, offline, no model: every number is read from a committed file and labelled
-with it. --live re-runs the court (Playwright; COURT_BROWSER_CHANNEL=chrome uses installed Chrome) on v1
+with it. --live re-runs the court's regression set (Playwright; COURT_BROWSER_CHANNEL=chrome uses installed Chrome) on v1
 and v2 and prints the fresh numbers next to the committed ones; if that fails it says so and falls back.
 """
 import argparse, contextlib, hashlib, io, json, pathlib, subprocess, sys, tempfile, time
@@ -47,9 +47,8 @@ def seal_check():
 
 
 def live_court(html_path, tmp):
-    """Fresh court run of one revival: (regression passed, total, attack mismatches, attacks). Raises on any failure."""
-    from court import regression, serve
-    from court.court import judge
+    """Fresh court run of one revival on the regression set: (passed, total). Raises on any failure."""
+    from court import regression
     d = pathlib.Path(tmp) / html_path.stem
     d.mkdir()
     (d / "index.html").write_bytes(html_path.read_bytes())
@@ -57,11 +56,7 @@ def live_court(html_path, tmp):
     orig = ROOT / "apps/todo/original"
     regression.main([str(REG), "--original-dir", str(orig), "--revival-dir", str(d), "--out", str(rep)])
     rows = load(rep)["rows"]
-    attacks = [a for a in load(ATK) if a.get("app") == "todo"]
-    with serve.folder(str(orig)) as o, serve.folder(str(d)) as r:
-        verdicts, _ = judge([], attacks, o, r, str(d / "run"))
-    mism = sum(1 for v in verdicts if not v["match"] and not v["flaky"])
-    return sum(1 for r_ in rows if not r_["mismatch"]), len(rows), mism, len(attacks)
+    return sum(1 for r_ in rows if not r_["mismatch"]), len(rows)  # attacks (105 x 2 runs) take ~10 min per build: not live
 
 
 def main(argv=None):
@@ -81,7 +76,7 @@ def main(argv=None):
     BA, REGF, VERF = rel(C / "before_after.json"), rel(C / "todo/regression-result.json"), rel(C / "todo/verdicts.json")
     live = {}
     if a.live:
-        print("--live: re-running the court on v1 and v2 (about a minute)...", flush=True)
+        print("--live: re-running the court on v1 and v2 (regression set, about 2 min per build)...", flush=True)
         try:
             with tempfile.TemporaryDirectory() as tmp:
                 with contextlib.redirect_stdout(io.StringIO()):  # court is chatty
@@ -108,10 +103,9 @@ def main(argv=None):
         s.row("traps flagged (diverged)", f"{row['traps_flagged']}/{row['traps_of']}", BA)
         s.row("false strikes", f"{row['false_strikes']}/{row['false_strikes_of']}", BA)
         s.row("attack mismatches", f"{row['attack_mismatches']}/{len(load(SEAL)['attacks'])}", BA)
-        s.row("fidelity", row["fidelity"], BA)
+        s.row("fidelity (attacks only)", row["fidelity"], BA)
         if ver in live:
-            p, t, m, n_atk = live[ver]
-            s.row("LIVE court re-run", f"{p}/{t}, {m}/{n_atk} mism.", "court.regression + court.court, this machine")
+            s.row("LIVE regression re-run", "%d/%d" % live[ver], "court.regression on this machine")
 
     s.head("2a", "BASELINE: the original app against its own regression set")
     s.row("original regression passed", f"{sum(r['passed'] for r in orig)}/{len(orig)}", rel(C / "todo/original-regression-result.json"))
@@ -132,7 +126,8 @@ def main(argv=None):
 
     s.head(5, "FINAL NUMBERS")
     CF = rel(C / "todo.case.yml")
-    s.row("fidelity", f"{v1['fidelity']} -> {case['fidelity']}", f"{BA} / {CF}")
+    s.row("fidelity (attacks only)", f"{v1['fidelity']} -> {case['fidelity']}", f"{BA} / {CF}")
+    print("      (all-verdict fidelity per CONTRACTS.md, 105 attacks + 16 claims: 41 -> 100, as on the stage and in DEMO.md)")
     s.row("attack mismatches", f"{v1['attack_mismatches']} -> {v2['attack_mismatches']}", BA)
     s.row("regression", f"{v1['regression_passed']} -> {v2['regression_passed']} of {v2['regression_total']}", BA)
     s.row("claims locked / struck", f"{case['counts']['locked']} / {case['counts']['struck']} of {case['counts']['claims']}", CF)

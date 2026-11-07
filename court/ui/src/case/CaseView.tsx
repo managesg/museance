@@ -114,7 +114,7 @@ export function CaseView() {
   const badge = feed.status === 'live' ? 'live' : feed.source === 'fixture' ? 'fixture' : feed.status;
   const header = (
     <header className="case-head">
-      <h1 className="case-head__mark">SÉANCE</h1>
+      <h1 className="case-head__mark">MUSÉANCE</h1>
       {state && (
         <div className="case-play">
           <button type="button" className="case-play__btn" onClick={director.toggle}>
@@ -122,8 +122,8 @@ export function CaseView() {
           </button>
           {intro && (
             <p className="case-play__intro">
-              SÉANCE checks whether a <Explain term="revival">rebuilt app</Explain> really behaves like the dead{' '}
-              <Explain term="original">original</Explain>. Press Play.
+              MUSÉANCE checks whether a <Explain term="revival">rebuilt app</Explain> really behaves like the dead{' '}
+              <Explain term="original">original</Explain>.
             </p>
           )}
         </div>

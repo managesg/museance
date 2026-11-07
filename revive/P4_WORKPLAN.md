@@ -27,6 +27,8 @@ Status 12:28: L1 done (delivered 3:15 PM ET). T1 done: builder merged (main ccaf
 
 Status 12:50: DONE T1 builder, T2 pipeline, T3 seal, T4 repair (first real repair 18->19/20), T7 case counts, T10 METRICS.md. RUNNING: PR #4/#5 review+merge, T5 todo regression set, T9 Muse builder. NEXT (queue order): T11a copy runs/<app>/regression-result.json and repairs.jsonl into cases/<app>/ so every METRICS.md number cites a committed file; T5b todo revival once Roshni's sheet.json lands (or from her pile if the reader is blocked); T6 todo end to end with P1 court at 13:30; T8 zero-false-strike on todo via P1 court; README P4 section + CREDITS (todo app MIT, themaxsandelin).
 
+Status 15:12 (FINAL, freeze 15:30): ALL P4 tasks done on main. T1 builder · T2 fixture pipeline · T3 seal (verify OK) · T4 repair loop (rollback-safe, builder logged) · T5 todo regression 12 good + 8 traps from the running original + 105 attacks sealed · T5b todo revival (19/20) · T6 todo end to end through P1 court · T7 case counts · T8 zero false strikes 0/12 (app1 + todo) · T9 Muse builder + logged Muse repair of todo (68->0 mismatches, 20/20) · T10 METRICS.md + BEFORE_AFTER.md (measured only) · T11 DEMO.md + `python eval/demo_p4.py` replay (live mode verified on Chrome). Repairs: todo v1->v2 by Codex (fidelity 41->100 all verdicts; 35->100 attacks only) and independently by Muse; calculator 18->20/20 (c03, c05, t04). Known gap: app1 repairs c03/c05 have no machine-recorded builder (before repair.py logged it).
+
 ## Task queue (do in order; each has a done-check)
 | ID | By | Task | Agent | Done when |
 |---|---|---|---|---|
