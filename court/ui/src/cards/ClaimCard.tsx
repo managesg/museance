@@ -1,6 +1,7 @@
 import { useId } from 'react';
 import type { Claim, LockStatus, Tier } from '../contracts';
 import type { CardStatus, CardView } from '../engine/types';
+import { prettyOutput } from '../engine/format';
 import { stepLabel } from './keys';
 import { Stamp, WaxSeal } from './Stamp';
 import './cards.css';
@@ -44,7 +45,7 @@ const bondChips = (bond: number) => Math.min(5, Math.max(1, Math.round(bond / 50
 const betChips = (credits: number) => (credits > 0 ? Math.min(4, Math.max(1, Math.round(credits / 50))) : 0);
 const svgId = (raw: string) => raw.replace(/[^\w-]/g, '');
 
-export function ClaimCard({ view, size }: { view: CardView; size: 'small' | 'focus' }) {
+export function ClaimCard({ view, size, showBets = false }: { view: CardView; size: 'small' | 'focus'; showBets?: boolean }) {
   const { claim, status } = view;
   const sealed = status === 'sealed';
   const lock = isLock(status) ? status : null;
@@ -81,7 +82,7 @@ export function ClaimCard({ view, size }: { view: CardView; size: 'small' | 'foc
           </div>
         )}
       </div>
-      {size === 'small' && <Bets bets={view.bets} />}
+      {size === 'small' && showBets && <Bets bets={view.bets} />}
     </article>
   );
 }
@@ -115,10 +116,12 @@ function FocusFront({ view }: { view: CardView }) {
         <dd className="cc__ids">{claim.evidence?.length ? claim.evidence.join(', ') : 'none'}</dd>
         <dt className="cc__alarm">IF FALSE</dt>
         <dd>{guyName(claim.screen)} glitches</dd>
-        {view.repairedFrom && (
+        {view.verdict && (
           <>
-            <dt>REPAIRS</dt>
-            <dd className="cc__ids">{view.repairedFrom}</dd>
+            <dt>COURT SAW</dt>
+            <dd className="cc__ids">
+              O {prettyOutput(view.verdict.original) || '(blank)'} · R {prettyOutput(view.verdict.revival) || '(blank)'}
+            </dd>
           </>
         )}
       </dl>

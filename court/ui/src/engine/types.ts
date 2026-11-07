@@ -2,13 +2,13 @@ import type { Attack, CaseBundle, Claim, Evidence, LedgerEvent, LockStatus, Shee
 export type Phase = 'dig' | 'read' | 'raise' | 'swear' | 'cross' | 'repair' | 'bench' | 'sentence';
 export const PHASES: readonly Phase[] = ['dig', 'read', 'raise', 'swear', 'cross', 'repair', 'bench', 'sentence'];
 export type CardStatus = 'sealed' | 'sworn' | 'under-cross' | LockStatus;
-export interface CardView { claim: Claim; status: CardStatus; verdict: Verdict | null; bets: { trueCredits: number; falseCredits: number }; repairedFrom?: string; }
+export interface CardView { claim: Claim; status: CardStatus; verdict: Verdict | null; bets: { trueCredits: number; falseCredits: number }; }
 export type GhostMood = 'idle' | 'hopeful' | 'sad' | 'flicker' | 'relieved';
 export type McCluskyMood = 'idle' | 'swearing' | 'nervous' | 'caught' | 'fainted' | 'relieved';
 export type HootMood = 'idle' | 'writing' | 'attacking' | 'unimpressed' | 'satisfied';
 export type FauxMood = 'hidden' | 'wave' | 'bow' | 'smug';
 export type StenoMood = 'idle' | 'scribbling' | 'sealing';
-export type GuyKind = 'calculator' | 'brush' | 'clock' | 'keycap';
+export type GuyKind = 'calculator' | 'brush' | 'clock' | 'keycap' | 'checkbox' | 'trash' | 'listitem';
 export type GuyState = 'idle' | 'nervous' | 'glitch' | 'locked' | 'repaired' | 'fabricated';
 export type ExhibitMode = 'dark' | 'evidence' | 'reading' | 'booting' | 'live' | 'cross';
 export type Pastry = 'croissant' | 'bagel' | 'eclair' | 'pretzel' | 'canele' | 'kouign';
@@ -20,7 +20,7 @@ export interface StageState {
   phase: Phase; beat: number; beats: number; playing: boolean;
   app: string; appLabel: string; source: CaseBundle['source'];
   evidenceShown: Evidence[]; sheetShown: SheetLine[]; wordCount: number;
-  exhibits: { original: ExhibitMode; revival: ExhibitMode; originalSrc: string; revivalSrc: string };
+  exhibits: { original: ExhibitMode; revival: ExhibitMode; originalSrc: string; revivalSrc: string; scale: number };
   cards: CardView[]; focusId: string | null;
   attacks: { attack: Attack; opened: boolean; verdict: Verdict | null }[];
   divergence: { ref: string; original: string; revival: string; steps: string[] } | null;
@@ -28,7 +28,8 @@ export interface StageState {
   moods: { ghost: GhostMood; mcclusky: McCluskyMood; hoot: HootMood; faux: FauxMood; steno: StenoMood };
   guys: { screen: string; kind: GuyKind; glyph?: string; state: GuyState }[];
   ledgerTail: LedgerEvent[];
-  subtitle: { who: 'McCLUSKY' | 'DR. HOOT' | 'THE CLERK'; text: string } | null;
+  // A mesh.* ledger caption speaks as its agent, upper-cased.
+  subtitle: { who: 'McCLUSKY' | 'DR. HOOT' | 'THE CLERK' | (string & {}); text: string } | null;
   banner: string | null;
   bench: { open: boolean; last: Verdict | null; runs: number };
   leaderboard: LeaderRow[];

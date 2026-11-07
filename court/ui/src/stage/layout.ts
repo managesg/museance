@@ -18,9 +18,9 @@ export const ZONES = {
   candle: [16, 420, 160, 300],
   meter: [0, 610, 240, 340],
   mcclusky: [200, 466, 370, 466],
-  // The tape hangs on the wainscot under the revival; Hoot stands left of it with his head below the plate.
+  // The tape hangs on the wainscot under the revival; Hoot stands left of it, low enough that his head clears the frame.
   ledger: [1560, 548, 360, 220],
-  hoot: [1292, 548, 280, 400],
+  hoot: [1292, 590, 280, 400],
   steno: [1740, 730, 170, 250],
   cards: [560, 430, 800, 520],
   subtitles: [460, 904, 1000, 64],
@@ -29,14 +29,16 @@ export const ZONES = {
   numbers: [0, 984, 1920, 96],
 } as const satisfies Record<string, Zone>;
 
-// One floor slot per app screen, alternating left and right of the table, inner slots first.
+// One floor slot per app screen, alternating left and right of the table, inner slots first. Feet on y 975,
+// just above the numbers bar, low and outward enough to clear McClusky, Hoot and the subtitle plate.
 export const GUY_SLOTS: readonly Zone[] = [
-  [432, 836, 112, 140],
-  [1338, 830, 112, 140],
-  [306, 846, 112, 140],
-  [1462, 840, 112, 140],
-  [180, 852, 112, 140],
-  [1586, 850, 112, 140],
+  [420, 835, 112, 140],
+  // Right of Hoot's body and left of the stenographer.
+  [1552, 835, 112, 140],
+  [300, 835, 112, 140],
+  [1652, 835, 112, 140],
+  [180, 835, 112, 140],
+  [1440, 835, 112, 140],
 ];
 
 export const place = ([x, y, w, h]: Zone): CSSProperties => ({ left: x, top: y, width: w, height: h });

@@ -61,7 +61,8 @@ const KIND: Record<Evidence['kind'], ReactNode> = {
 
 const svgId = (raw: string) => raw.replace(/[^\w-]/g, '');
 
-export function DigTicker({ items }: { items: Evidence[] }) {
+// total: the whole evidence pile, so the count reads 'N of M exhumed'.
+export function DigTicker({ items, total }: { items: Evidence[]; total: number }) {
   const n = items.length;
   const from = Math.max(0, n - SHOWN);
   return (
@@ -71,7 +72,7 @@ export function DigTicker({ items }: { items: Evidence[] }) {
         <span key={n} className="hud-dig__num">
           {n}
         </span>
-        <span className="hud-dig__unit">{n === 1 ? 'item' : 'items'} exhumed</span>
+        <span className="hud-dig__unit">of {total} exhumed</span>
       </p>
       <ol className="hud-dig__list">
         {items

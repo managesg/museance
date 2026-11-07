@@ -110,10 +110,11 @@ export async function benchRun(
   steps: string[],
   observe: string,
   app?: string,
+  srcs?: { original: string; revival: string },
 ): Promise<Verdict> {
   const doc = original?.contentDocument;
   if (doc) checkSteps(doc, steps);
-  const court = app ? await postBench(app, steps, observe) : null;
+  const court = app && srcs ? await postBench(app, steps, observe, srcs.original, srcs.revival) : null;
   if (court) return court;
 
   const orig = build(original, 'original', observe);

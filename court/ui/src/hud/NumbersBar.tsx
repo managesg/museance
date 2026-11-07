@@ -1,6 +1,8 @@
 import { useId, type ReactNode } from 'react';
 import type { CaseBundle } from '../contracts';
 import type { Measured, Scores } from '../engine/types';
+import { Explain } from '../case/Explain';
+import type { Term } from '../case/glossary';
 import './hud.css';
 
 const MOULD = 'M-10 2.6Q480 1.2 960 2.9T1930 2.2V11.6Q960 13.2 -10 11.4Z';
@@ -41,11 +43,11 @@ function Value({ text }: { text: string | null }) {
   return <Figures key={text} text={text} />;
 }
 
-function Plate(props: { label: string; stripes: string | null; kind?: 'unsworn' | 'fabricated'; flagged?: boolean; children: ReactNode }) {
-  const { label, stripes, kind, flagged, children } = props;
+function Plate(props: { label: string; term?: Term; stripes: string | null; kind?: 'unsworn' | 'fabricated'; flagged?: boolean; children: ReactNode }) {
+  const { label, term, stripes, kind, flagged, children } = props;
   return (
     <div className={`hud-plate${kind ? ` hud-plate--${kind}` : ''}${flagged ? ' is-flagged' : ''}`}>
-      <dt className="hud-plate__label">{label}</dt>
+      <dt className="hud-plate__label"><Explain term={term}>{label}</Explain></dt>
       <dd className="hud-plate__win">
         {stripes && (
           <svg className="hud-plate__stripes" aria-hidden="true">
@@ -59,7 +61,9 @@ function Plate(props: { label: string; stripes: string | null; kind?: 'unsworn' 
 }
 
 /** The walnut and brass scoreboard along the bottom: 100% wide (1920 design px) by 96. Fixture numbers sit in striped windows. */
-export function NumbersBar({ scores, source }: { scores: Scores; source: CaseBundle['source'] }) {
+/** explain: hover a label for its meaning (the case screen); the stage keeps plain labels. */
+export function NumbersBar({ scores, source, explain = false }: { scores: Scores; source: CaseBundle['source']; explain?: boolean }) {
+  const t = (term: Term) => (explain ? term : undefined);
   const pattern = `hud-fx-${useId().replace(/[^\w-]/g, '')}`;
   const stripes = source === 'fixture' ? pattern : null;
   const s = scores;
@@ -75,7 +79,7 @@ export function NumbersBar({ scores, source }: { scores: Scores; source: CaseBun
         <path d={MOULD} fill="var(--wood-light)" stroke="var(--ink)" strokeWidth="4" vectorEffect="non-scaling-stroke" />
       </svg>
       <dl className="hud-numbers__row">
-        <Plate label="Credibility" stripes={stripes}>
+        <Plate label="Credibility" term={t('credibility')} stripes={stripes}>
           <Figures key={`a${s.credibilityStart}`} text={whole(s.credibilityStart)} className="hud-num--from" />
           <svg className="hud-arrow" viewBox="0 0 34 22" aria-hidden="true">
             <path d={ARROW} />
@@ -87,25 +91,25 @@ export function NumbersBar({ scores, source }: { scores: Scores; source: CaseBun
             className={s.credibility < s.credibilityStart ? 'is-down' : undefined}
           />
         </Plate>
-        <Plate label="Brier" stripes={stripes}>
+        <Plate label="Brier" term={t('brier')} stripes={stripes}>
           <Value text={finite(s.brier) ? s.brier.toFixed(2) : null} />
         </Plate>
-        <Plate label="Fidelity" stripes={stripes}>
+        <Plate label="Fidelity" term={t('fidelity')} stripes={stripes}>
           <Value text={finite(s.fidelity) ? `${Math.round(s.fidelity)}%` : null} />
         </Plate>
-        <Plate label="False strikes" stripes={stripes}>
+        <Plate label="False strikes" term={t('falseStrikes')} stripes={stripes}>
           <Value text={ratio(s.falseStrikes)} />
         </Plate>
-        <Plate label="Traps caught" stripes={stripes}>
+        <Plate label="Traps caught" term={t('traps')} stripes={stripes}>
           <Value text={ratio(s.trapsCaught)} />
         </Plate>
         <Plate label="Survived" stripes={stripes}>
           <Value text={ratio({ value: s.claimsSurvived, of: s.claimsMade })} />
         </Plate>
-        <Plate label="Unsworn" stripes={stripes} kind="unsworn" flagged={s.unsworn > 0}>
+        <Plate label="Unsworn" term={t('unsworn')} stripes={stripes} kind="unsworn" flagged={s.unsworn > 0}>
           <Value text={count(s.unsworn)} />
         </Plate>
-        <Plate label="Fabricated" stripes={stripes} kind="fabricated" flagged={s.fabricated > 0}>
+        <Plate label="Fabricated" term={t('fabricated')} stripes={stripes} kind="fabricated" flagged={s.fabricated > 0}>
           <Value text={count(s.fabricated)} />
         </Plate>
         <Plate label="Rollbacks" stripes={stripes}>

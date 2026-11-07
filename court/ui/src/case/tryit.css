@@ -1,0 +1,65 @@
+/* Run-your-own-test panel and app picker: plain frames, tokens from src/styles/tokens.css. */
+.tryit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  font: 18px/1.4 var(--font-ui);
+  min-width: 0;
+}
+.tryit-label {
+  margin: 0;
+  font: 700 14px/1.2 var(--font-ui);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brass-deep);
+}
+.tryit-sub { font-weight: 700; }
+.tryit-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.tryit-row > .tryit-sub { flex: 1; }
+.tryit-targets { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+.tryit button, .apppicker button, .tryit select, .tryit input, .apppicker input {
+  font: 18px/1.2 var(--font-ui);
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  padding: var(--space-2) var(--space-3);
+  min-height: 40px;
+  border-radius: 0;
+}
+.tryit button:not(:disabled), .apppicker button { cursor: pointer; }
+.tryit button:disabled { opacity: 0.45; }
+.tryit button:hover:not(:disabled), .apppicker button:hover { background: var(--paper-deep); }
+.tryit :focus-visible, .apppicker :focus-visible { outline: 3px solid var(--brass); outline-offset: 2px; }
+.tryit-chip[aria-pressed='true'] { background: var(--brass); }
+.tryit-ghost { border-color: var(--paper-deep) !important; }
+.tryit-run { background: var(--ink) !important; color: var(--paper) !important; font-weight: 700 !important; }
+
+.tryit-type { display: flex; flex-direction: column; gap: var(--space-1); flex: 1; min-width: 0; }
+.tryit-type input, .tryit-type select { width: 100%; min-width: 0; }
+
+.tryit-steps { margin: 0; padding-left: 1.5em; font-family: var(--font-doc); overflow-wrap: anywhere; }
+.tryit-empty { list-style: none; margin-left: -1.5em; opacity: 0.6; font-family: var(--font-ui); }
+
+.tryit-error { margin: 0; padding: var(--space-3); border-left: 4px solid var(--crimson); background: var(--paper-deep); }
+.tryit-note { margin: 0; font-size: 16px; opacity: 0.8; }
+
+.tryit-ruling { border: 1px solid var(--ink); padding: var(--space-3); display: flex; flex-direction: column; gap: var(--space-2); }
+.tryit-ruling p { margin: 0; }
+.tryit-verdict { font: 36px/1 var(--font-stamp); }
+.tryit-ruling.is-match .tryit-verdict { color: var(--wall-deep); }
+.tryit-ruling.is-diff { border-color: var(--crimson); }
+.tryit-ruling.is-diff .tryit-verdict { color: var(--crimson); }
+.tryit-ruling.is-flaky .tryit-verdict { color: var(--slate); }
+.tryit-ruling dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: var(--space-1) var(--space-3); }
+.tryit-ruling dt { font-weight: 700; }
+.tryit-ruling dd { margin: 0; font-family: var(--font-doc); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.apppicker { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-2); font: 18px/1.4 var(--font-ui); color: inherit; }
+.apppicker .tryit-type { flex: 0 1 280px; }
+.apppicker-note { flex-basis: 100%; margin: 0; font-size: 16px; }
+.apppicker .tryit-label { color: var(--brass); }

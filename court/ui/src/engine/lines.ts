@@ -1,12 +1,13 @@
 // Subtitles, keyed by beat kind and outcome. McClusky speaks only here; each joke leans on a number on screen.
 import type { Claim, Verdict } from '../contracts';
+import { prettyOutput } from './format';
 import type { StageState } from './types';
 
 export type Subtitle = NonNullable<StageState['subtitle']>;
 
 export interface LineCtx {
   i?: number; n?: number; app?: string; id?: string; screen?: string; steps?: number; words?: number; bonds?: number;
-  claim?: Claim; struck?: Claim; verdict?: Verdict | null; delta?: number;
+  claim?: Claim; verdict?: Verdict | null; delta?: number; reason?: string; diverge?: number; flaky?: number;
   credibility?: number; start?: number; fidelity?: number | null; brier?: number | null; rollbacks?: number;
 }
 
@@ -17,7 +18,10 @@ const pick = (i: number | undefined, ...xs: string[]) => xs[(i ?? 0) % xs.length
 const pct = (x = 0) => `${Math.round(x * 100)}%`;
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 // Observed text can be a whole paragraph and the subtitle bar holds one projector line.
-const clip = (s: string | undefined, n = 14) => (s === undefined ? '?' : s === '' ? 'blank' : s.length > n ? `${s.slice(0, n - 3)}...` : s);
+const clip = (raw: string | undefined, n = 14) => {
+  const s = raw === undefined ? undefined : prettyOutput(raw);
+  return s === undefined ? '?' : s === '' ? 'blank' : s.length > n ? `${s.slice(0, n - 3)}...` : s;
+};
 
 const LINES: Record<string, (c: LineCtx) => Subtitle> = {
   open: (c) => clerk(`Court is in session. The case of ${c.app}.`),
@@ -60,10 +64,14 @@ const LINES: Record<string, (c: LineCtx) => Subtitle> = {
   // Nothing replays an attack on the exhibits, so there is nothing to watch.
   'attack:pending': (c) => hoot(`${c.id}: ${c.steps} steps. No verdict yet.`),
 
-  repair: ({ id, claim }) => clerk(`Claim ${id} narrowed: ${clip(claim?.text, 36)}.`),
-  'repaired:LOCKED': ({ struck }) => mc(`Narrowed and locked. The ${struck?.bond ?? 0} I lost stays lost.`),
-  'repaired:STRUCK': ({ claim }) => mc(`Narrowed to ${clip(claim?.test.expect)}. Still wrong. Twice is a pattern.`),
-  repaired: ({ claim, rollbacks }) => clerk(`Claim ${claim?.id} re-ruled. Rollbacks: ${rollbacks}.`),
+  'attack:tally': ({ n, diverge, flaky }) => hoot(`+${n} more attacks: ${diverge} diverge, ${flaky} flaky`),
+
+  // P4's repair reason, verbatim: it carries P4's measured numbers.
+  repair: ({ reason }) => clerk(reason ?? ''),
+  'repaired:rollback': ({ id, rollbacks }) => clerk(`Rolled back. Claim ${id} is unsworn. Rollbacks: ${rollbacks}.`),
+  'repaired:unsworn': ({ id }) => clerk(`Claim ${id} is unsworn. No credits move.`),
+  repaired: () => clerk('The repaired revival is live.'),
+  rerule: ({ fidelity }) => clerk(`Re-ruled on the repaired revival. Fidelity ${fidelity ?? 'unmeasured'}.`),
 
   bench: () => clerk('The bench is open. Propose a test.'),
   'bench:match': ({ n, verdict }) => clerk(`Bench run ${n}: ${clip(verdict?.original)} and ${clip(verdict?.revival)}. They match.`),
@@ -76,6 +84,13 @@ const LINES: Record<string, (c: LineCtx) => Subtitle> = {
   'farewell:nervous': ({ credibility = 0, start = 0 }) => mc(`Down ${start - credibility} credits. I'll appeal. To whom, unclear.`),
   'farewell:fainted': (c) => clerk(`Credibility ${c.credibility}. Counsel has fainted. Adjourned.`),
 };
+
+/** A Fetch mesh.* ledger event's caption, spoken by its agent. */
+export function meshLine(e: { type: string; payload: unknown }): Subtitle | null {
+  const p = (e.payload && typeof e.payload === 'object' ? e.payload : {}) as { caption?: unknown; agent?: unknown };
+  if (!e.type.startsWith('mesh.') || typeof p.caption !== 'string') return null;
+  return { who: typeof p.agent === 'string' && p.agent ? p.agent.toUpperCase() : 'THE CLERK', text: p.caption };
+}
 
 /** The line for a beat, falling back from "kind:outcome" to "kind". */
 export function line(kind: string, outcome: string | null, ctx: LineCtx): Subtitle | null {

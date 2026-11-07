@@ -520,3 +520,10 @@
     animation: hud2-fade var(--dur-fade, 220ms) ease-out both;
   }
 }
+
+.hud-tape__empty {
+  padding: 8px 6px;
+  font-style: italic;
+  color: var(--ink);
+  opacity: 0.55;
+}

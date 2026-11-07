@@ -1,5 +1,5 @@
 import type {
-  Attack, BehaviorSheet, CaseBundle, CaseFile, Claim, ClaimTest, Evidence, LedgerEvent, Lock, Repair, SheetLine, Verdict,
+  Attack, BehaviorSheet, Builds, CaseBundle, CaseFile, Claim, ClaimTest, Evidence, LedgerEvent, Lock, Repair, SheetLine, Verdict,
 } from '../contracts';
 
 // A rule returns the first problem it finds in x (named by the path `at`), or null when x fits.
@@ -64,13 +64,18 @@ const ledgerEvent = obj<LedgerEvent>({ seq: num, ts: str, type: str, payload: an
 const caseFile = obj<CaseFile>({
   app: str, fidelity: num, brier: num, credibility_start: num, credibility_end: num,
   locked: strs, struck: strs, fabricated: strs, unsworn: strs,
-  counts: is((x) => typeof x === 'object' && x !== null && Object.values(x).every((n) => typeof n === 'number'), 'counts by name'),
+  counts: is((x) => typeof x === 'object' && x !== null && Object.values(x).every((n) => n === null || typeof n === 'number'), 'counts by name (a number or null)'),
 });
-const repair = obj<Repair>({ struck_id: str, claim, verdict, rollback: bool, note: str });
+const repair = obj<Repair>({
+  claim_id: str, decision: oneOf('patched', 'rollback', 'unsworn'), reason: str, from_sha256: opt(str), to_sha256: opt(str),
+});
+const builds = obj<Builds>({ original: str, revival: str, revivalAfter: orNull(str), scale: num });
+const after = obj<NonNullable<CaseBundle['after']>>({ verdicts: list(verdict), locks: list(lock), caseFile: orNull(caseFile) });
 const bundle = obj<CaseBundle>({
   app: str, appLabel: str, source: anything, // toBundle stamps the source the caller asked for
   evidence: list(evidence), sheet: orNull(sheet), claims: list(claim), attacks: list(attack), verdicts: list(verdict),
   locks: list(lock), ledger: list(ledgerEvent), caseFile: orNull(caseFile), repairs: list(repair),
+  builds, after: orNull(after),
 });
 
 /** The first thing wrong with x as a CaseBundle (e.g. "bundle.claims[2].bond: expected ..."), or null when it is one. */

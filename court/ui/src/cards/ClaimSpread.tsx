@@ -23,13 +23,16 @@ export function ClaimSpread({
   focusId,
   width,
   height,
+  showBets = false,
 }: {
   cards: CardView[];
   focusId: string | null;
   width: number;
   height: number;
+  // The gallery's chips show only while claims are sworn.
+  showBets?: boolean;
 }) {
-  const poses = layout(cards, focusId, width, height);
+  const poses = layout(cards, focusId, width, height, showBets);
   const keys = keysOf(cards);
   const nodes = useRef(new Map<string, HTMLDivElement>());
   const last = useRef(new Map<string, Pose>());
@@ -64,7 +67,7 @@ export function ClaimSpread({
             }}
             style={{ width: p.w, zIndex: p.z, transform: place(p), '--card-w': `${p.w}px` } as CSSProperties}
           >
-            <ClaimCard view={view} size={p.focus ? 'focus' : 'small'} />
+            <ClaimCard view={view} size={p.focus ? 'focus' : 'small'} showBets={showBets} />
           </div>
         );
       })}
@@ -72,7 +75,7 @@ export function ClaimSpread({
   );
 }
 
-function layout(cards: CardView[], focusId: string | null, W: number, H: number): Pose[] {
+function layout(cards: CardView[], focusId: string | null, W: number, H: number, showBets: boolean): Pose[] {
   const n = cards.length;
   const floor = H - Math.round(H * 0.09); // the subtitle band crosses the bottom of this zone
   // The focus card's text ends above the subtitle band (only its bottom margin dips in); with 6+ cards
@@ -81,7 +84,7 @@ function layout(cards: CardView[], focusId: string | null, W: number, H: number)
   if (Math.ceil((n - 1) / 2) >= 3) focusW = Math.min(focusW, W - 2 * (2 * MIN_W + 2 * GAP + PAD));
   const fit = Math.floor(((W - 2 * PAD) / Math.max(n, 1)) * 1.08);
   const w = Math.max(MIN_W, Math.min(Math.round(focusW / 2), fit));
-  const hasBets = cards.some((v) => v.bets.trueCredits > 0 || v.bets.falseCredits > 0);
+  const hasBets = showBets && cards.some((v) => v.bets.trueCredits > 0 || v.bets.falseCredits > 0);
   const betsH = (cardW: number) => (hasBets ? (cardW >= 136 ? 44 : 76) : 0); // two chip tallies wrap below 136px
   const fi = focusId === null ? -1 : cards.findLastIndex((v) => v.claim.id === focusId);
   const poses: Pose[] = [];
@@ -134,11 +137,11 @@ function layout(cards: CardView[], focusId: string | null, W: number, H: number)
   return poses;
 }
 
-// A repaired claim may reuse the struck claim's id, so keys carry the repair link and a duplicate count.
+// A case may repeat a claim id, so keys carry a duplicate count.
 function keysOf(cards: CardView[]): string[] {
   const seen = new Map<string, number>();
   return cards.map((v) => {
-    const base = v.repairedFrom ? `${v.claim.id}<${v.repairedFrom}` : v.claim.id;
+    const base = v.claim.id;
     const dup = seen.get(base) ?? 0;
     seen.set(base, dup + 1);
     return dup ? `${base}#${dup}` : base;

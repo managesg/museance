@@ -12,7 +12,8 @@ const verdictOf = (id: string) => verdicts.find((v) => v.ref === id);
 
 const bundle = (over: Partial<CaseBundle> = {}): CaseBundle => ({
   app: 'app1', appLabel: 'fixture-calc', source: 'fixture', evidence: [], sheet: null,
-  claims, attacks: attacksJson as Attack[], verdicts, locks: [], ledger: [], caseFile: null, repairs: [], ...over,
+  claims, attacks: attacksJson as Attack[], verdicts, locks: [], ledger: [], caseFile: null, repairs: [],
+  builds: { original: '/o/', revival: '/r/', revivalAfter: null, scale: 1 }, after: null, ...over,
 });
 const derived = (): Record<string, LockStatus> => {
   const out: Record<string, LockStatus> = {};
@@ -93,9 +94,12 @@ describe('computeScores on the repo fixtures', () => {
       falseStrikes: { value: 0, of: 12 }, trapsCaught: { value: 7, of: 8 },
     });
     expect(computeScores(bundle({ caseFile }), { c01: 'LOCKED' }).credibility).toBe(1010);
-    const bare = computeScores(bundle({ caseFile: { ...caseFile, counts: { claims: 5 } } }), derived());
+    const bare = computeScores(bundle({ caseFile: { ...caseFile, counts: { claims: 5, traps_caught: null, traps_of: 8 } } }), derived());
     expect(bare.falseStrikes).toBeNull();
     expect(bare.trapsCaught).toBeNull();
+    // The repaired revival's case file carries the regression counts in force.
+    const after = { verdicts: [], locks: [], caseFile: { ...caseFile, counts: { ...caseFile.counts, traps_caught: 0 } } };
+    expect(computeScores(bundle({ caseFile, after }), derived()).trapsCaught).toEqual({ value: 0, of: 8 });
   });
 });
 

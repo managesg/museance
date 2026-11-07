@@ -51,9 +51,10 @@ export function fidelity(verdicts: Verdict[]): number | null {
   return live.length ? pyRound((100 * live.filter((v) => v.match).length) / live.length) : null;
 }
 
-function measured(cf: CaseFile | null, value: string, of: string): Measured | null {
-  const n = cf?.counts;
-  return n && typeof n[value] === 'number' && typeof n[of] === 'number' ? { value: n[value], of: n[of] } : null;
+function measured(cf: CaseFile | null | undefined, value: string, of: string): Measured | null {
+  const v = cf?.counts[value];
+  const n = cf?.counts[of];
+  return typeof v === 'number' && typeof n === 'number' ? { value: v, of: n } : null;
 }
 
 /** Scores for the claims that have a status; fidelity covers every verdict in the bundle. */
@@ -74,8 +75,9 @@ export function computeScores(bundle: CaseBundle, statuses: Record<string, LockS
     unsworn: count('UNSWORN'),
     fabricated: count('FABRICATED'),
     rollbacks: opts.rollbacks ?? 0,
-    falseStrikes: measured(cf, 'false_strikes', 'false_strikes_of'),
-    trapsCaught: measured(cf, 'traps_caught', 'traps_of'),
+    // The regression counts in force: the repaired revival's case file once there is one.
+    falseStrikes: measured(bundle.after?.caseFile ?? cf, 'false_strikes', 'false_strikes_of'),
+    trapsCaught: measured(bundle.after?.caseFile ?? cf, 'traps_caught', 'traps_of'),
   };
   // The case file is P4's result for the finished ruling, so it only takes over once every claim is ruled.
   if (!cf || !ruled.length || ruled.length < bundle.claims.length) return scores;

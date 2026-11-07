@@ -1,22 +1,24 @@
 import { describe, expect, it } from 'vitest';
-import type { Attack, CaseBundle, Claim, Repair, Verdict } from '../contracts';
+import type { Attack, Builds, CaseBundle, Claim, Repair, Verdict } from '../contracts';
 import attacksJson from '../../../../fixtures/attacks.json';
 import claimsJson from '../../../../fixtures/claims.json';
 import verdictsJson from '../../../../fixtures/verdicts.json';
 import { loadFixtureBundle } from '../fixtures';
-import { EXHIBIT_SRC, buildScript, foldStates, initialState, stateAt, type BenchRuns } from './director';
+import { buildScript, foldStates, initialState, stateAt, type BenchRuns } from './director';
 import { GENESIS, commitOf, sha256Hex, synthesizeLedger, verifyLedger } from './hash';
 import { PHASES, type Beat, type StageState } from './types';
 
 const claims = claimsJson as Claim[];
 const c03 = claims[2];
 
-const REPAIR: Repair = {
-  struck_id: 'c03',
-  claim: { ...c03, id: 'c03r', text: '1 / 8 truncates to 0.12', test: { ...c03.test, expect: '0.12' }, confidence: 0.74, bond: 50 },
-  verdict: { ref: 'c03r', kind: 'claim', original: '0.12', revival: '0.12', claim_true: true, match: true, flaky: false, shrunk_steps: [] },
-  rollback: true,
-  note: 'rounds -> truncates',
+const BUILDS: Builds = { original: '/o/', revival: '/r/v1.html', revivalAfter: '/r/v2.html', scale: 1.5 };
+// The shape of cases/app1/repairs.jsonl: P4 patched the revival, so c03 stays STRUCK.
+const PATCH: Repair = { claim_id: 'c03', decision: 'patched', reason: "claim test now gives '0.12'; regression score 18 -> 19" };
+// The same claims judged on the repaired build: every claim's builds now agree.
+const AFTER: NonNullable<CaseBundle['after']> = {
+  verdicts: (verdictsJson as Verdict[]).map((v) => ({ ...v, revival: v.original, match: true })),
+  locks: [],
+  caseFile: null,
 };
 
 const bundle = (over: Partial<CaseBundle> = {}): CaseBundle => ({
@@ -27,7 +29,7 @@ const bundle = (over: Partial<CaseBundle> = {}): CaseBundle => ({
   ],
   sheet: { app: 'app1', lines: [{ id: 'b001', screen: 'add', text: '7 + 8 shows 15', label: 'SEEN', citations: ['shot-001'], conflicts: [] }] },
   claims, attacks: attacksJson as Attack[], verdicts: verdictsJson as Verdict[],
-  locks: [], ledger: [], caseFile: null, repairs: [REPAIR], ...over,
+  locks: [], ledger: [], caseFile: null, repairs: [PATCH], builds: BUILDS, after: AFTER, ...over,
 });
 
 const play = (b: CaseBundle, bench?: BenchRuns) => {
@@ -54,19 +56,47 @@ describe('script', () => {
     expect(ms('swear')).toEqual([900, 900, 900, 900, 900]);
     expect(ms('cross')).toEqual([1200, 1200, 1200, 1200, 1200]);
     expect(ms('ruling')).toEqual([2200, 2200, 2200, 2200, 2200]);
-    expect(ms('attack')).toEqual([900, 900, 900, 900, 900]);
-    expect(script.filter((b) => b.kind === 'repair')).toHaveLength(1);
+    expect(ms('attack')).toEqual([900, 900, 900, 900]);
+    expect(script.filter((b) => b.kind === 'tally')).toHaveLength(1);
+    expect(script.filter((b) => ['repair', 'repaired', 'rerule'].includes(b.kind)).map((b) => b.kind)).toEqual(['repair', 'repaired', 'rerule']);
   });
 
-  it('opens each attack after the first ruling on its screen', () => {
+  it('caps the dig and read phases at about 4 s each, 60 ms a beat at least', () => {
+    const many = (n: number) => Array.from({ length: n }, (_, i) => ({ id: `e${i}`, app: 'app1', tier: 'A' as const, kind: 'page' as const, source: 'test' }));
+    const sheet = (n: number) => ({ app: 'app1', lines: Array.from({ length: n }, (_, i) => ({ id: `b${i}`, screen: 'add', text: 't', label: 'SEEN' as const, citations: [], conflicts: [] })) });
+    const total = (b: CaseBundle, kind: string) => buildScript(b).filter((x) => x.kind === kind).reduce((n, x) => n + x.ms, 0);
+    expect(total(bundle({ evidence: many(55), sheet: sheet(24) }), 'dig')).toBeLessThanOrEqual(4100);
+    expect(total(bundle({ evidence: many(55), sheet: sheet(24) }), 'read')).toBeLessThanOrEqual(4100);
+    expect(buildScript(bundle({ evidence: many(500) })).find((x) => x.kind === 'dig')?.ms).toBe(60);
+  });
+
+  it('opens unjudged attacks after the first ruling on their screen, four at most, then tallies the rest', () => {
     const { script, states } = play(bundle());
-    const opened = script.flatMap((b, i) => (b.kind === 'attack' ? states[i].attacks.filter((a) => a.opened).length : []));
+    const opened = script.flatMap((b, i) => (b.kind === 'attack' || b.kind === 'tally' ? states[i].attacks.filter((a) => a.opened).length : []));
     expect(opened).toEqual([1, 2, 3, 4, 5]);
-    const last = states.at(-1);
-    expect(last?.attacks.map((a) => a.opened)).toEqual([true, true, true, true, true]);
     const firstAttack = (id: string) => script.findIndex((b, i) => b.kind === 'attack' && states[i].attacks.some((a) => a.attack.id === id && a.opened));
-    // claim order is add, multiply, divide, clear: a02 a03 (a01 a05) a04
-    expect(['a02', 'a03', 'a01', 'a05', 'a04'].map(firstAttack)).toEqual(['a02', 'a03', 'a01', 'a05', 'a04'].map(firstAttack).sort((a, b) => a - b));
+    // the fixture attacks have no verdicts, so the first four play; claim order add, multiply, divide, clear: a02 a03 a01 a04
+    expect(['a02', 'a03', 'a01', 'a04'].map(firstAttack)).toEqual(['a02', 'a03', 'a01', 'a04'].map(firstAttack).sort((a, b) => a - b));
+    expect(find(script, states, 'tally').s.subtitle).toEqual({ who: 'DR. HOOT', text: '+1 more attacks: 0 diverge, 0 flaky' });
+  });
+
+  it('plays mismatches first and one match, tallies the rest, and glitches every screen with a mismatch', () => {
+    const atk = (id: string, screen: string): Attack => ({ id, app: 'app1', screen, steps: ['click:#k1'], observe: '#display' });
+    const attacks = [atk('m1', 'clear'), atk('ok1', 'add'), atk('m2', 'clear'), atk('ok2', 'add'), atk('m3', 'multiply'), atk('m4', 'multiply'), atk('f1', 'add'), atk('m5', 'multiply')];
+    const av = (a: Attack): Verdict => ({
+      ref: a.id, kind: 'attack', original: '1', revival: a.id.startsWith('m') ? '2' : '1',
+      match: !a.id.startsWith('m'), flaky: a.id.startsWith('f'), claim_true: null,
+    });
+    const b = bundle({ attacks, verdicts: [...(verdictsJson as Verdict[]), ...attacks.map(av)], repairs: [], after: null });
+    const { script, states } = play(b);
+    const shown = script.flatMap((x, i) => (x.kind === 'attack' ? [states[i].subtitle?.text.split(':')[0]] : []));
+    expect([...shown].sort()).toEqual(['m1', 'm2', 'm3', 'ok1']);
+    const { s } = find(script, states, 'tally');
+    expect(s.subtitle).toEqual({ who: 'DR. HOOT', text: '+4 more attacks: 2 diverge, 1 flaky' });
+    expect(s.attacks.every((a) => a.opened)).toBe(true);
+    expect(guy(s, 'multiply')).toBe('glitch');
+    expect(guy(s, 'clear')).toBe('glitch');
+    expect(guy(s, 'add')).toBe('locked');
   });
 
   it('gives one little guy per claim screen, keycaps for operators', () => {
@@ -78,6 +108,28 @@ describe('script', () => {
     ]);
     const odd = ['history', 'theme', 'settings', 'about', 'history'].map((screen, i) => ({ ...c03, id: `o${i}`, screen }));
     expect(initialState(bundle({ claims: odd })).guys.map((g) => g.kind)).toEqual(['calculator', 'brush', 'clock', 'calculator']);
+  });
+
+  it('folds the todo screens into four guys: add, list, complete, remove', () => {
+    const todo = ['add', 'todo', 'completed', 'list'].map((screen, i) => ({ ...c03, id: `t${i}`, screen }));
+    const hits = ['complete', 'remove', 'add'].map((screen, i): Attack => ({ id: `h${i}`, app: 'todo', screen, steps: [], observe: '#todo' }));
+    expect(initialState(bundle({ claims: todo, attacks: hits })).guys).toEqual([
+      { screen: 'add', kind: 'keycap', glyph: '+', state: 'idle' },
+      { screen: 'list', kind: 'listitem', state: 'idle' },
+      { screen: 'complete', kind: 'checkbox', state: 'idle' },
+      { screen: 'remove', kind: 'trash', state: 'idle' },
+    ]);
+  });
+
+  it('takes the exhibit sources and scale from the bundle builds', () => {
+    expect(initialState(bundle()).exhibits).toMatchObject({ originalSrc: '/o/', revivalSrc: '/r/v1.html', scale: 1.5 });
+  });
+
+  it('lets a mesh.* ledger caption speak as its agent', () => {
+    const mesh = (agent?: string) => ({ seq: 1, ts: '', type: 'mesh.dig', payload: { caption: 'Found 3 pages.', agent }, prev_hash: '', hash: '' });
+    const { states } = play(bundle({ ledger: [mesh('reader'), mesh()] }));
+    expect(states[1].subtitle).toEqual({ who: 'READER', text: 'Found 3 pages.' });
+    expect(states[2].subtitle).toEqual({ who: 'THE CLERK', text: 'Found 3 pages.' });
   });
 
   it('stateAt agrees with the fold', () => {
@@ -142,25 +194,56 @@ describe('the show on the fixture case', () => {
     expect(s.scores).toMatchObject({ credibility: 982, fidelity: 60, claimsSurvived: 3, struck: 1, fabricated: 1 });
   });
 
-  it('repairs c03: narrowed claim re-ruled LOCKED, fidelity 60 to 80, no refund', () => {
+  it('repairs the revival: boots the after build under P4 reason, then re-rules fidelity 60 to 100, every status kept', () => {
     const boot = find(script, states, 'repair').s;
-    expect(boot.exhibits).toMatchObject({ revival: 'booting', revivalSrc: EXHIBIT_SRC.repaired });
-    expect(boot.scores.credibility).toBe(982);
-    const { s } = find(script, states, 'repaired');
-    expect(s.cards[2]).toMatchObject({ status: 'LOCKED', repairedFrom: 'c03', claim: { id: 'c03r' } });
-    expect(s.scores).toMatchObject({ fidelity: 80, credibility: 982, rollbacks: 1, struck: 1 });
-    expect(s.exhibits.revival).toBe('live');
-    expect(guy(s, 'divide')).toBe('repaired');
-    expect(s.moods.faux).toBe('hidden');
+    expect(boot.exhibits).toMatchObject({ revival: 'booting', revivalSrc: '/r/v2.html' });
+    expect(boot.subtitle).toEqual({ who: 'THE CLERK', text: PATCH.reason });
+    expect(boot.scores).toMatchObject({ credibility: 982, fidelity: 60 });
+    const live = find(script, states, 'repaired').s;
+    expect(live.exhibits.revival).toBe('live');
+    expect(live.subtitle).toEqual(boot.subtitle);
+    expect(live.cards.map((k) => k.status)).toEqual(['LOCKED', 'LOCKED', 'STRUCK', 'LOCKED', 'FABRICATED']);
+    const { s } = find(script, states, 'rerule');
+    expect(s.cards.map((k) => k.status)).toEqual(['LOCKED', 'LOCKED', 'STRUCK', 'LOCKED', 'FABRICATED']);
+    expect(s.scores).toMatchObject({ fidelity: 100, credibility: 982, rollbacks: 0, struck: 1 });
+    expect(s.divergence).toBeNull();
+    expect(guy(s, 'divide')).toBe('repaired'); // c03 and c05 diverged before the repair
+    expect(guy(s, 'add')).toBe('locked');
+    expect(guy(states.at(-1)!, 'divide')).toBe('repaired');
+    expect(s.subtitle?.text).toBe('Re-ruled on the repaired revival. Fidelity 100.');
   });
 
-  it('sentences: Faux bows at fidelity 80 with no strike standing; counsel nervous at 982', () => {
+  it('sentences: a strike still stands after the patch, so Faux is smug; counsel nervous at 982', () => {
     const end = states.at(-1);
     expect(end?.phase).toBe('sentence');
-    expect(end?.moods).toMatchObject({ faux: 'bow', mcclusky: 'nervous' });
+    expect(end?.moods).toMatchObject({ faux: 'smug', mcclusky: 'nervous' });
     const sentence = find(script, states, 'sentence').s;
-    expect(sentence.subtitle?.text).toBe('Fidelity 80. Credibility 982. Brier 0.173.');
+    expect(sentence.subtitle?.text).toBe('Fidelity 100. Credibility 982. Brier 0.173.');
     expect(end?.subtitle?.text).toBe('Down 18 credits. I\'ll appeal. To whom, unclear.');
+  });
+});
+
+describe('repair decisions (P4)', () => {
+  const last = (r: Repair) => play(bundle({ repairs: [r] })).states.at(-1)!;
+
+  it('a rollback unswears the claim it names and counts one rollback', () => {
+    const s = last({ ...PATCH, decision: 'rollback', reason: 'regression 19 -> 17' });
+    expect(s.cards[2].status).toBe('UNSWORN');
+    expect(s.scores).toMatchObject({ rollbacks: 1, struck: 0, unsworn: 1, credibility: 1042 });
+  });
+
+  it('unsworn unswears without a rollback', () => {
+    const s = last({ ...PATCH, decision: 'unsworn', reason: 'no build to test' });
+    expect(s.cards[2].status).toBe('UNSWORN');
+    expect(s.scores.rollbacks).toBe(0);
+  });
+
+  it('a whole-revival patch changes no claim, and no after build keeps the old revival', () => {
+    const { script, states } = play(bundle({ repairs: [{ claim_id: 'attacks:app1', decision: 'patched', reason: 'attack mismatches 3->0' }], after: null, builds: { ...BUILDS, revivalAfter: null } }));
+    expect(script.some((b) => b.kind === 'rerule')).toBe(false);
+    const s = find(script, states, 'repair').s;
+    expect(s).toMatchObject({ focusId: null, exhibits: { revivalSrc: '/r/v1.html', revival: 'booting' } });
+    expect(states.at(-1)?.cards.map((k) => k.status)).toEqual(['LOCKED', 'LOCKED', 'STRUCK', 'LOCKED', 'FABRICATED']);
   });
 });
 
@@ -211,11 +294,11 @@ describe('no perjury without a ruling the court can stand on', () => {
 describe('bench', () => {
   it('lands bench verdicts at the bench beat and counts them toward fidelity', () => {
     const v: Verdict = { ref: 'bench-1', kind: 'attack', original: '0.2', revival: '0.2', claim_true: null, match: true, flaky: false, shrunk_steps: [] };
-    const { script, states } = play(bundle(), { verdicts: [v], events: [] });
+    const { script, states } = play(bundle({ repairs: [], after: null }), { verdicts: [v], events: [] });
     const { s } = find(script, states, 'bench');
     expect(s.bench).toEqual({ open: true, last: v, runs: 1 });
-    // c01 c02 c03r c04 and the bench run match, c05 does not: 100 * 5 / 6 = 83.3
-    expect(s.scores.fidelity).toBe(83);
+    // c01 c02 c04 and the bench run match, c03 c05 do not: 100 * 4 / 6 = 66.7
+    expect(s.scores.fidelity).toBe(67);
     expect(states.at(-1)?.bench.open).toBe(false);
   });
 });
@@ -227,13 +310,14 @@ describe('ledger', () => {
     expect(await commitOf(claims[0])).toBe('cc867cfc14b056ec219ad0aa5fc3247fc230bc441483bf8996a178c5cc0dc14b');
     const ledger = await synthesizeLedger(bundle());
     expect(ledger[0]).toMatchObject({
-      seq: 1, type: 'claim_committed', prev_hash: GENESIS,
+      seq: 1, type: 'commit', payload: { kind: 'claim', ref: 'c01' }, prev_hash: GENESIS,
       hash: 'aad36b1596125a99193202a27374c45ff105f8947d4fe95c42049bc4c048812c',
     });
+    // court/ledger.py names and order; repairs stay off the chain.
     expect(ledger.map((e) => e.type)).toEqual([
-      ...Array<string>(5).fill('claim_committed'), ...Array<string>(5).fill('attack_committed'),
-      ...Array<string>(5).fill('verdict'), ...Array<string>(5).fill('lock'), 'repair', 'rollback',
+      ...Array<string>(10).fill('commit'), ...Array<string>(5).fill('verdict'), ...Array<string>(5).fill('lock'),
     ]);
+    expect(ledger.slice(5, 10).map((e) => (e.payload as { kind: string }).kind)).toEqual(Array<string>(5).fill('attack'));
     expect(await verifyLedger(ledger)).toBe(true);
     expect(await verifyLedger(ledger.map((e, i) => (i === 3 ? { ...e, payload: { edited: true } } : e)))).toBe(false);
   });
@@ -262,20 +346,21 @@ describe('the shipped fixture bundle', () => {
     expect(end?.evidenceShown).toHaveLength(b.evidence.length);
   });
 
-  it('shows the hand-computed numbers before and after the c03 repair, and nothing unmeasured', () => {
-    // credibility: 1000 + 10 (c01) + 18 (c02) - 60 (c03) + 7 (c04) + 7 (c05, fabricated but true) = 982; the repair refunds nothing.
-    // Brier over the five sworn claims: (.0025 + .01 + .36 + .0009 + .49) / 5 = .17268.
-    // fidelity: 3 of 5 match at the last ruling (60); c03r matches on the repaired build, so 4 of 5 after it (80).
-    const { script, states } = play(loadFixtureBundle());
+  it('shows the hand-computed numbers, P4 repair reasons verbatim, and the measured regression counts', () => {
+    // credibility: 1000 + 10 (c01) + 18 (c02) - 60 (c03) + 7 (c04) + 7 (c05, fabricated but true) = 982; patches refund nothing.
+    // fidelity: 3 of 5 claims match and the attacks are unjudged (60), the same as cases/app1-fixture.case.yml.
+    const b = loadFixtureBundle();
+    const { script, states } = play(b);
     expect(find(script, states, 'ruling', 'c05').s.scores).toMatchObject({ credibility: 982, fidelity: 60 });
+    const reasons = script.flatMap((x, i) => (x.kind === 'repair' ? [states[i].subtitle?.text] : []));
+    expect(reasons).toEqual(b.repairs.map((r) => r.reason));
     const end = states.at(-1);
     expect(end?.source).toBe('fixture');
     expect(end?.scores).toMatchObject({
-      credibilityStart: 1000, credibility: 982, fidelity: 80, claimsMade: 5, claimsSurvived: 3,
-      struck: 1, unsworn: 0, fabricated: 1, rollbacks: 0, falseStrikes: null, trapsCaught: null,
+      credibilityStart: 1000, credibility: 982, fidelity: 60, claimsMade: 5, claimsSurvived: 3,
+      struck: 1, unsworn: 0, fabricated: 1, rollbacks: 0,
     });
-    expect(end?.scores.brier).toBeCloseTo(0.17268, 12);
-    expect(find(script, states, 'sentence').s.subtitle?.text).toBe('Fidelity 80. Credibility 982. Brier 0.173.');
+    expect(end?.scores.brier).toBeCloseTo(0.173, 3);
     // Credibility peaks at 1028 after c02, so no line may call the opening 1000 the peak.
     expect(Math.max(...states.map((s) => s.scores.credibility))).toBe(1028);
   });

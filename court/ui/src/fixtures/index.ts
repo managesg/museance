@@ -3,7 +3,11 @@ import type { BenchSuggestion } from '../engine/types';
 import attacks from '../../../../fixtures/attacks.json';
 import claims from '../../../../fixtures/claims.json';
 import verdicts from '../../../../fixtures/verdicts.json';
-import { APP1_EVIDENCE, APP1_REPAIRS, APP1_SHEET } from './app1.extra';
+import caseYaml from '../../../../cases/app1-fixture.case.yml?raw';
+import repairsJsonl from '../../../../cases/app1/repairs.jsonl?raw';
+import { FIXTURE_BUILDS } from '../feed/builds';
+import { parseCase, parseRepairs } from '../feed/parse';
+import { APP1_EVIDENCE, APP1_SHEET } from './app1.extra';
 
 // Built once so callers that key effects or memos on the bundle get the same object every time.
 const BUNDLE: CaseBundle = {
@@ -18,8 +22,10 @@ const BUNDLE: CaseBundle = {
   verdicts: verdicts as Verdict[],
   locks: [],
   ledger: [],
-  caseFile: null,
-  repairs: APP1_REPAIRS,
+  caseFile: parseCase(caseYaml),
+  repairs: parseRepairs(repairsJsonl),
+  builds: FIXTURE_BUILDS,
+  after: null,
 };
 
 export function loadFixtureBundle(): CaseBundle {
