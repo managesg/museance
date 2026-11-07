@@ -1,5 +1,5 @@
 app: "todo"
-fidelity: 36
+fidelity: 100
 brier: 0.014
 credibility_start: 1000
 credibility_end: 1010
@@ -23,5 +23,5 @@ counts:
   unsworn: 0
   false_strikes: 0
   false_strikes_of: 12
-  traps_caught: 1
+  traps_caught: 0
   traps_of: 8
