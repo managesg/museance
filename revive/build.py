@@ -1,6 +1,7 @@
 """Build a single-file revival from supplied evidence, without original sources."""
 import argparse
 import json
+import os
 from pathlib import Path
 import re
 import shutil
@@ -67,6 +68,9 @@ def check_selectors(html, selectors):
 def builder_command(builder):
     if builder == "codex":
         return ["codex", "exec", "-s", "read-only", "--skip-git-repo-check", "--ephemeral", "-"]
+    if builder == "muse":  # no tools can run or write; the prompt is passed by --prompt-file (no stdin support)
+        return ["muse", "exec", "--disable-shell", "--disable-write", "--disable-web-tools", "--approval-mode", "never",
+                "--no-session-log", "--no-foreign-personal-context"]
     executable = "claude" if builder == "claude" else str(Path.home() / ".local/bin/glm")
     return [executable, "-p", "--output-format", "text", "--permission-mode", "plan"]
 
@@ -74,10 +78,16 @@ def builder_command(builder):
 def run_builder(builder, prompt):
     """Send a prompt to the coding CLI and return its reply text."""
     # Neither repository context nor original-app paths are handed to the coding CLI.
-    with tempfile.TemporaryDirectory(prefix="seance-revival-") as work:
+    with tempfile.TemporaryDirectory(prefix="seance-revival-") as work, tempfile.TemporaryDirectory(prefix="seance-tmp-") as tmp:
         command = builder_command(builder)
+        env = None
+        if builder == "muse":  # Muse refuses a workspace that contains TMPDIR, so TMPDIR is a sibling dir
+            (Path(work) / "prompt.txt").write_text(prompt, encoding="utf-8")
+            command += ["--prompt-file", "prompt.txt"]
+            prompt = None
+            env = {**os.environ, "TMPDIR": tmp, "TEMP": tmp, "TMP": tmp}
         command[0] = shutil.which(command[0]) or command[0]  # Windows npm shims are codex.cmd, not codex
-        result = subprocess.run(command, input=prompt, cwd=work,
+        result = subprocess.run(command, input=prompt, cwd=work, env=env,
                                 capture_output=True, text=True, encoding="utf-8", timeout=600)
     if result.returncode:
         raise RuntimeError(f"{builder} exited {result.returncode}: {result.stderr[-3000:]}")
