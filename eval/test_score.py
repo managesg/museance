@@ -1,3 +1,4 @@
+import pytest
 import json, pathlib, sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
@@ -45,5 +46,22 @@ def test_fabricated_and_struck_is_struck():
 def test_case():
     c = build_case("app1", CLAIMS, VERDICTS)
     assert (c["fidelity"], c["brier"], c["credibility_end"]) == (60, 0.173, 982)
-    assert c["counts"] == {"claims": 5, "locked": 3, "struck": 1, "fabricated": 1, "unsworn": 0}
+    assert c["counts"] == {"claims": 5, "locked": 3, "struck": 1, "fabricated": 1, "unsworn": 0,
+                           "false_strikes": None, "false_strikes_of": None, "traps_caught": None, "traps_of": None}
     assert c["struck"] == ["divide: 1 / 8 rounds to 0.13 [C]"]
+
+
+def test_case_regression_counts_and_yaml():
+    from case_file import to_yaml
+    reg = [{"id": "g1", "kind": "good", "passed": True}, {"id": "g2", "kind": "good", "passed": False},
+           {"id": "t1", "kind": "trap", "passed": False}, {"id": "t2", "kind": "trap", "passed": True},
+           {"id": "t3", "kind": "trap", "passed": False}]
+    c = build_case("app1", CLAIMS, VERDICTS, reg)["counts"]
+    assert (c["false_strikes"], c["false_strikes_of"], c["traps_caught"], c["traps_of"]) == (1, 2, 2, 3)
+    assert "  false_strikes: 1\n" in to_yaml(build_case("app1", CLAIMS, VERDICTS, reg))
+    # no run -> null, never 0
+    assert "  false_strikes: null\n" in to_yaml(build_case("app1", CLAIMS, VERDICTS))
+    # a run with no traps is 0 of 0, still a number
+    assert build_case("app1", CLAIMS, VERDICTS, [])["counts"]["traps_of"] == 0
+    with pytest.raises(ValueError):
+        build_case("app1", CLAIMS, VERDICTS, [{"id": "x", "kind": "bad", "passed": True}])

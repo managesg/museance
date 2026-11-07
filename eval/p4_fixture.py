@@ -13,13 +13,17 @@ from skeptic import generate  # noqa: E402
 load = lambda p: json.loads(pathlib.Path(p).read_text(encoding="utf-8"))
 
 
-def regression_line(revival):
+def regression_run(revival):
+    """Return (summary line, [{id, kind, passed}] or None when no revival was checked)."""
     revival = pathlib.Path(revival)
     if not revival.is_file():
-        return f"skipped (no revival at {revival})"
-    r = subprocess.run([sys.executable, str(ROOT / "revive/check_revival.py"), str(revival)], capture_output=True, text=True)
-    m = re.search(r"Total: (\d+)/(\d+) passed", r.stdout)
-    return f"{m[1]}/{m[2]}" if m else f"error (exit {r.returncode}): {r.stderr.strip()[-200:]}"
+        return f"skipped (no revival at {revival})", None
+    r = subprocess.run([sys.executable, str(ROOT / "revive/check_revival.py"), "--json", str(revival)], capture_output=True, text=True)
+    try:
+        rows = json.loads(r.stdout)
+    except ValueError:
+        return f"error (exit {r.returncode}): {r.stderr.strip()[-200:]}", None
+    return f"{sum(x['passed'] for x in rows)}/{len(rows)}", rows
 
 
 def run(app="app1", revival=ROOT / "runs/app1/revival/index.html", attacks_out=None, case_out=None):
@@ -28,8 +32,8 @@ def run(app="app1", revival=ROOT / "runs/app1/revival/index.html", attacks_out=N
     attacks = generate(app, load(ROOT / f"eval/regression/{app}-selectors.json"))
     attacks_out.parent.mkdir(parents=True, exist_ok=True)
     attacks_out.write_text(json.dumps(attacks, indent=1), encoding="utf-8")
-    reg = regression_line(revival)
-    case = build_case(f"{app}-fixture", load(ROOT / "fixtures/claims.json"), load(ROOT / "fixtures/verdicts.json"))
+    reg, rows = regression_run(revival)
+    case = build_case(f"{app}-fixture", load(ROOT / "fixtures/claims.json"), load(ROOT / "fixtures/verdicts.json"), rows)
     case_out.parent.mkdir(parents=True, exist_ok=True)
     with open(case_out, "w", encoding="utf-8", newline="\n") as f:
         f.write(to_yaml(case))

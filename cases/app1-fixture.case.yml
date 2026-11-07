@@ -18,3 +18,7 @@ counts:
   struck: 1
   fabricated: 1
   unsworn: 0
+  false_strikes: null
+  false_strikes_of: null
+  traps_caught: null
+  traps_of: null

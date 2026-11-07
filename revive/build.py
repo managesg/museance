@@ -70,6 +70,17 @@ def builder_command(builder):
     return [executable, "-p", "--output-format", "text", "--permission-mode", "plan"]
 
 
+def run_builder(builder, prompt):
+    """Send a prompt to the coding CLI and return its reply text."""
+    # Neither repository context nor original-app paths are handed to the coding CLI.
+    with tempfile.TemporaryDirectory(prefix="seance-revival-") as work:
+        result = subprocess.run(builder_command(builder), input=prompt, cwd=work,
+                                capture_output=True, text=True, encoding="utf-8", timeout=600)
+    if result.returncode:
+        raise RuntimeError(f"{builder} exited {result.returncode}: {result.stderr[-3000:]}")
+    return result.stdout
+
+
 def build(sheet_path, selectors_path, out, builder):
     sheet = json.loads(Path(sheet_path).read_text(encoding="utf-8"))
     selectors = json.loads(Path(selectors_path).read_text(encoding="utf-8"))
@@ -77,13 +88,7 @@ def build(sheet_path, selectors_path, out, builder):
     out = Path(out).resolve()
     out.parent.mkdir(parents=True, exist_ok=True)
     out.with_suffix(".prompt.txt").write_text(prompt, encoding="utf-8")
-    # Neither repository context nor original-app paths are handed to the coding CLI.
-    with tempfile.TemporaryDirectory(prefix="seance-revival-") as work:
-        result = subprocess.run(builder_command(builder), input=prompt, cwd=work,
-                                capture_output=True, text=True, encoding="utf-8", timeout=600)
-    if result.returncode:
-        raise RuntimeError(f"{builder} exited {result.returncode}: {result.stderr[-3000:]}")
-    html = extract_html(result.stdout)
+    html = extract_html(run_builder(builder, prompt))
     check_selectors(html, selectors)
     out.write_text(html, encoding="utf-8")
     return out

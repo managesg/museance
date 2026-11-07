@@ -95,7 +95,8 @@ def deny_network():
         lib.seccomp_release(ctx)
 
 
-def check_revival(html_path, checks_path=ROOT / "eval/regression/app1-fixture.json"):
+def evaluate(html_path, checks_path=ROOT / "eval/regression/app1-fixture.json"):
+    """Run the checks; return one row per check: id, kind (good|trap), passed, expect, got."""
     html_path, checks_path = Path(html_path).resolve(), Path(checks_path).resolve()
     for path in (html_path, checks_path):
         if not path.is_file():
@@ -113,18 +114,27 @@ def check_revival(html_path, checks_path=ROOT / "eval/regression/app1-fixture.js
         raise RuntimeError(f"Node evaluator exited {result.returncode}: {result.stderr[-3000:]}")
     observations = json.loads(result.stdout)
     data = json.loads(checks_path.read_text(encoding="utf-8"))
-    rows = data if isinstance(data, list) else data["good"] + data["traps"]
-    passed = 0
-    failed = []
-    for row in rows:
+    if isinstance(data, list):  # flat list: rows may carry their own kind, default good
+        rows = [(r, "trap" if r.get("kind") == "trap" else "good") for r in data]
+    else:
+        rows = [(r, "good") for r in data["good"]] + [(r, "trap") for r in data["traps"]]
+    out = []
+    for row, kind in rows:
         got = observations[row["id"]]
-        ok = "error" not in got and got.get("observed") == row["expect"]
-        passed += ok
-        if not ok:
-            failed.append(row["id"])
-        detail = got.get("error", repr(got.get("observed")))
-        print(f"{'PASS' if ok else 'FAIL'} {row['id']}: expected {row['expect']!r}, got {detail}")
-    print(f"Total: {passed}/{len(rows)} passed")
+        out.append({"id": row["id"], "kind": kind, "passed": "error" not in got and got.get("observed") == row["expect"],
+                    "expect": row["expect"], "got": got.get("error", repr(got.get("observed")))})
+    return out
+
+
+def check_revival(html_path, checks_path=ROOT / "eval/regression/app1-fixture.json", as_json=False):
+    results = evaluate(html_path, checks_path)
+    failed = [r["id"] for r in results if not r["passed"]]
+    if as_json:
+        print(json.dumps([{k: r[k] for k in ("id", "kind", "passed")} for r in results]))
+        return 1 if failed else 0
+    for r in results:
+        print(f"{'PASS' if r['passed'] else 'FAIL'} {r['id']}: expected {r['expect']!r}, got {r['got']}")
+    print(f"Total: {len(results) - len(failed)}/{len(results)} passed")
     print("Failed checks: " + (", ".join(failed) or "none"))
     return 0 if not failed else 1
 
@@ -134,12 +144,13 @@ def main():
     parser.add_argument("html", nargs="?", help="revival index.html")
     parser.add_argument("--html", "--revival", dest="html_option")
     parser.add_argument("--checks", default=str(ROOT / "eval/regression/app1-fixture.json"))
+    parser.add_argument("--json", action="store_true", help="print [{id, kind, passed}] as JSON instead of text")
     args = parser.parse_args()
     target = args.html_option or args.html
     if not target:
         parser.error("provide a revival HTML path")
     try:
-        return check_revival(target, args.checks)
+        return check_revival(target, args.checks, as_json=args.json)
     except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as exc:
         parser.exit(2, f"Evaluation failed: {exc}\n")
 
