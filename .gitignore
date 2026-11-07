@@ -5,3 +5,5 @@ sealed/
 __pycache__/
 node_modules/
 .venv/
+private_keys.json
+*_data.json
