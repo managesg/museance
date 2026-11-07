@@ -8,6 +8,11 @@
    "url": "http://localhost:8001",
    "cmd": "python -m http.server 8001 -d fixtures/app1",
    "port": 8001
+  },
+  "revival": {
+   "url": "http://localhost:8002",
+   "cmd": "python -m http.server 8002 -d revive/out/app1",
+   "port": 8002
   }
  },
  {
@@ -19,6 +24,11 @@
    "url": "http://localhost:8011",
    "cmd": "python -m http.server 8011 -d apps/todo/original",
    "port": 8011
+  },
+  "revival": {
+   "url": "http://localhost:8012",
+   "cmd": "python -m http.server 8012 -d revive/out/todo",
+   "port": 8012
   }
  }
 ]

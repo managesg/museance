@@ -79,7 +79,7 @@ li {
   font-size: 14px;
   line-height: 20px;
   overflow-wrap: anywhere;
-  white-space: pre-wrap;
+  white-space: normal;
 }
 li button {
   position: absolute;
@@ -181,9 +181,6 @@ function renderList(name) {
   list.className = tasks[name].length ? "" : "empty";
 
   if (!tasks[name].length) {
-    list.textContent = name === "todo"
-      ? "You have nothing to-do!"
-      : "You have yet to complete any tasks.";
     return;
   }
 

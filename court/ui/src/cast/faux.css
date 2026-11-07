@@ -1,0 +1,145 @@
+/* Faux, the cardboard standee of the app. The root's faux--{mood} class poses the named groups. */
+
+.faux {
+  --kraft: color-mix(in oklab, var(--floor-shadow) 66%, var(--wood-light));
+  --kraft-deep: color-mix(in oklab, var(--floor-shadow) 30%, var(--wood-light));
+  display: block;
+  overflow: visible;
+  /* the bow leans past its sides, but the bottom edge is the slot it sinks into when hidden */
+  clip-path: inset(-100% -100% 0 -100%);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.faux__key-label {
+  font-family: var(--font-stamp);
+  font-size: 27px;
+  font-variant-numeric: tabular-nums;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+/* rise from below with a small settle; sink back quickly */
+.faux__rig {
+  transition: transform 640ms cubic-bezier(0.18, 1.25, 0.4, 1);
+}
+.faux--hidden .faux__rig {
+  transform: translateY(100%);
+  transition: transform 380ms cubic-bezier(0.55, 0, 0.8, 0.25);
+}
+
+/* bow: the board hinges on its bottom-left foot toward centre stage */
+.faux__tilt {
+  transform-origin: 30px 506px;
+  transition: transform 560ms cubic-bezier(0.3, 1.3, 0.5, 1);
+}
+.faux--bow .faux__tilt {
+  transform: rotate(-25deg);
+}
+
+/* the arm hangs loose on its brad, so it stays plumb when the board tips */
+.faux__arm {
+  transform-origin: 0 0;
+  transform: rotate(-22deg);
+  transition: transform 700ms cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.faux--bow .faux__arm {
+  transform: rotate(3deg);
+}
+.faux--wave .faux__arm {
+  animation: faux-wave 2.6s ease-in-out 0.45s both;
+}
+
+/* googly pupils swing on the eye centre; the right eye runs on its own clock */
+.faux__pupil {
+  transform-origin: 0 0;
+  animation: faux-sway var(--sway, 3.4s) ease-in-out infinite alternate;
+}
+.faux__eye--r {
+  --sway: 2.7s;
+  --lag: 90ms;
+}
+.faux--wave .faux__pupil {
+  animation:
+    faux-sway var(--sway, 3.4s) ease-in-out infinite alternate,
+    faux-jiggle 0.9s ease-out calc(0.4s + var(--lag, 0s)) 3;
+}
+.faux--bow .faux__pupil {
+  animation: faux-hang 1.3s ease-out calc(0.1s + var(--lag, 0s)) both;
+}
+.faux--smug .faux__pupil {
+  animation: faux-roll 0.9s ease-out var(--lag, 0s) both;
+}
+
+@keyframes faux-wave {
+  0% { transform: rotate(-22deg); }
+  14% { transform: rotate(-152deg); }
+  24% { transform: rotate(-134deg); }
+  34% { transform: rotate(-168deg); }
+  44% { transform: rotate(-134deg); }
+  54% { transform: rotate(-168deg); }
+  64% { transform: rotate(-134deg); }
+  74% { transform: rotate(-168deg); }
+  84% { transform: rotate(-150deg); }
+  100% { transform: rotate(-22deg); }
+}
+
+@keyframes faux-sway {
+  from { transform: rotate(-8deg); }
+  to { transform: rotate(8deg); }
+}
+
+@keyframes faux-jiggle {
+  0% { transform: rotate(0deg); }
+  15% { transform: rotate(38deg); }
+  32% { transform: rotate(-28deg); }
+  48% { transform: rotate(18deg); }
+  64% { transform: rotate(-10deg); }
+  80% { transform: rotate(5deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* the board tips -25deg, so the pupils swing +25deg to keep hanging plumb */
+@keyframes faux-hang {
+  0% { transform: rotate(0deg); }
+  35% { transform: rotate(48deg); }
+  55% { transform: rotate(12deg); }
+  72% { transform: rotate(32deg); }
+  87% { transform: rotate(21deg); }
+  100% { transform: rotate(25deg); }
+}
+
+/* side-eye toward centre stage, a little up */
+@keyframes faux-roll {
+  0% { transform: rotate(0deg); }
+  55% { transform: rotate(124deg); }
+  78% { transform: rotate(100deg); }
+  100% { transform: rotate(110deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faux .faux__rig {
+    transition: opacity 280ms ease-out;
+  }
+  .faux--hidden .faux__rig {
+    transform: none;
+    opacity: 0;
+  }
+  .faux .faux__tilt,
+  .faux .faux__arm {
+    transition: none;
+  }
+  .faux .faux__arm,
+  .faux .faux__pupil {
+    animation: none;
+  }
+  .faux--wave .faux__arm {
+    transform: rotate(-150deg);
+  }
+  .faux--bow .faux__pupil {
+    transform: rotate(25deg);
+  }
+  .faux--smug .faux__pupil {
+    transform: rotate(110deg);
+  }
+}

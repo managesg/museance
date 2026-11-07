@@ -1,0 +1,115 @@
+/* Dr. Hoot. Poses live on outer groups (transitions); loops live on inner groups (keyframes). */
+.hoot {
+  overflow: visible; /* the pointer reaches past the box toward the cards */
+  --hoot-deep: color-mix(in srgb, var(--owl) 70%, var(--ink));
+  --hoot-chest: color-mix(in srgb, var(--owl-cream) 55%, var(--owl));
+  --lid-l: 16px;
+  --lid-r: 16px;
+  --tilt: 0deg;
+  --px: 0px;
+  --py: 2px;
+}
+.hoot g,
+.hoot path {
+  transition:
+    transform 280ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 180ms ease-out;
+}
+
+.hoot-breath { transform-origin: 190px 492px; animation: hoot-breathe 4.2s ease-in-out infinite; }
+.hoot-head,
+.hoot-nod { transform-origin: 190px 256px; }
+.hoot-tufts { transform-origin: 190px 100px; }
+.hoot-brow--l { transform-origin: 94px 126px; }
+.hoot-brow--r { transform-origin: 286px 126px; }
+.hoot-lidtilt--l { transform-origin: 140px 170px; transform: rotate(var(--tilt)); }
+.hoot-lidtilt--r { transform-origin: 240px 170px; transform: rotate(calc(var(--tilt) * -1)); }
+.hoot-lid--l { transform: translateY(var(--lid-l)); }
+.hoot-lid--r { transform: translateY(var(--lid-r)); }
+.hoot-pupil { transform: translate(var(--px), var(--py)); }
+.hoot-wing--l { transform-origin: 92px 214px; }
+.hoot-wing--r { transform-origin: 288px 214px; }
+.hoot-hand--l,
+.hoot-stick { transform-origin: 64px 302px; }
+.hoot-hand--r { transform-origin: 312px 343px; }
+.hoot-watch,
+.hoot-needle { transform-origin: 320px 300px; }
+.hoot-pencil,
+.hoot-clicks { opacity: 0; }
+/* pathLength=1: a 1-unit dash and a longer gap, so the hidden state leaves no round-cap dot */
+.hoot-scribbles path,
+.hoot-check { stroke-dasharray: 1 2; stroke-dashoffset: 1; }
+
+/* idle: bored lids, slow blink */
+.hoot--idle .hoot-blink { animation: hoot-blink 4.6s ease-in-out infinite; }
+
+/* writing: head down to the clipboard, pointer tucked under the arm, pencil scribbling */
+.hoot--writing { --lid-l: 24px; --lid-r: 24px; --px: 6px; --py: 8px; }
+.hoot--writing .hoot-head { transform: translateY(3px) rotate(4deg); }
+.hoot--writing .hoot-brow--l { transform: translateY(3px) rotate(5deg); }
+.hoot--writing .hoot-brow--r { transform: translateY(3px) rotate(-5deg); }
+.hoot--writing .hoot-wing--l { transform: rotate(-8deg); }
+.hoot--writing .hoot-hand--l { transform: translate(152px, 30px); }
+.hoot--writing .hoot-stick { transform: rotate(-58deg); }
+.hoot--writing .hoot-pencil { opacity: 1; }
+.hoot--writing .hoot-hand--l .hoot-hand-act { animation: hoot-scribble 520ms ease-in-out infinite; }
+.hoot--writing .hoot-scribbles path { animation: hoot-draw 620ms 200ms linear forwards; }
+.hoot--writing .hoot-scribbles path:nth-child(2) { animation-delay: 900ms; }
+.hoot--writing .hoot-scribbles path:nth-child(3) { animation-delay: 1600ms; }
+
+/* attacking: pointer levelled at the cards, stopwatch raised and clicking */
+.hoot--attacking { --lid-l: 19px; --lid-r: 19px; --tilt: 9deg; --px: -9px; --py: 2px; }
+.hoot--attacking .hoot-head { transform: rotate(-3deg); }
+.hoot--attacking .hoot-tufts { transform: scaleY(1.12); }
+.hoot--attacking .hoot-brow--l { transform: translateY(5px) rotate(12deg); }
+.hoot--attacking .hoot-brow--r { transform: translateY(5px) rotate(-12deg); }
+.hoot--attacking .hoot-wing--l { transform: rotate(10deg); }
+.hoot--attacking .hoot-hand--l { transform: translate(-28px, -30px); }
+.hoot--attacking .hoot-stick { transform: rotate(-76deg); }
+.hoot--attacking .hoot-hand--l .hoot-hand-act { animation: hoot-jab 1.6s 380ms ease-out infinite; }
+.hoot--attacking .hoot-hand--r { transform: translate(6px, -112px) rotate(-4deg); }
+.hoot--attacking .hoot-watch { transform: scale(1.14); }
+.hoot--attacking .hoot-crown { animation: hoot-click 1.6s 380ms ease-out infinite; }
+.hoot--attacking .hoot-clicks { animation: hoot-flash 1.6s 380ms ease-out infinite; }
+.hoot--attacking .hoot-needle { animation: hoot-tick 6s 380ms steps(60) infinite; }
+
+/* unimpressed: half lids, one brow down, the other up */
+.hoot--unimpressed { --lid-l: 30px; --lid-r: 25px; --px: -6px; --py: 3px; }
+.hoot--unimpressed .hoot-head { transform: rotate(-2deg); }
+.hoot--unimpressed .hoot-brow--l { transform: translateY(7px) rotate(6deg); }
+.hoot--unimpressed .hoot-brow--r { transform: translateY(-7px) rotate(5deg); }
+.hoot--unimpressed .hoot-blink { animation: hoot-blink 7s 1.2s ease-in-out infinite; }
+
+/* satisfied: one curt nod and a tick on the clipboard, lids stay low */
+.hoot--satisfied { --lid-l: 30px; --lid-r: 30px; --py: 3px; }
+.hoot--satisfied .hoot-brow--l { transform: translateY(-3px) rotate(-3deg); }
+.hoot--satisfied .hoot-brow--r { transform: translateY(-3px) rotate(3deg); }
+.hoot--satisfied .hoot-nod { animation: hoot-nod 560ms 120ms ease-out both; }
+.hoot--satisfied .hoot-check { animation: hoot-draw 300ms 560ms ease-out forwards; }
+
+@keyframes hoot-breathe { 50% { transform: scale(1.008, 1.016); } }
+@keyframes hoot-blink { 0%, 94%, 100% { transform: none; } 97% { transform: translateY(60px); } }
+@keyframes hoot-draw { to { stroke-dashoffset: 0; } }
+@keyframes hoot-scribble {
+  0%, 100% { transform: none; }
+  25% { transform: translate(7px, -2px); }
+  50% { transform: translate(2px, 3px); }
+  75% { transform: translate(9px, 1px); }
+}
+@keyframes hoot-jab {
+  0%, 34%, 100% { transform: none; }
+  8% { transform: translateX(-12px); }
+  16% { transform: none; }
+  24% { transform: translateX(-8px); }
+}
+@keyframes hoot-click { 0%, 14%, 100% { transform: none; } 5% { transform: translateY(4px); } }
+@keyframes hoot-flash { 0%, 24%, 100% { opacity: 0; } 6% { opacity: 1; } }
+@keyframes hoot-tick { to { transform: rotate(360deg); } }
+@keyframes hoot-nod { 0%, 100% { transform: none; } 35% { transform: translateY(6px) rotate(1.5deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .hoot * { animation: none !important; transition: opacity 200ms ease-out !important; }
+  .hoot--writing .hoot-scribbles path,
+  .hoot--satisfied .hoot-check { stroke-dashoffset: 0; }
+  .hoot--attacking .hoot-clicks { opacity: 1; }
+}

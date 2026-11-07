@@ -1,0 +1,591 @@
+/* The judge's bench: a walnut and brass drawer that rises at the bottom right of the 1920x1080 stage. */
+.bench {
+  --wood-deep: color-mix(in srgb, var(--wood) 70%, var(--ink));
+  --ring: var(--flame-core);
+  position: absolute;
+  right: 32px;
+  bottom: 0;
+  z-index: 20;
+  box-sizing: border-box;
+  width: 960px;
+  height: 520px;
+  padding: 0 32px 18px;
+  display: grid;
+  grid-template-rows: 72px minmax(0, 1fr);
+  color: var(--paper);
+  font: 22px/1.25 var(--font-ui, 'Atkinson Hyperlegible', sans-serif);
+  transform: translateY(calc(100% + 40px));
+  visibility: hidden;
+  transition:
+    transform 560ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s linear 560ms;
+}
+.bench--open {
+  transform: none;
+  visibility: visible;
+  transition:
+    transform 560ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s;
+}
+.bench *,
+.bench *::before,
+.bench *::after {
+  box-sizing: border-box;
+}
+.bench:focus {
+  outline: none;
+}
+.bench ::selection {
+  background: var(--brass);
+  color: var(--ink);
+}
+.bench :is(button, input):focus-visible {
+  outline: 4px solid var(--ring);
+  outline-offset: 3px;
+}
+
+.bench-body {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(-6px -8px 20px color-mix(in srgb, var(--ink) 45%, transparent));
+}
+
+/* Lip: brass nameplate and the hand-bell. */
+.bench-lip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 44px 0;
+}
+.bench-plate {
+  position: relative;
+  margin: 0;
+  padding: 5px 36px 3px;
+  border: 4px solid var(--ink);
+  border-radius: 8px 10px 9px 7px;
+  background: var(--brass);
+  color: var(--ink);
+  font: 26px/1.2 var(--font-stamp, 'Alfa Slab One', serif);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.bench-plate::before,
+.bench-plate::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 13px;
+  height: 13px;
+  margin-top: -6.5px;
+  border: 2.5px solid var(--ink);
+  border-radius: 50%;
+  background: var(--brass-deep);
+}
+.bench-plate::before {
+  left: 10px;
+}
+.bench-plate::after {
+  right: 10px;
+}
+.bench-bell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 52px;
+  padding: 0 20px 0 10px;
+  border: 4px solid var(--ink);
+  border-radius: 26px;
+  background: var(--wood);
+  color: var(--paper);
+  font: 700 22px/1 var(--font-ui, 'Atkinson Hyperlegible', sans-serif);
+  cursor: pointer;
+  transition: background-color 140ms ease-out;
+}
+.bench-bell:hover {
+  background: var(--wood-deep);
+}
+.bench-bell-art {
+  width: 32px;
+  height: 38px;
+  transform-origin: 50% 8%;
+}
+.bench-bell:hover .bench-bell-art,
+.bench-bell:focus-visible .bench-bell-art {
+  animation: bench-ring 640ms ease-out;
+}
+
+/* Desk: compose on the left, run and rule on the right. */
+.bench-desk {
+  display: grid;
+  grid-template-columns: 470px minmax(0, 1fr);
+  gap: 20px;
+  min-height: 0;
+  padding-top: 10px;
+}
+.bench-compose {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+.bench-keys {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  grid-auto-flow: dense;
+  gap: 10px;
+  max-height: 158px;
+  overflow-y: auto;
+  padding: 10px;
+  border: 4px solid var(--ink);
+  border-radius: 16px 18px 15px 17px;
+  background: var(--wood-deep);
+  scrollbar-color: var(--brass) var(--wood-deep);
+  scrollbar-width: thin;
+}
+
+/* Keycaps: paper face over a darker skirt, the key's front edge. */
+.bench-key,
+.bench-cap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 4px solid var(--ink);
+  border-radius: 12px 14px 12px 15px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-stamp, 'Alfa Slab One', serif);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.bench-key::after,
+.bench-cap::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 9px;
+  background: var(--paper-deep);
+}
+.bench-key {
+  height: 60px;
+  padding: 0 8px 9px;
+  font-size: 30px;
+  cursor: pointer;
+  transition: transform 120ms ease-out;
+}
+.bench-key--wide {
+  grid-column: span 2;
+  font-size: 22px;
+}
+.bench-key:hover {
+  transform: translateY(-2px);
+}
+.bench-key:active {
+  transform: translateY(2px);
+}
+.bench-cap {
+  flex: none;
+  min-width: 44px;
+  height: 46px;
+  padding: 0 8px 7px;
+  border-width: 3px;
+  border-radius: 9px 10px 8px 11px;
+  font-size: 22px;
+}
+.bench-cap::after {
+  height: 7px;
+}
+
+.bench-type {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.bench-type label {
+  font-weight: 700;
+}
+.bench-field {
+  flex: 1;
+  min-width: 0;
+  height: 56px;
+  padding: 0 16px;
+  border: 4px solid var(--ink);
+  border-radius: 10px 12px 9px 11px;
+  background: var(--paper);
+  color: var(--ink);
+  caret-color: var(--crimson);
+  font: 700 30px/1 var(--font-doc, 'Courier Prime', monospace);
+  letter-spacing: 0.04em;
+}
+.bench-field::placeholder {
+  color: color-mix(in srgb, var(--ink) 70%, var(--paper));
+}
+.bench-field[aria-invalid='true'] {
+  border-color: var(--crimson);
+}
+.bench-typo {
+  flex: none;
+  min-height: 26px;
+  margin: -4px 0;
+  color: var(--flame-core);
+  font-size: 20px;
+}
+
+.bench-tape {
+  flex: none;
+  display: flex;
+  gap: 10px;
+  height: 64px;
+}
+.bench-caps {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bench-tape .bench-caps {
+  flex: 1;
+  min-width: 0;
+  padding: 0 10px;
+  overflow-x: auto;
+  border: 4px solid var(--ink);
+  border-radius: 12px 14px 12px 13px;
+  background: var(--wood-deep);
+  scrollbar-color: var(--brass) var(--wood-deep);
+  scrollbar-width: thin;
+}
+.bench-none {
+  font-size: 20px;
+}
+.bench-tool {
+  padding: 0 16px;
+  border: 4px solid var(--ink);
+  border-radius: 12px 10px 13px 11px;
+  background: var(--wood-light);
+  color: var(--paper);
+  font: 700 22px/1 var(--font-ui, 'Atkinson Hyperlegible', sans-serif);
+  cursor: pointer;
+  transition: background-color 140ms ease-out;
+}
+.bench-tool:hover {
+  background: var(--wood);
+}
+
+.bench-suggest {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+}
+.bench-suggest > span {
+  flex: none;
+  font-weight: 700;
+}
+.bench-slip {
+  flex: 1;
+  min-width: 0;
+  min-height: 52px;
+  padding: 6px 12px;
+  border: 4px solid var(--ink);
+  border-radius: 6px 8px 7px 9px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 700 21px/1.1 var(--font-ui, 'Atkinson Hyperlegible', sans-serif);
+  transform: rotate(-1deg);
+  cursor: pointer;
+  transition: transform 120ms ease-out;
+}
+.bench-slip:nth-of-type(even) {
+  transform: rotate(1deg);
+}
+.bench-slip:hover {
+  transform: translateY(-2px);
+}
+
+.bench-rule {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+}
+.bench-run {
+  position: relative;
+  flex: none;
+  height: 76px;
+  padding: 0 0 12px;
+  overflow: hidden;
+  border: 5px solid var(--ink);
+  border-radius: 16px 18px 15px 17px;
+  background: var(--brass);
+  color: var(--ink);
+  font: 36px/1 var(--font-stamp, 'Alfa Slab One', serif);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 120ms ease-out;
+}
+.bench-run::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 12px;
+  background: var(--brass-deep);
+}
+.bench-run:hover {
+  transform: translateY(-2px);
+}
+.bench-run:active {
+  transform: translateY(2px);
+}
+
+/* Disabled after the hover rules so it wins; running keeps the run button lit. */
+.bench [aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+.bench--running .bench-run {
+  opacity: 1;
+  cursor: progress;
+}
+
+/* The ruling slip. */
+.bench-paper {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px 20px;
+  border: 4px solid var(--ink);
+  border-radius: 6px 10px 8px 12px;
+  background: var(--paper);
+  color: var(--ink);
+  transform: rotate(-0.5deg);
+  scrollbar-color: var(--paper-deep) var(--paper);
+  scrollbar-width: thin;
+}
+.bench-note {
+  margin: 0;
+}
+.bench-note--wait {
+  animation: bench-wait 1.2s ease-in-out infinite alternate;
+}
+.bench-problem {
+  margin: 0;
+  color: var(--crimson-deep);
+  font-weight: 700;
+}
+.bench-ruling {
+  animation: bench-flicker 420ms ease-out both;
+}
+.bench-outs {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 14px;
+  align-items: baseline;
+  margin: 0;
+}
+.bench-outs dt {
+  font-weight: 700;
+}
+.bench-out {
+  margin: 0;
+  font: 700 44px/1.15 var(--font-doc, 'Courier Prime', monospace);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.bench-out--long {
+  font-size: 24px;
+}
+.bench-verdict {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 8px;
+}
+.bench-stamp {
+  position: relative;
+  flex: none;
+  margin: 0;
+  padding: 2px 12px;
+  border: 5px solid currentColor;
+  border-radius: 8px;
+  outline: 2px solid currentColor;
+  outline-offset: -10px;
+  font: 32px/1.15 var(--font-stamp, 'Alfa Slab One', serif);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  mix-blend-mode: multiply;
+  transform: rotate(-6deg);
+  animation: bench-slam 160ms cubic-bezier(0.55, 0, 1, 0.45) both;
+}
+.bench-stamp--diverges {
+  color: var(--crimson);
+}
+.bench-stamp--match {
+  color: var(--brass-deep);
+}
+.bench-stamp--flaky {
+  color: var(--slate);
+  border-style: dashed;
+}
+.bench-flag {
+  margin: 0;
+  font-size: 20px;
+}
+.bench-smallest {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+.bench-smallest > span {
+  flex: none;
+  font-weight: 700;
+}
+.bench-by {
+  margin: 8px 0 0;
+  font-size: 20px;
+}
+
+/* Dust kicked up by the stamp; same slam and puff curves as the claim-card stamps. */
+.bench-dust {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.bench-dust circle {
+  fill: var(--paper-deep);
+  stroke: var(--ink);
+  stroke-width: 1.6;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: bench-dust 480ms 150ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+@keyframes bench-slam {
+  from {
+    opacity: 0;
+    transform: scale(1.6) rotate(-2deg);
+  }
+  40% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(-6deg);
+  }
+}
+@keyframes bench-dust {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  25% {
+    opacity: 0.95;
+  }
+  to {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) scale(1.25);
+  }
+}
+@keyframes bench-flicker {
+  0% {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  25% {
+    opacity: 0.75;
+  }
+  35% {
+    opacity: 0.3;
+  }
+  55% {
+    opacity: 0.9;
+  }
+  65% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes bench-wait {
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes bench-ring {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  20% {
+    transform: rotate(14deg);
+  }
+  45% {
+    transform: rotate(-12deg);
+  }
+  70% {
+    transform: rotate(7deg);
+  }
+}
+@keyframes bench-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bench {
+    transform: none;
+    opacity: 0;
+    transition:
+      opacity 200ms linear,
+      visibility 0s linear 200ms;
+  }
+  .bench--open {
+    opacity: 1;
+    transition:
+      opacity 200ms linear,
+      visibility 0s;
+  }
+  .bench-ruling,
+  .bench-stamp {
+    animation: bench-fade 200ms linear both;
+  }
+  .bench-dust {
+    display: none;
+  }
+  .bench-note--wait,
+  .bench-bell:hover .bench-bell-art,
+  .bench-bell:focus-visible .bench-bell-art {
+    animation: none;
+  }
+  .bench-key,
+  .bench-slip,
+  .bench-run,
+  .bench-bell,
+  .bench-tool {
+    transition: none;
+  }
+}

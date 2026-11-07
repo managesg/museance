@@ -28,6 +28,14 @@ _PSEUDO_RE = re.compile(
     r"(?:(?:%s)\(|(?:%s)(?![A-Za-z0-9_-]))" % ("|".join(_FUNC_PSEUDO), "|".join(_BARE_PSEUDO)))
 
 
+def launch_browser(pw):
+    """Chromium for the court. COURT_BROWSER_CHANNEL=chrome (or msedge) uses the installed
+    browser instead of Playwright's downloaded Chromium, e.g. on a demo laptop."""
+    import os
+    channel = os.environ.get("COURT_BROWSER_CHANNEL") or None
+    return pw.chromium.launch(channel=channel) if channel else pw.chromium.launch()
+
+
 def split_type(rest: str):
     """Split `<css>:<text>` per the rule in the module docstring; None if no separator."""
     depth, quote = 0, None

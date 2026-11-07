@@ -1,0 +1,26 @@
+<!doctype html>
+<!-- Fixture revival written today for lane testing, not P4 output. Copy of fixtures/app1 that drifts on purpose, as fixtures/verdicts.json says: rounds instead of truncating (1 / 8 shows 0.13) and has no divide-by-zero guard (7 / 0 shows Infinity). -->
+<html><head><meta charset="utf-8"><title>fixture-calc</title></head>
+<body>
+<div id="display">0</div>
+<div id="keys">
+<button id="k7">7</button><button id="k8">8</button><button id="k1">1</button><button id="k0">0</button>
+<button id="kadd">+</button><button id="kmul">x</button><button id="kdiv">/</button><button id="kdot">.</button>
+<button id="keq">=</button><button id="kc">C</button>
+</div>
+<script>
+let cur = "0", acc = null, op = null;
+const d = document.getElementById("display");
+const show = () => { d.innerText = cur; };
+const digit = c => { cur = (cur === "0" && c !== ".") ? c : cur + c; show(); };
+const calc = () => { const a = parseFloat(acc), b = parseFloat(cur);
+  const r = op === "+" ? a + b : op === "x" ? a * b : op === "/" ? a / b : b;
+  cur = Number.isNaN(r) ? "Error" : String(Math.round(r * 100) / 100); acc = null; op = null; show(); };
+const setOp = o => { if (op) calc(); acc = cur; op = o; cur = "0"; };
+for (const [id, c] of [["k7","7"],["k8","8"],["k1","1"],["k0","0"],["kdot","."]]) document.getElementById(id).onclick = () => digit(c);
+document.getElementById("kadd").onclick = () => setOp("+");
+document.getElementById("kmul").onclick = () => setOp("x");
+document.getElementById("kdiv").onclick = () => setOp("/");
+document.getElementById("keq").onclick = calc;
+document.getElementById("kc").onclick = () => { cur = "0"; acc = null; op = null; show(); };
+</script></body></html>
