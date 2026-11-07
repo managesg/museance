@@ -1,0 +1,132 @@
+{
+ "rows": [
+  {
+   "app": "app1",
+   "version": "v1",
+   "sha256": "4413dc121a0395a02ae0d49da37bad535843e63ab80944941db2adf70b7ca220",
+   "regression_total": 20,
+   "traps_of": 8,
+   "false_strikes_of": 12,
+   "regression_passed": 18,
+   "attack_mismatches": null,
+   "traps_flagged": 2,
+   "false_strikes": 0,
+   "fidelity": 60,
+   "repair_claim": "c03",
+   "repair_decision": "patched",
+   "repair_builder": null,
+   "repair_reason": "claim test now gives '0.12'; regression score 18 -> 19",
+   "repair_to": "v2",
+   "not_recorded": [
+    "attack_mismatches"
+   ]
+  },
+  {
+   "app": "app1",
+   "version": "v2",
+   "sha256": "05f5fca4de70cac6f48caa31b00c0933d6d07825bc441a8b27d3b7d590db7bbc",
+   "regression_total": 20,
+   "traps_of": null,
+   "false_strikes_of": null,
+   "regression_passed": 19,
+   "attack_mismatches": null,
+   "traps_flagged": null,
+   "false_strikes": null,
+   "fidelity": null,
+   "repair_claim": "c05",
+   "repair_decision": "patched",
+   "repair_builder": null,
+   "repair_reason": "claim test now gives 'Error'; regression score 19 -> 19",
+   "repair_to": "v3",
+   "not_recorded": [
+    "attack_mismatches",
+    "traps_flagged",
+    "false_strikes",
+    "fidelity"
+   ]
+  },
+  {
+   "app": "app1",
+   "version": "v3",
+   "sha256": "1e7e7fa123f0ccc35d9dc7d56cfe517083f5d3c9441d385965ff35e637a1bc12",
+   "regression_total": 20,
+   "traps_of": null,
+   "false_strikes_of": null,
+   "regression_passed": 19,
+   "attack_mismatches": null,
+   "traps_flagged": null,
+   "false_strikes": null,
+   "fidelity": null,
+   "repair_claim": "t04",
+   "repair_decision": "patched",
+   "repair_builder": "codex",
+   "repair_reason": "claim test now gives '0'; regression score 19 -> 20",
+   "repair_to": "v4",
+   "not_recorded": [
+    "attack_mismatches",
+    "traps_flagged",
+    "false_strikes",
+    "fidelity"
+   ]
+  },
+  {
+   "app": "app1",
+   "version": "v4",
+   "sha256": "bf3e86d57dfb1b58d00a3c51f2052cdbf7b489dcc89d843c16a58d06b736be83",
+   "regression_total": 20,
+   "traps_of": 8,
+   "false_strikes_of": 12,
+   "regression_passed": 20,
+   "attack_mismatches": null,
+   "traps_flagged": 0,
+   "false_strikes": 0,
+   "fidelity": 60,
+   "repair_claim": null,
+   "repair_decision": null,
+   "repair_builder": null,
+   "repair_reason": null,
+   "repair_to": null,
+   "not_recorded": [
+    "attack_mismatches"
+   ]
+  },
+  {
+   "app": "todo",
+   "version": "v1",
+   "sha256": "f821a7d336c48d334d7a37a3d5263315c6356c9cf4c2c252b822b85be875a9d1",
+   "regression_total": 20,
+   "traps_of": 8,
+   "false_strikes_of": 12,
+   "regression_passed": 19,
+   "attack_mismatches": 68,
+   "traps_flagged": 1,
+   "false_strikes": 0,
+   "fidelity": 35,
+   "repair_claim": "attacks:todo",
+   "repair_decision": "patched",
+   "repair_builder": "codex",
+   "repair_reason": "attack mismatches 68->0, fidelity 35->100, regression 19->20",
+   "repair_to": "v2",
+   "not_recorded": []
+  },
+  {
+   "app": "todo",
+   "version": "v2",
+   "sha256": "c6c0724555b0e5943d47b544c5513dcfd8d52b1e5e414ccd89013fe485054f6c",
+   "regression_total": 20,
+   "traps_of": 8,
+   "false_strikes_of": 12,
+   "regression_passed": 20,
+   "attack_mismatches": 0,
+   "traps_flagged": 0,
+   "false_strikes": 0,
+   "fidelity": 100,
+   "repair_claim": null,
+   "repair_decision": null,
+   "repair_builder": null,
+   "repair_reason": null,
+   "repair_to": null,
+   "not_recorded": []
+  }
+ ]
+}
