@@ -74,7 +74,11 @@ def rule(bench, item: dict, kind: str, original_url: str, revival_url: str) -> d
             r = [bench.run(revival_url, cand, observe) for _ in range(RUNS_PER_BUILD)]
             return len(set(o)) == 1 and len(set(r)) == 1 and (o[0], r[0]) == target
         shrunk = shrink(steps, still_differs)
-    judgeable = not orig[0].startswith("ERROR:")  # a missing element/timeout/load failure on the oracle
+    # Only a LOAD failure on the oracle makes a claim unjudgeable (court couldn't run it at all).
+    # A missing element / failed step on the original is a stable observation (seen twice, not
+    # flaky): e.g. P2's "an empty task can be created" reads `#todo li`, gets ERROR:observe on the
+    # original, and must be STRUCK, not let off as UNSWORN.
+    judgeable = not orig[0].startswith("ERROR:load")
     return {
         "ref": item["id"],
         "kind": kind,

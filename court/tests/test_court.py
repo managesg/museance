@@ -169,15 +169,22 @@ def test_shrinker_stays_on_the_same_bug(tmp_path, bench):
         assert bench.run(rev, v[0]["shrunk_steps"], obs) == "0.13"
 
 
-def test_original_error_is_unsworn_not_struck(tmp_path, bench):
+def test_missing_element_on_original_is_evidence_not_unsworn(tmp_path, bench):
+    # P2's todo claim "an empty task can be created" reads `#todo li`; on the original there is
+    # no item, so the court observes ERROR:observe twice (stable). That is evidence the claim is
+    # false -> STRUCK. Only a LOAD failure (test_unreachable_url_is_unsworn) is unjudgeable.
     claim = {"id": "e1", "app": "app1", "screen": "s", "text": "t", "tier": "A", "label": "SEEN",
              "confidence": 0.9, "bond": 100,
-             "test": {"steps": ["click:#nope"], "observe": "#display", "expect": "0"}}
+             "test": {"steps": ["click:#k7"], "observe": "#nope", "expect": ""}}
     with serve.folder(FIX / "app1") as url:
         v, locks = judge([claim], [], url, url, tmp_path, clock=CLOCK, bench=bench)
-    assert v[0]["claim_true"] is None
-    assert locks[0]["status"] == "UNSWORN" and "could not run" in locks[0]["reason"]
-    assert bailiff.status({**claim, "label": "FABRICATED"}, v[0])[0] == "FABRICATED"
+    assert v[0]["original"].startswith("ERROR:observe #nope") and v[0]["flaky"] is False
+    assert v[0]["claim_true"] is False
+    assert locks[0]["status"] == "STRUCK"
+    # a None claim_true (load failure) still goes UNSWORN, and FABRICATED still overrides non-STRUCK
+    unj = {**v[0], "claim_true": None}
+    assert bailiff.status(claim, unj)[0] == "UNSWORN"
+    assert bailiff.status({**claim, "label": "FABRICATED"}, unj)[0] == "FABRICATED"
 
 
 def test_unreachable_url_is_unsworn(tmp_path, bench):
