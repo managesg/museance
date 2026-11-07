@@ -61,3 +61,10 @@ def test_regression_expects_match_fixture_app():
     got = json.loads(subprocess.run(["node", str(ROOT / "eval" / "run_fixture.js"), str(REG)], capture_output=True, text=True, check=True).stdout)
     d = json.loads(REG.read_text())
     assert {r["id"]: r["expect"] for r in d["good"] + d["traps"]} == got
+
+
+def test_todo_attacks_cover_both_lists_and_stay_valid():
+    sel = json.loads((ROOT / "eval" / "regression" / "todo-selectors.json").read_text())
+    attacks = generate("todo", sel)
+    assert len(attacks) > 30 and {a["observe"] for a in attacks} == {"#todo", "#completed", "body"}
+    assert len({a["id"] for a in attacks}) == len(attacks)
