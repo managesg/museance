@@ -1,0 +1,32 @@
+[
+ {
+  "claim_id": "cr01",
+  "status": "LOCKED",
+  "reason": "original shows 'hr0=60,hr1=40,coil0=1,coil1=0,coil2=0' as claimed"
+ },
+ {
+  "claim_id": "cr02",
+  "status": "LOCKED",
+  "reason": "original shows 'hr0=45,hr1=40,coil0=0,coil1=0,coil2=0' as claimed"
+ },
+ {
+  "claim_id": "cr03",
+  "status": "LOCKED",
+  "reason": "original shows 'hr0=100,hr1=40,coil0=1,coil1=0,coil2=0' as claimed"
+ },
+ {
+  "claim_id": "cr04",
+  "status": "LOCKED",
+  "reason": "original shows 'hr0=100,hr1=40,coil0=1,coil1=0,coil2=1' as claimed"
+ },
+ {
+  "claim_id": "cr05",
+  "status": "LOCKED",
+  "reason": "original shows 'hr0=0,hr1=40,coil0=0,coil1=1,coil2=0' as claimed"
+ },
+ {
+  "claim_id": "cr06",
+  "status": "LOCKED",
+  "reason": "original shows 'hr0=0,hr1=40,coil0=0,coil1=0,coil2=0' as claimed"
+ }
+]
