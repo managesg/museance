@@ -65,15 +65,26 @@ def rule(bench, item: dict, kind: str, original_url: str, revival_url: str) -> d
     match = (not flaky) and orig[0] == rev[0]
     shrunk: list[str] = []
     if not flaky and not match:
+        target = (orig[0], rev[0])
+
         def still_differs(cand: list[str]) -> bool:
-            return bench.run(original_url, cand, observe) != bench.run(revival_url, cand, observe)
+            # same bug only: the candidate must reproduce the full run's exact (original, revival)
+            # pair, and each build must agree with itself over two runs (else flaky: reject)
+            o = [bench.run(original_url, cand, observe) for _ in range(RUNS_PER_BUILD)]
+            r = [bench.run(revival_url, cand, observe) for _ in range(RUNS_PER_BUILD)]
+            return len(set(o)) == 1 and len(set(r)) == 1 and (o[0], r[0]) == target
         shrunk = shrink(steps, still_differs)
+    # Only a LOAD failure on the oracle makes a claim unjudgeable (court couldn't run it at all).
+    # A missing element / failed step on the original is a stable observation (seen twice, not
+    # flaky): e.g. P2's "an empty task can be created" reads `#todo li`, gets ERROR:observe on the
+    # original, and must be STRUCK, not let off as UNSWORN.
+    judgeable = not orig[0].startswith("ERROR:load")
     return {
         "ref": item["id"],
         "kind": kind,
         "original": orig[0],
         "revival": rev[0],
-        "claim_true": (orig[0] == item["test"]["expect"]) if kind == "claim" else None,
+        "claim_true": ((orig[0] == item["test"]["expect"]) if judgeable else None) if kind == "claim" else None,
         "match": match,
         "flaky": flaky,
         "shrunk_steps": shrunk,
@@ -113,7 +124,10 @@ def judge(claims, attacks, original_url, revival_url, out_dir, clock=None, bench
             c = commit_hash(it)
             if it.get("commit") and it["commit"] != c:
                 raise ValueError(f"{kind} {it['id']}: commit {it['commit'][:12]} != sha256 {c[:12]} (edited after commit?)")
-            ledger.append("commit", {"kind": kind, "ref": it["id"], "commit": c})
+            rec = {"kind": kind, "ref": it["id"], "commit": c}
+            if not it.get("commit"):
+                rec["computed_by_court"] = True
+            ledger.append("commit", rec)
 
     verdicts = []
     work = [(kind, it) for kind, items in (("claim", claims), ("attack", attacks)) for it in items]

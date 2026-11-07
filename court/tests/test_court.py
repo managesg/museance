@@ -149,3 +149,99 @@ def test_missing_element_is_an_observation_not_a_crash(tmp_path, bench):
         verdicts, _ = judge([], [attack], url, url, tmp_path, clock=CLOCK, bench=bench)
     assert verdicts[0]["original"].startswith("ERROR:step 0 click:#nope")
     assert verdicts[0]["match"] is True and verdicts[0]["flaky"] is False
+
+
+# --- review fixes ----------------------------------------------------------------
+def test_parse_type_selectors_with_colons():
+    assert parse("type:input:nth-child(2):hi") == ("type", ["input:nth-child(2)", "hi"])
+    assert parse('type:[name="a:b"]:x') == ("type", ['[name="a:b"]', "x"])
+    assert parse("type:#name:Ada: Lovelace") == ("type", ["#name", "Ada: Lovelace"])
+    assert parse("type:li:not(.a):first-child:z") == ("type", ["li:not(.a):first-child", "z"])
+
+
+def test_shrinker_stays_on_the_same_bug(tmp_path, bench):
+    c03 = next(c for c in load("claims.json") if c["id"] == "c03")
+    with serve.folder(FIX / "app1") as orig, serve.folder(REVIVAL) as rev:
+        v, _ = judge([c03], [], orig, rev, tmp_path, clock=CLOCK, bench=bench)
+        assert v[0]["shrunk_steps"] == ["click:#k1", "click:#kdiv", "click:#k8", "click:#keq"]
+        obs = c03["test"]["observe"]
+        assert bench.run(orig, v[0]["shrunk_steps"], obs) == "0.12"
+        assert bench.run(rev, v[0]["shrunk_steps"], obs) == "0.13"
+
+
+def test_missing_element_on_original_is_evidence_not_unsworn(tmp_path, bench):
+    # P2's todo claim "an empty task can be created" reads `#todo li`; on the original there is
+    # no item, so the court observes ERROR:observe twice (stable). That is evidence the claim is
+    # false -> STRUCK. Only a LOAD failure (test_unreachable_url_is_unsworn) is unjudgeable.
+    claim = {"id": "e1", "app": "app1", "screen": "s", "text": "t", "tier": "A", "label": "SEEN",
+             "confidence": 0.9, "bond": 100,
+             "test": {"steps": ["click:#k7"], "observe": "#nope", "expect": ""}}
+    with serve.folder(FIX / "app1") as url:
+        v, locks = judge([claim], [], url, url, tmp_path, clock=CLOCK, bench=bench)
+    assert v[0]["original"].startswith("ERROR:observe #nope") and v[0]["flaky"] is False
+    assert v[0]["claim_true"] is False
+    assert locks[0]["status"] == "STRUCK"
+    # a None claim_true (load failure) still goes UNSWORN, and FABRICATED still overrides non-STRUCK
+    unj = {**v[0], "claim_true": None}
+    assert bailiff.status(claim, unj)[0] == "UNSWORN"
+    assert bailiff.status({**claim, "label": "FABRICATED"}, unj)[0] == "FABRICATED"
+
+
+def test_unreachable_url_is_unsworn(tmp_path, bench):
+    claim = {"id": "u1", "app": "x", "screen": "s", "text": "t", "tier": "A", "label": "SEEN",
+             "confidence": 0.9, "bond": 100, "test": {"steps": [], "observe": "#display", "expect": "0"}}
+    v, locks = judge([claim], [], "http://127.0.0.1:9", "http://127.0.0.1:9", tmp_path, clock=CLOCK, bench=bench)
+    assert v[0]["original"].startswith("ERROR:load ")
+    assert locks[0]["status"] == "UNSWORN"
+
+
+def test_type_sends_key_events_and_settles(tmp_path, bench):
+    d = tmp_path / "kbd"
+    d.mkdir()
+    (d / "index.html").write_text(
+        '<input id="i" value="old"><div id="o"></div><script>'
+        'i.addEventListener("keyup",()=>{setTimeout(()=>{o.innerText="up:"+i.value},120)})</script>',
+        encoding="utf-8")
+    with serve.folder(d) as url:
+        assert bench.run(url, ["type:#i:hello"], "#o") == "up:hello"
+
+
+def test_computed_commit_is_flagged_in_ledger(tmp_path):
+    c = dict(load("claims.json")[0])
+    committed = {**c, "id": "zz", "commit": None}
+    committed["commit"] = ledger.commit_hash(committed)
+    judge([c, committed], [], "http://unused", "http://unused", tmp_path, clock=CLOCK,
+          bench=type("B", (), {"run": lambda self, *a: "x"})())
+    evs = [e["payload"] for e in ledger.read(tmp_path / "ledger.jsonl") if e["type"] == "commit"]
+    assert evs[0].get("computed_by_court") is True and "computed_by_court" not in evs[1]
+
+
+def test_ledger_concurrent_writers_and_truncated_tail(tmp_path):
+    import threading
+    p = tmp_path / "l.jsonl"
+    a, b = ledger.Ledger(p, clock=CLOCK), ledger.Ledger(p, clock=CLOCK)
+
+    def go(lg, tag):
+        for i in range(20):
+            lg.append("x", {"w": tag, "i": i})
+    ts = [threading.Thread(target=go, args=(a, "a")), threading.Thread(target=go, args=(b, "b"))]
+    [t.start() for t in ts]
+    [t.join() for t in ts]
+    assert ledger.verify(p) == (True, "40 events, chain intact")
+    with p.open("a", encoding="utf-8") as f:
+        f.write('{"seq":41,"ts"')  # crash mid-write
+    assert len(ledger.read(p)) == 40
+    assert ledger.verify(p)[0] is False
+    ledger.Ledger(p, clock=CLOCK).append("x", {})  # new writer continues from the last good event
+    assert len(ledger.read(p)) == 41 and ledger.verify(p)[0]
+
+
+def test_ledger_two_processes(tmp_path):
+    import subprocess
+    import sys
+    p = tmp_path / "mp.jsonl"
+    code = ("import sys; from court.ledger import Ledger; lg = Ledger(sys.argv[1]); "
+            "[lg.append('mesh.x', {'w': sys.argv[2], 'i': i}) for i in range(20)]")
+    procs = [subprocess.Popen([sys.executable, "-c", code, str(p), w], cwd=ROOT) for w in "ab"]
+    assert [q.wait() for q in procs] == [0, 0]
+    assert ledger.verify(p) == (True, "40 events, chain intact")
