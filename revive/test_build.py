@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from revive.build import build, builder_command, check_selectors, extract_html, make_prompt
+from revive.build import build, builder_command, check_selectors, extract_html, make_prompt, run_builder
 from revive.check_revival import check_revival
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -62,6 +62,13 @@ def test_cli_commands():
     assert builder_command("codex") == ["codex", "exec", "-s", "read-only", "--skip-git-repo-check", "--ephemeral", "-"]
     assert builder_command("claude") == ["claude", "-p", "--output-format", "text", "--permission-mode", "plan"]
     assert builder_command("glm")[0] == str(Path.home() / ".local/bin/glm")
+
+
+def test_run_builder_resolves_executable_on_path():
+    seen = []
+    with patch("revive.build.shutil.which", return_value="C:/npm/codex.cmd"),             patch("revive.build.subprocess.run", side_effect=lambda c, **k: seen.append(c) or subprocess.CompletedProcess(c, 0, "ok", "")):
+        assert run_builder("codex", "p") == "ok"
+    assert seen[0][0] == "C:/npm/codex.cmd" and seen[0][1] == "exec"
 
 
 def test_build_isolated_and_validated(tmp_path):

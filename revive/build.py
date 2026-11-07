@@ -3,6 +3,7 @@ import argparse
 import json
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import tempfile
 from html.parser import HTMLParser
@@ -74,7 +75,9 @@ def run_builder(builder, prompt):
     """Send a prompt to the coding CLI and return its reply text."""
     # Neither repository context nor original-app paths are handed to the coding CLI.
     with tempfile.TemporaryDirectory(prefix="seance-revival-") as work:
-        result = subprocess.run(builder_command(builder), input=prompt, cwd=work,
+        command = builder_command(builder)
+        command[0] = shutil.which(command[0]) or command[0]  # Windows npm shims are codex.cmd, not codex
+        result = subprocess.run(command, input=prompt, cwd=work,
                                 capture_output=True, text=True, encoding="utf-8", timeout=600)
     if result.returncode:
         raise RuntimeError(f"{builder} exited {result.returncode}: {result.stderr[-3000:]}")
