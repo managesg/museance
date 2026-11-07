@@ -23,6 +23,8 @@ No Gemini. Author and reviewer must be different vendors.
 | D2 | Skeptic v0 (deterministic attacks, hashed), Codex skeptic, `commit_hash` | `eval/skeptic.py`, `eval/skeptic_codex.py`, `eval/commit.py` | main, 75 attacks on fixture |
 | D3 | Regression set fixture: 12 good + 8 traps, verified by running the fixture JS | `eval/regression/app1-fixture.json` | main |
 
+Status 12:28: L1 done (delivered 3:15 PM ET). T1 done: builder merged (main ccaf0a3); first Codex revival 18/20 (fails t01 rounding, t04). Work runs LOCAL first; the box only for heavy jobs (court browser runs, Docker, many agents).
+
 ## Task queue (do in order; each has a done-check)
 | ID | By | Task | Agent | Done when |
 |---|---|---|---|---|
