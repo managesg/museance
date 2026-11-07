@@ -110,8 +110,8 @@
  {
   "id": "t07",
   "kind": "trap",
-  "passed": false,
-  "observed": "A\nYou have yet to complete any tasks."
+  "passed": true,
+  "observed": "A"
  },
  {
   "id": "t08",
