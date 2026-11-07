@@ -39,3 +39,9 @@ describe('labelFrom', () => {
     expect(labelFrom(doc(''))('.x')).toBeNull();
   });
 });
+
+it('reads the seeding steps aloud', () => {
+  expect(stepText('reload')).toBe('reload the page');
+  expect(stepText('storage:bestScore=0')).toBe('set saved best score to 0');
+  expect(stepText('storage:gameState={"grid":{"size":4}}')).toBe('load a saved game state');
+});
