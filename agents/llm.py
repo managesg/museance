@@ -6,7 +6,8 @@ import hashlib, json, os, pathlib, re, urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 CACHE = ROOT / "runs" / "cache"
-DEFAULTS = {"ASI1": ("https://api.asi1.ai/v1", "asi1-mini")}
+DEFAULTS = {"ASI1": ("https://api.asi1.ai/v1", "asi1")}  # Vi's probe: asi1-mini gave broken cards
+EXTRA = {"ASI1": {"reasoning_effort": "medium"}}
 
 
 def _load_env():
@@ -27,7 +28,7 @@ def chat(p, system, user):
     _load_env()
     base, model = DEFAULTS.get(p, (None, None))
     base, model = os.environ.get(f"{p}_BASE_URL", base), os.environ.get(f"{p}_MODEL", model)
-    body = {"model": model, "temperature": 0, "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
+    body = {"model": model, "temperature": 0, "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}], **EXTRA.get(p, {})}
     key = hashlib.sha256(json.dumps([p, body], sort_keys=True).encode()).hexdigest()[:24]
     hit = CACHE / f"{key}.txt"
     if hit.exists():
