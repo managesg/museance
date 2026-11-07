@@ -1,4 +1,24 @@
 [
- {"id":"app1","name":"fixture-calc","license":"MIT","source":"fixtures/app1 (written today for lane testing, not a real dead app)",
-  "original":{"url":"http://localhost:8001","cmd":"python -m http.server 8001 -d fixtures/app1","port":8001}}
+ {
+  "id": "app1",
+  "name": "fixture-calc",
+  "license": "MIT",
+  "source": "fixtures/app1 (written today for lane testing, not a real dead app)",
+  "original": {
+   "url": "http://localhost:8001",
+   "cmd": "python -m http.server 8001 -d fixtures/app1",
+   "port": 8001
+  }
+ },
+ {
+  "id": "todo",
+  "name": "todo (themaxsandelin)",
+  "license": "MIT",
+  "source": "https://github.com/themaxsandelin/todo@87d0205389edd6da8fdbf0732c6b0b589d0a57c2",
+  "original": {
+   "url": "http://localhost:8011",
+   "cmd": "python -m http.server 8011 -d apps/todo/original",
+   "port": 8011
+  }
+ }
 ]
