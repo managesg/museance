@@ -71,7 +71,7 @@ export function Masthead({ appLabel, source, status }: { appLabel: string; sourc
           />
         </svg>
         <span className="hud-tack" aria-hidden="true" />
-        <h1 className="hud-plaque__title">Séance</h1>
+        <h1 className="hud-plaque__title">Muséance</h1>
         <span className="hud-plaque__rule" aria-hidden="true" />
         <p className="hud-plaque__case">
           Court of Fidelity · In re <span className="hud-plaque__app">{appLabel}</span>

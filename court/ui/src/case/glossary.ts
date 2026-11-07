@@ -1,6 +1,6 @@
 // Plain-language meanings shown when a viewer hovers or holds a term.
 export const GLOSSARY = {
-  original: { title: 'Original', text: 'The dead app as it really ran. SÉANCE keeps it as the reference and never shows its code to the rebuilders.' },
+  original: { title: 'Original', text: 'The dead app as it really ran. MUSÉANCE keeps it as the reference and never shows its code to the rebuilders.' },
   revival: { title: 'Revival', text: 'The app rebuilt only from the evidence. This is what is on trial.' },
   evidence: { title: 'Evidence', text: 'Everything left behind about the app: pages, screenshots, issues, docs. Tier A is a running copy; tier D is nothing at all.' },
   sheet: { title: 'Behavior sheet', text: 'A plain list of what the app did, written from the evidence. Each line says whether it was seen or guessed.' },

@@ -115,7 +115,7 @@ function StagePreview() {
 function Gallery() {
   return (
     <main>
-      <h1>Séance · cast gallery</h1>
+      <h1>MUSÉANCE · cast gallery</h1>
       <StagePreview />
       <Live />
       <Row title="McClusky, Esq.">
