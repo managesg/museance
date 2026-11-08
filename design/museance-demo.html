@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MUSÉANCE · FreshMart Store #214 · demo</title>
+<style>
+:root{--bg:#EEF6FC;--pn:#fff;--st:#E3ECF4;--bd:#C9D6E2;--tx:#0F1E2C;--mu:#4A5D70;--rd:#C62828;--gr:#1B7F4B;--am:#9A5B00;--ac:#1F6FB2;--rdbg:#FDECEC;--grbg:#E6F4EC;--ambg:#FFF3E0;--acbg:#E3F0FB;--onac:#fff;--floor:#F6FAFD;--dial:#D5E3EF;--code:#0B1620}
+.dark{--bg:#0B1620;--pn:#132331;--st:#1A2E40;--bd:#264057;--tx:#E6F0F8;--mu:#9FB3C6;--rd:#FF7A7A;--gr:#4CD38A;--am:#F0B44C;--ac:#6CB6FF;--rdbg:#3A1A1E;--grbg:#12301F;--ambg:#3A2A10;--acbg:#16324A;--onac:#0B1620;--floor:#0F1D2A;--dial:#22384B}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+.mono{font-family:"JetBrains Mono",ui-monospace,Consolas,monospace}
+button,a.btn{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;padding:12px 24px;background:var(--pn);border-bottom:1px solid var(--bd)}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{width:36px;height:36px;border-radius:10px;background:var(--ac);display:grid;place-items:center}
+.sub{font-size:13px;color:var(--mu)}
+.badge{font-size:12px;color:var(--mu);background:var(--st);padding:6px 24px}
+.chip{display:inline-flex;gap:6px;align-items:center;font-size:12px;font-weight:600;padding:4px 9px;border-radius:999px}
+.ok{background:var(--grbg);color:var(--gr)}.warn{background:var(--ambg);color:var(--am)}.bad{background:var(--rdbg);color:var(--rd)}.info{background:var(--acbg);color:var(--ac)}.muted{background:var(--st);color:var(--mu)}
+main{max-width:1440px;margin:0 auto;padding:20px 24px;display:flex;flex-direction:column;gap:18px}
+.card{background:var(--pn);border:1px solid var(--bd);border-radius:16px}
+.row{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+/* store */
+.floor{flex:999 1 760px;min-width:0;background:var(--floor);border:1px solid var(--bd);border-radius:18px;padding:16px;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-auto-rows:62px;gap:10px}
+.area{border-radius:10px;background:var(--st);color:var(--mu);font-size:13px;display:grid;place-items:center}
+.unit{text-align:left;display:flex;flex-direction:column;gap:6px;padding:12px;border-radius:12px;background:var(--pn);border:1px solid var(--bd);height:100%}
+.unit.sel{border:2px solid var(--ac);box-shadow:0 0 0 4px var(--acbg)}
+.unit.hot{border:2px solid var(--rd);background:var(--rdbg)}
+.unit .t{font-size:24px;font-weight:700}
+.side{flex:1 1 340px;display:flex;flex-direction:column;gap:14px}
+.primary{display:inline-flex;gap:8px;align-items:center;justify-content:center;min-height:48px;padding:0 18px;border-radius:12px;background:var(--ac);color:var(--onac);border:0;font-weight:700;font-size:15px}
+.ghost{min-height:44px;padding:0 14px;border-radius:12px;background:var(--pn);border:1px solid var(--bd);font-size:14px}
+.danger{min-height:44px;padding:0 14px;border-radius:12px;background:transparent;border:2px solid var(--rd);color:var(--rd);font-weight:600;font-size:14px}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px}.kv span:nth-child(odd){color:var(--mu)}
+/* court */
+.crumb{display:flex;gap:10px;align-items:center;font-size:15px}
+.crumb a{color:var(--ac);font-weight:600;text-decoration:none}
+.court-top{display:grid;grid-template-columns:minmax(300px,1fr) 300px minmax(300px,1fr);gap:18px;align-items:start}
+@media(max-width:1000px){.court-top{grid-template-columns:1fr}}
+.room{padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 6px 24px rgba(15,30,44,.08)}
+.room h2{margin:0;font-size:19px;letter-spacing:1px}
+.tiles{display:flex;flex-wrap:wrap;gap:8px}
+.tile{flex:1;min-width:110px;display:flex;gap:8px;align-items:center;background:var(--st);border:1px solid var(--bd);border-radius:12px;padding:10px}
+.tile b{display:block;font-size:15px}.tile small{color:var(--mu);font-size:12px}
+.tile.on b{color:var(--ac)}.tile.def b{color:var(--am)}.tile.alarm{background:var(--rdbg);border-color:var(--rd)}.tile.alarm b{color:var(--rd)}
+.food{display:flex;gap:12px;align-items:center;background:var(--st);border-radius:12px;padding:12px}
+.bar{height:10px;border-radius:5px;background:var(--dial)}.bar>div{height:10px;border-radius:5px;transition:width .3s}
+.toast{display:flex;gap:10px;align-items:center;border-radius:12px;padding:10px 12px;font-size:14px}
+.ctrl{padding:18px;display:flex;flex-direction:column;gap:10px;background:var(--st)}
+.speed{display:flex;gap:6px}.speed button{flex:1;min-height:40px;border-radius:10px;border:1px solid var(--bd);background:var(--pn)}
+.speed button[aria-pressed=true]{background:var(--ac);color:var(--onac)}
+.dim{opacity:.35;transition:opacity .3s}
+.diff{list-style:none;margin:0;padding:10px 0;background:var(--code);border-radius:10px}
+.diff li{font-size:14px;line-height:1.8;padding:0 12px;color:#9FB3C6}.diff .m{background:#3A1A1E;color:#FFB4B4}.diff .p{background:#12301F;color:#A6F0C6}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px}
+.vc{text-align:left;background:var(--st);border:1px solid var(--bd);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px;opacity:.55}
+.vc.run{background:var(--pn);opacity:1}.vc.fresh{animation:flip .45s ease}
+.vc.sec.run{border:2px solid var(--rd)}
+.vc code{font-size:12px;color:var(--mu)}
+.vc .obs{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px}
+.vc .more{display:none;font-size:13px;color:var(--mu)}.vc[aria-expanded=true] .more{display:block}
+@keyframes flip{from{transform:rotateX(70deg);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.strip{display:flex;gap:12px;align-items:center;padding:16px 20px;border-radius:14px;font-size:17px;font-weight:600}
+.hidden{display:none!important}
+.spin{animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.sr{position:absolute;left:-9999px}
+.pulse{width:9px;height:9px;border-radius:50%;background:var(--gr);display:inline-block;animation:pl 1.6s ease-in-out infinite}@keyframes pl{50%{opacity:.25}}
+.log{list-style:none;margin:0;padding:0;max-height:260px;overflow:auto;font-size:12.5px}
+.log li{display:flex;gap:8px;padding:6px 0;border-top:1px solid var(--bd)}.log .ts{font-family:"JetBrains Mono",ui-monospace,monospace;color:var(--mu);flex:none}
+.log .bad{color:var(--rd);background:none}.log .warn{color:var(--am);background:none}.log .ok{color:var(--gr);background:none}
+.banner{display:flex;gap:10px;align-items:center;padding:10px 24px;background:var(--rdbg);color:var(--rd);font-weight:600;font-size:14px;border-bottom:1px solid var(--rd)}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M4 7l16 10M20 7L4 17"/></svg></div>
+    <div><b style="font-size:18px">FreshMart · Store #214</b><div class="sub">Refrigeration &amp; HVAC · building management · <b>MUSÉANCE</b> court</div></div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <span style="display:inline-flex;gap:8px;align-items:center;font-size:13px;color:var(--mu)"><span class="pulse" aria-hidden="true"></span><span id="poll">Live · polling 11 controllers</span></span><span id="siteStatus" class="chip ok">All systems normal</span>
+    <span id="mode" class="chip muted mono">SIMULATION</span>
+    <span id="clock" class="mono" style="font-size:20px;font-weight:600">00:00</span>
+    <span class="chip muted mono" id="ledger">ledger head ------ · chain intact ✓</span>
+    <button class="ghost" id="theme" aria-label="Toggle dark mode">Dark mode</button>
+  </div>
+</header>
+<div class="banner hidden" id="banner" role="alert"></div><div class="badge">Modeled on the Oct/Nov 2026 EU supermarket refrigeration attacks · fictional store · not vendor code · frontend demo, simulated controllers</div>
+
+<!-- STORE VIEW -->
+<main id="storeView">
+  <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;align-items:baseline">
+    <h1 style="margin:0;font-size:26px">Store floor</h1>
+    <span class="sub">Click any unit · only the dairy walk-in is on today’s docket</span>
+  </div>
+  <div class="row">
+    <section class="floor" id="floor" aria-label="Floor plan"></section>
+    <div class="side">
+      <aside class="card" id="sidePanel" style="padding:18px;display:flex;flex-direction:column;gap:12px" aria-live="polite"></aside>
+      <section class="card" style="padding:14px" aria-label="Live event log"><b style="font-size:14px">Live controller events</b><ol class="log" id="logStore"></ol></section>
+      <section class="card" style="padding:14px;display:flex;flex-direction:column;gap:8px" aria-label="Off the floor"><b style="font-size:14px">Off the floor</b><div id="offFloor" style="display:flex;flex-direction:column;gap:8px"></div></section>
+    </div>
+  </div>
+</main>
+
+<!-- COURT VIEW -->
+<main id="courtView" class="hidden">
+  <nav class="crumb" aria-label="Breadcrumb"><a href="#" id="back">FreshMart · Store #214</a><span style="color:var(--mu)">›</span><b>Dairy walk-in cold room</b><span class="chip bad mono">ON TRIAL</span></nav>
+  <div class="court-top">
+    <section class="card room" id="roomO" aria-label="Original build"></section>
+    <aside class="card ctrl" id="ctrl" aria-label="Controls">
+      <span class="sub" style="letter-spacing:2px">CONTROLLERS · LIVE</span>
+      <div style="display:flex;gap:8px"><button class="primary" id="play" style="flex:1">⏸ Pause</button><button class="ghost" id="reset" aria-label="Reset">↺ Reset</button></div>
+      <div class="speed" role="group" aria-label="Speed"><button aria-pressed="true" data-s="0.0166667">Live</button><button aria-pressed="false" data-s="1">60x</button><button aria-pressed="false" data-s="10">600x</button></div>
+      <hr style="border:0;border-top:1px solid var(--bd);width:100%">
+      <button class="ghost" id="runTests">✓ Run test suite</button>
+      <button class="danger" id="atkSp">⚡ Launch attack: setpoint → 25.0 °C (no auth)</button>
+      <button class="danger" id="atkDf">⚡ Launch attack: defrost 20 min → 8 h</button>
+      <hr style="border:0;border-top:1px solid var(--bd);width:100%">
+      <label class="ghost" style="display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer">⤒ Load court files<input type="file" id="files" multiple accept=".json,.jsonl" class="sr"></label>
+      <span class="sub" style="font-size:12px">verdicts.json · locks.json · ledger.jsonl</span>
+      <hr style="border:0;border-top:1px solid var(--bd);width:100%"><b style="font-size:13px">Live events · dairy walk-in</b><ol class="log" id="logCourt" style="max-height:200px"></ol>
+    </aside>
+    <section class="card room" id="roomP" aria-label="Patched build"></section>
+  </div>
+  <section class="card" id="patch" style="padding:18px;display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><h2 style="margin:0;font-size:18px">The patch · 3 lines</h2><span class="sub">Everything else byte for byte the same · court re-runs after every change</span></div>
+    <ol class="diff mono"><li>@@ setpoint write handler</li><li class="m">-  state.setpoint = value</li><li class="p">+  if not session.unlocked: reject("unlock required")</li><li class="p">+  if not 0.0 &lt;= value &lt;= 8.0: reject("out of range")</li><li class="p">+  state.setpoint = value</li></ol>
+  </section>
+  <section class="card" id="court" style="padding:20px;display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:baseline"><h2 style="margin:0;font-size:22px">The court</h2><span class="sub">Deterministic replay · no AI · identical steps on both builds · each test runs twice</span></div>
+    <h3 class="sub" style="margin:0;letter-spacing:2px">CONTROL BEHAVIOR · MUST MATCH</h3>
+    <div class="cards" id="ctrlCards"></div>
+    <h3 class="sub" style="margin:0;letter-spacing:2px">SECURITY · MUST DIFFER</h3>
+    <div class="cards" id="secCards"></div>
+  </section>
+  <div class="strip" id="strip" role="status"></div>
+</main>
+<div aria-live="polite" class="sr" id="live"></div>
+
+<script>
+(function(){
+"use strict";
+var PIN="2604";
+// ---------- controller model (shared by both builds) ----------
+function Controller(patched){this.patched=patched;this.reset();}
+Controller.prototype.reset=function(){this.temp=4.0;this.sp=4.0;this.comp=false;this.def=false;this.alarm=false;this.high=0;this.min=0;this.defLen=20;this.spoil=0;this.over8=0;this.hist=[];};
+Controller.prototype.tick=function(){
+  this.min+=1;
+  var m=this.min%360; this.def=this.min>=360&&m<this.defLen; // defrost window starts 06:00, every 6 h
+  if(this.defLen>=360)this.def=this.min>=360&&Math.floor((this.min-360)/360)>=0&&((this.min-360)%720)<this.defLen;
+  if(this.def){this.comp=false;}
+  else if(this.temp>this.sp+1){this.comp=true;}
+  else if(this.temp<this.sp-1){this.comp=false;}
+  this.temp+=this.def?0.25:(this.comp?-0.3:0.15);
+  this.temp=Math.max(-5,Math.min(30,Math.round(this.temp*100)/100));
+  if(this.def){this.high=0;this.alarm=false;} // alarm is suppressed during defrost (as on real controllers)
+  else if(this.temp>this.sp+4){this.high+=1;if(this.high>=10)this.alarm=true;}
+  else{this.high=0;this.alarm=false;}
+  if(this.temp>8){this.over8+=1;if(this.over8>30)this.spoil=Math.min(100,this.spoil+2);}else this.over8=0; // spoilage counts after 30 min above 8 °C
+  this.hist.push(this.temp);if(this.hist.length>360)this.hist.shift();
+};
+Controller.prototype.tickLogged=function(name){var c0=this.comp,d0=this.def,a0=this.alarm;this.tick();
+  if(this.comp!==c0)ev(name,"compressor "+(this.comp?"ON":"OFF")+" at "+this.temp.toFixed(1)+" °C",this.comp?"":"");
+  if(this.def!==d0)ev(name,this.def?"defrost started ("+this.defLen+" min)":"defrost ended",this.def?"warn":"");
+  if(this.alarm!==a0)ev(name,this.alarm?"HIGH TEMP ALARM":"alarm cleared",this.alarm?"bad":"ok");};
+Controller.prototype.writeSetpoint=function(v,pin){
+  if(this.patched){var why=[];if(pin!==PIN)why.push("unlock required");if(!(v>=0&&v<=8))why.push("out of range");if(why.length)return {ok:false,msg:"write rejected: "+why.join(" + ")};}
+  this.sp=v;return {ok:true,msg:"write accepted: setpoint → "+v.toFixed(1)+(this.patched?"":" (no auth)")};
+};
+Controller.prototype.writeDefrost=function(mins,pin){
+  if(this.patched){var why=[];if(pin!==PIN)why.push("unlock required");if(mins>20)why.push("over 20 min");if(why.length)return {ok:false,msg:"write rejected: "+why.join(" + ")};}
+  this.defLen=mins;return {ok:true,msg:"write accepted: defrost "+mins+" min"+(this.patched?"":" (no auth)")};
+};
+Controller.prototype.regs=function(){return "hr0="+Math.round(this.temp*10)+",hr1="+Math.round(this.sp*10)+",coil0="+(+this.comp)+",coil1="+(+this.def)+",coil2="+(+this.alarm);};
+
+// ---------- court tests (pure, fresh controller each run) ----------
+var TESTS=[
+ {id:"c1",t:"Compressor on above setpoint + 1",s:"hr1=40 · hr0=52 · tick:1 · observe coil0",run:function(c){c.temp=5.2;c.tick();return "coil0="+(+c.comp);}},
+ {id:"c2",t:"Compressor off below setpoint - 1",s:"hr1=40 · hr0=28 · coil0=1 · tick:1 · observe coil0",run:function(c){c.temp=2.8;c.comp=true;c.tick();return "coil0="+(+c.comp);}},
+ {id:"c3",t:"Alarm only after 10 min high",s:"hr1=40 · hr0=120 · tick:9, tick:1 · observe coil2",run:function(c){c.temp=12;for(var i=0;i<9;i++)c.tick();var a=+c.alarm;c.tick();return "coil2="+a+" → "+(+c.alarm);}},
+ {id:"c4",t:"Defrost every 6 h for 20 min",s:"clock=05:59 · tick:30 · count coil1",run:function(c){c.min=359;var n=0;for(var i=0;i<30;i++){c.tick();n+=c.def;}return "coil1=1 ×"+n;}},
+ {id:"c5",t:"No alarm during normal cooling",s:"hr1=40 · tick:720 · observe max coil2",run:function(c){var mx=0;for(var i=0;i<720;i++){c.tick();mx=Math.max(mx,+c.alarm);}return "coil2 max="+mx;}},
+ {id:"c6",t:"Temp recovers after defrost",s:"clock=06:00 · tick:50 · observe hr0 ≤ 50",run:function(c){c.min=359;for(var i=0;i<50;i++)c.tick();return "hr0="+Math.round(c.temp*10)+(c.temp<=5?" ✓":" ✗");}}
+];
+var SEC=[
+ {id:"sec-setpoint",t:"Setpoint write → 25.0 °C, no auth",s:"write hr1=250 · no PIN · tick:60 · observe hr1",run:function(c){var r=c.writeSetpoint(25);for(var i=0;i<60;i++)c.tick();return (r.ok?"accepted":"rejected")+" · setpoint "+c.sp.toFixed(1);}},
+ {id:"sec-defrost",t:"Defrost stretched 20 min → 8 h",s:"write defrost_len=480 · no PIN · observe defrost length",run:function(c){var r=c.writeDefrost(480);return (r.ok?"accepted":"rejected")+" · defrost "+c.defLen+" min";}}
+];
+function trial(test){ // run twice per build; flaky if runs disagree
+  var o1=test.run(new Controller(false)),o2=test.run(new Controller(false));
+  var p1=test.run(new Controller(true)),p2=test.run(new Controller(true));
+  return {ref:test.id,original:o1,revival:p1,flaky:(o1!==o2||p1!==p2),match:o1===p1,at:Date.now()};
+}
+
+// ---------- ledger (demo hash chain, FNV-1a; the real court uses sha256) ----------
+var head="000000";
+function fnv(s){var h=0x811c9dc5;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return ("0000000"+h.toString(16)).slice(-8);}
+function ledger(ev){head=fnv(head+JSON.stringify(ev));$("ledger").textContent="ledger head "+head.slice(0,6)+"… · chain intact ✓";}
+
+// ---------- state ----------
+var O=new Controller(false),Pt=new Controller(true);
+var now0=new Date(),START=now0.getHours()*60+now0.getMinutes();
+function seed(){O.reset();Pt.reset();O.min=Pt.min=START;O.temp=Pt.temp=3.6;O.comp=Pt.comp=false;}
+seed();
+var EV=[],lastPoll=Date.now(),simAhead=false;
+var IPS=["10.0.4.22 (store BMS)","10.0.4.22 (store BMS)","10.0.9.3 (service laptop)"];
+function hhmmss(){var d=new Date();if(simAhead){var m=O.min%1440;return pad(Math.floor(m/60))+":"+pad(m%60)+":"+pad(d.getSeconds());}return pad(d.getHours())+":"+pad(d.getMinutes())+":"+pad(d.getSeconds());}
+function ev(unit,msg,lvl){EV.unshift({ts:hhmmss(),u:unit,m:msg,l:lvl||""});if(EV.length>60)EV.pop();renderLogs();}
+function renderLogs(){var h=EV.slice(0,40).map(function(e){return '<li><span class="ts">'+e.ts+'</span><span><b>'+e.u+'</b> <span class="'+e.l+'">'+e.m+'</span></span></li>';}).join("");var a=$("logStore"),b=$("logCourt");if(a)a.innerHTML=h;if(b)b.innerHTML=EV.filter(function(e){return /Dairy|Court|Attack/.test(e.u);}).slice(0,25).map(function(e){return '<li><span class="ts">'+e.ts+'</span><span><b>'+e.u+'</b> <span class="'+e.l+'">'+e.m+'</span></span></li>';}).join("");}
+function noise(){return (Math.random()-0.5)*0.08;}
+var playing=true,speed=1/60,results={},secResults={},live=false,attacked=false,lastT=0,acc=0;
+var toasts={O:null,P:null};
+function $(id){return document.getElementById(id);}
+function announce(t){$("live").textContent=t;}
+
+// ---------- store ----------
+var UNITS=[
+ {id:"meat",n:"Meat cold room",k:"snow",t:1.8,sp:2.0,fw:"v2.1 (2013)",auth:false,g:"1/4/1/3"},
+ {id:"dairy",n:"Dairy walk-in cold room",k:"snow",t:4.0,sp:4.0,fw:"v2.1 (2013)",auth:false,g:"4/7/1/3",trial:true},
+ {id:"dock",area:"Receiving dock",g:"7/9/1/3"},
+ {id:"f1",n:"Frozen aisle F1",k:"snow",t:-20.4,sp:-20,fw:"v2.1 (2013)",auth:false,g:"1/3/3/5"},
+ {id:"f2",n:"Frozen aisle F2",k:"snow",t:-19.6,sp:-20,fw:"v2.1 (2013)",auth:false,g:"1/3/5/7"},
+ {id:"f3",n:"Frozen aisle F3",k:"snow",t:-20.1,sp:-20,fw:"v2.1 (2013)",auth:false,g:"1/3/7/9"},
+ {id:"a1",area:"Aisle 1",g:"3/4/3/9"},{id:"a2",area:"Aisle 2",g:"4/5/3/9"},{id:"a3",area:"Aisle 3",g:"5/6/3/9"},
+ {id:"deli",n:"Deli case",k:"snow",t:3.9,sp:4.0,fw:"v3.4 (2017)",auth:false,g:"6/9/3/5"},
+ {id:"bakery",n:"Bakery case",k:"snow",t:6.0,sp:6.0,fw:"v3.4 (2017)",auth:false,g:"6/9/5/7"},
+ {id:"produce",n:"Produce case",k:"snow",t:5.2,sp:5.0,fw:"v3.4 (2017)",auth:false,g:"6/9/7/9"},
+ {id:"chk",area:"Checkouts",g:"1/6/9/10"},{id:"ent",area:"Entrance",g:"6/9/9/10"},
+ {id:"rack",n:"Rooftop compressor rack",k:"fan",t:-8.0,sp:-8.0,fw:"v4.0 (2021)",auth:true,off:true},
+ {id:"hvac1",n:"HVAC zone 1 · sales floor",k:"wind",t:21.2,sp:21.0,fw:"v4.0 (2021)",auth:true,off:true},
+ {id:"hvac2",n:"HVAC zone 2 · back room",k:"wind",t:21.6,sp:21.0,fw:"v4.0 (2021)",auth:true,off:true}
+];
+var selected="dairy",queued={};
+function icon(k,col,s){s=s||16;var p={snow:'<path d="M12 2v20M4 7l16 10M20 7L4 17"/>',fan:'<circle cx="12" cy="12" r="2"/><path d="M12 10c0-4 1-7 4-7 2 0 2 3-1 5M14 12c4 0 7 1 7 4 0 2-3 2-5-1M12 14c0 4-1 7-4 7-2 0-2-3 1-5M10 12c-4 0-7-1-7-4 0-2 3-2 5 1"/>',wind:'<path d="M3 8h11a3 3 0 10-3-3M3 12h15a3 3 0 11-3 3M3 16h7"/>',lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/>',open:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 017.5-2"/>',drip:'<path d="M12 3s6 7 6 11a6 6 0 01-12 0c0-4 6-11 6-11z"/>',bell:'<path d="M6 16V11a6 6 0 0112 0v5l2 2H4z"/><path d="M10 20a2 2 0 004 0"/>',shield:'<path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z"/>',bolt:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',crate:'<path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/>',check:'<path d="M5 12l5 5 9-10"/>'}[k];return '<svg aria-hidden="true" width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="'+col+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none">'+p+'</svg>';}
+function cssv(n){return getComputedStyle(document.body).getPropertyValue(n).trim();}
+function unitState(u){
+  if(u.id==="dairy"){var t=O.temp+noise();return {t:t,sp:O.sp,hot:attacked&&t>8,chip:attacked&&t>8?["bad","Too warm · setpoint changed remotely"]:(O.def?["warn","Defrosting"]:["info","On trial"])};}
+  return {t:u.t,sp:u.sp,hot:false,chip:queued[u.id]?["muted","Queued for trial"]:["ok","Normal"]};
+}
+function unitHTML(u){
+  var s=unitState(u),cls="unit"+(u.id===selected?" sel":"")+(s.hot?" hot":"");
+  return '<button class="'+cls+'" data-u="'+u.id+'" aria-pressed="'+(u.id===selected)+'"><span style="display:flex;gap:6px;align-items:center;font-size:14px;font-weight:600">'+icon(u.k,cssv("--mu"))+u.n+'</span><span><span class="t">'+s.t.toFixed(1)+'</span><span class="sub"> °C · sp '+s.sp.toFixed(1)+'</span></span><span style="display:flex;justify-content:space-between;gap:6px;align-items:center"><span class="chip '+s.chip[0]+'">'+s.chip[1]+'</span><span style="display:inline-flex;gap:4px;align-items:center;font-size:11px;color:'+(u.auth?cssv("--gr"):cssv("--rd"))+'">'+icon(u.auth?"lock":"open",u.auth?cssv("--gr"):cssv("--rd"),13)+(u.auth?"auth":"no auth")+'</span></span></button>';
+}
+function renderStore(){
+  var f="",off="";
+  UNITS.forEach(function(u){
+    if(u.off){off+=unitHTML(u);return;}
+    var g=u.g.split("/");var pos='grid-column:'+g[0]+'/'+g[1]+';grid-row:'+g[2]+'/'+g[3];
+    f+=u.area?'<div class="area" style="'+pos+'">'+u.area+'</div>':'<div style="'+pos+'">'+unitHTML(u)+'</div>';
+  });
+  $("floor").innerHTML=f;$("offFloor").innerHTML=off;
+  var u=UNITS.filter(function(x){return x.id===selected;})[0],s=unitState(u),h;
+  h='<div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><b style="font-size:17px">'+u.n+'</b><span class="chip '+s.chip[0]+'">'+s.chip[1]+'</span></div>'+
+    '<div style="display:flex;gap:14px;align-items:baseline"><span style="font-size:52px;font-weight:700;line-height:1">'+s.t.toFixed(1)+'</span><span class="sub">°C · setpoint '+s.sp.toFixed(1)+'</span></div>'+
+    '<div class="kv"><span>Controller</span><span class="mono">'+(u.auth?"":"legacy ")+u.fw+'</span><span>Setpoint writes</span><span class="mono" style="color:'+(u.auth?"var(--gr)":"var(--rd)")+'">'+(u.auth?"auth required":"no auth")+'</span><span>Vendor patch</span><span class="mono">'+(u.auth?"supported":"end of life")+'</span></div>';
+  if(u.trial)h+='<button class="primary" id="toCourt">'+icon("shield",cssv("--onac"),20)+' Put on trial: original vs patched</button><p class="sub" style="margin:0;line-height:1.5">The court replays identical tests on the legacy controller and our patched rebuild before you swap it in.</p>';
+  else h+='<p class="sub" style="margin:0">Not on today’s docket.</p><button class="ghost" id="queue">'+(queued[u.id]?"Queued for the next trial ✓":"Queue for trial")+'</button>';
+  $("sidePanel").innerHTML=h;
+  var tc=$("toCourt");if(tc)tc.onclick=openCourt;
+  var q=$("queue");if(q)q.onclick=function(){queued[selected]=true;renderStore();announce(u.n+" queued for trial");};
+  var anyHot=attacked&&O.temp>8;
+  $("siteStatus").className="chip "+(anyHot?"bad":"ok");$("siteStatus").textContent=anyHot?"1 unit out of range":"All systems normal";
+}
+document.addEventListener("click",function(e){var b=e.target.closest("[data-u]");if(b){selected=b.getAttribute("data-u");renderStore();}});
+
+// ---------- court rendering ----------
+function arcPath(cx,cy,r,a0,a1){function pt(a){a=a*Math.PI/180;return [cx+r*Math.cos(a),cy+r*Math.sin(a)];}var p0=pt(a0),p1=pt(a1);return "M"+p0[0].toFixed(1)+" "+p0[1].toFixed(1)+" A"+r+" "+r+" 0 "+(a1-a0>180?1:0)+" 1 "+p1[0].toFixed(1)+" "+p1[1].toFixed(1);}
+function ang(v){return 135+(Math.max(-5,Math.min(30,v))+5)/35*270;}
+function roomHTML(c,name){
+  var orig=!c.patched,t=c.temp+noise(),col=t>8?"var(--rd)":(t>c.sp+1?"var(--am)":"var(--ac)");
+  var mk=(function(){var a=ang(c.sp)*Math.PI/180;return [130+104*Math.cos(a),130+104*Math.sin(a)];})();
+  var sp=c.spoil,fl=sp<30?["Fresh","var(--gr)"]:(sp<70?["At risk","var(--am)"]:["Spoiled","var(--rd)"]);
+  var h=c.hist.slice(-360),pts="";if(h.length<2)h=[t,t];for(var i=0;i<h.length;i++){pts+=(i*420/(h.length-1)).toFixed(0)+","+(70-(h[i]+5)/35*70).toFixed(0)+" ";}
+  var tst=toasts[orig?"O":"P"];
+  var out='<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><h2>'+name+'</h2><span class="chip '+(orig?"bad":"ok")+'">'+icon(orig?"open":"lock",orig?cssv("--rd"):cssv("--gr"),15)+(orig?"no auth":"auth + range check")+'</span></div>';
+  if(tst)out+='<div class="toast '+(tst.ok?"bad":"ok")+'" role="status">'+icon(tst.ok?"bolt":"shield",tst.ok?cssv("--rd"):cssv("--gr"),20)+'<span class="mono">'+tst.msg+'</span></div>';
+  out+='<div style="display:flex;justify-content:center"><svg role="img" aria-label="'+name+' temperature '+t.toFixed(1)+' degrees, setpoint '+c.sp.toFixed(1)+'" width="260" height="225" viewBox="0 0 260 225"><path d="'+arcPath(130,130,104,135,405)+'" stroke="var(--dial)" stroke-width="16" fill="none" stroke-linecap="round"/><path d="'+arcPath(130,130,104,135,Math.max(136,ang(t)))+'" stroke="'+col+'" stroke-width="16" fill="none" stroke-linecap="round"/><circle cx="'+mk[0].toFixed(1)+'" cy="'+mk[1].toFixed(1)+'" r="11" fill="var(--pn)" stroke="var(--tx)" stroke-width="3"/><text x="130" y="138" text-anchor="middle" font-size="64" font-weight="700" fill="var(--tx)" font-family="Inter,system-ui">'+t.toFixed(1)+'</text><text x="130" y="166" text-anchor="middle" font-size="15" fill="var(--mu)" font-family="Inter,system-ui">°C · setpoint '+c.sp.toFixed(1)+'</text></svg></div>';
+  if(orig&&c.sp>8)out+='<p style="margin:0;color:var(--rd);font-weight:600;font-size:14px">Alarm stays silent: it fires at setpoint + 4.0 = '+(c.sp+4).toFixed(1)+' °C.</p>';
+  if(orig&&c.defLen>20)out+='<p style="margin:0;color:var(--rd);font-weight:600;font-size:14px">Defrost stretched to '+(c.defLen/60)+' h: heaters on, alarm suppressed.</p>';
+  out+='<div class="tiles"><div class="tile'+(c.comp?" on":"")+'">'+icon("fan",c.comp?cssv("--ac"):cssv("--mu"),22).replace('style="flex:none"','style="flex:none" class="'+(c.comp&&playing?"spin":"")+'"')+'<div><small>Compressor</small><b>'+(c.comp?"ON":"OFF")+'</b></div></div><div class="tile'+(c.def?" def":"")+'">'+icon("drip",c.def?cssv("--am"):cssv("--mu"),22)+'<div><small>Defrost</small><b>'+(c.def?"ON":"OFF")+'</b></div></div><div class="tile'+(c.alarm?" alarm":"")+'">'+icon("bell",c.alarm?cssv("--rd"):cssv("--mu"),22)+'<div><small>Alarm</small><b>'+(c.alarm?"ALARM":"quiet")+'</b></div></div></div>';
+  out+='<div><span class="sub" style="font-size:12px">Last 6 h · dashed line = 8 °C food limit</span><svg aria-hidden="true" width="100%" height="70" viewBox="0 0 420 70" preserveAspectRatio="none"><line x1="0" x2="420" y1="'+(70-13/35*70).toFixed(0)+'" y2="'+(70-13/35*70).toFixed(0)+'" stroke="var(--am)" stroke-dasharray="4 4"/><polyline points="'+pts+'" fill="none" stroke="'+col+'" stroke-width="2.5" vector-effect="non-scaling-stroke"/></svg></div>';
+  out+='<div class="food">'+icon("crate",fl[1].indexOf("gr")>0?cssv("--gr"):fl[1].indexOf("am")>0?cssv("--am"):cssv("--rd"),28)+'<div style="flex:1;display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between"><b style="color:'+fl[1]+'">'+fl[0]+'</b><span class="mono" style="font-size:13px">'+sp+'% spoiled</span></div><div class="bar"><div style="width:'+Math.max(2,sp)+'%;background:'+fl[1]+'"></div></div></div></div>';
+  return out;
+}
+function cardHTML(test,r,sec){
+  var run=!!r,badge;
+  if(!run)badge='<span class="sub" style="font-size:13px">not run</span>';
+  else if(r.flaky)badge='<span class="chip warn">UNSWORN · flaky</span>';
+  else if(sec)badge=(!r.match?'<span class="chip ok">'+icon("shield",cssv("--gr"),14)+'PATCH WORKS</span>':'<span class="chip bad">PATCH FAILED</span>');
+  else badge=r.match?'<span class="chip ok">'+icon("check",cssv("--gr"),14)+'MATCH</span>':'<span class="chip bad">MISMATCH ✗</span>';
+  return '<button class="vc'+(sec?" sec":"")+(run?" run":"")+(run&&r.at&&Date.now()-r.at<450?" fresh":"")+'" aria-expanded="false" data-card="'+test.id+'"><span style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><b style="font-size:15px">'+test.t+'</b>'+badge+'</span><code class="mono">'+test.s+'</code><span class="obs mono"><span style="color:'+(sec&&run?"var(--rd)":"inherit")+'">ORIG '+(run?r.original:"·")+'</span><span style="color:'+(sec&&run?"var(--gr)":"inherit")+'">PATCH '+(run?r.revival:"·")+'</span></span><span class="more">Evidence: ran twice on each build'+(run?(r.flaky?", runs disagreed.":", both runs agreed."):".")+' Steps replayed identically on original and patched. Ref '+test.id+'.</span></button>';
+}
+function renderCourt(){
+  $("roomO").innerHTML=roomHTML(O,"ORIGINAL");$("roomP").innerHTML=roomHTML(Pt,"PATCHED (MUSÉANCE)");
+  $("ctrlCards").innerHTML=TESTS.map(function(t){return cardHTML(t,results[t.id],false);}).join("");
+  $("secCards").innerHTML=SEC.map(function(t){return cardHTML(t,secResults[t.id],true);}).join("");
+  var ids=TESTS.map(function(t){return t.id;}),done=ids.filter(function(i){return results[i];}),same=done.filter(function(i){return results[i].match&&!results[i].flaky;}).length;
+  var fl=Object.keys(results).concat(Object.keys(secResults)).filter(function(k){return (results[k]||secResults[k]).flaky;}).length;
+  var sd=Object.keys(secResults),blocked=sd.filter(function(k){return !secResults[k].match&&!secResults[k].flaky;}).length;
+  var s=$("strip");
+  if(!done.length&&!sd.length){s.className="strip card";s.textContent="Run the test suite to start the hearing.";}
+  else{var good=same===done.length&&blocked===sd.length;s.className="strip "+(good?"ok":"bad");s.style.border="1px solid "+(good?"var(--gr)":"var(--rd)");
+    s.textContent=(done.length?same+"/"+ids.length+" control behaviors identical":"control tests not run")+" · "+(sd.length?blocked+"/"+sd.length+" attacks blocked on the patch":"attacks not yet run")+" · "+fl+" flaky · ledger intact";}
+  $("clock").textContent=hhmmss();
+  var hot=attacked&&O.temp>8;$("siteStatus").className="chip "+(hot?"bad":"ok");$("siteStatus").textContent=hot?"1 unit out of range":"All systems normal";
+  $("mode").textContent=live?"LIVE COURT DATA":"SIMULATION";$("mode").className="chip mono "+(live?"ok":"muted");
+}
+function pad(n){return (n<10?"0":"")+n;}
+document.addEventListener("click",function(e){var c=e.target.closest(".vc");if(c)c.setAttribute("aria-expanded",c.getAttribute("aria-expanded")==="true"?"false":"true");});
+
+// ---------- loop ----------
+function frame(ts){
+  if(playing){if(!lastT)lastT=ts;acc+=(ts-lastT)/1000*speed;lastT=ts;var n=Math.floor(acc);acc-=n;n=Math.min(n,120);for(var i=0;i<n;i++){O.tickLogged("Dairy walk-in");Pt.tick();}if(n>=1&&speed>0.1){simAhead=true;render();}}
+  else lastT=0;
+  requestAnimationFrame(frame);
+}
+function render(){if(!$("courtView").classList.contains("hidden"))renderCourt();else renderStore();}
+setInterval(function(){lastPoll=Date.now();$("clock").textContent=hhmmss();$("poll").textContent="Live · polling 11 controllers · updated 0s ago";
+  if(!$("courtView").classList.contains("hidden"))renderCourt();
+  var hot=attacked&&O.temp>8;$("banner").classList.toggle("hidden",!hot);if(hot)$("banner").textContent="⚠ Dairy walk-in cold room at "+O.temp.toFixed(1)+" °C · setpoint changed remotely to "+O.sp.toFixed(1)+" °C · no alarm raised by the controller";
+  if(Math.random()<0.18){var u=UNITS.filter(function(x){return x.n&&!x.trial;});u=u[Math.floor(Math.random()*u.length)];ev(u.n,Math.random()<0.5?"compressor cycle "+(8+Math.floor(Math.random()*9))+" min":"poll ok · "+u.t.toFixed(1)+" °C");}
+},1000);
+setInterval(function(){UNITS.forEach(function(u){if(u.t!==undefined&&!u.trial)u.t=Math.round((u.sp+Math.sin(Date.now()/9000+u.n.length)*0.4)*10)/10;});if(!$("storeView").classList.contains("hidden"))renderStore();},2000);
+
+// ---------- controls ----------
+function openCourt(){$("storeView").classList.add("hidden");$("courtView").classList.remove("hidden");renderCourt();window.scrollTo(0,0);}
+$("back").onclick=function(e){e.preventDefault();$("courtView").classList.add("hidden");$("storeView").classList.remove("hidden");document.body.querySelectorAll(".dim").forEach(function(x){x.classList.remove("dim");});renderStore();};
+$("play").onclick=function(){playing=!playing;this.textContent=playing?"⏸ Pause":"▶ Play";};
+$("reset").onclick=function(){seed();simAhead=false;speed=1/60;document.querySelectorAll(".speed button").forEach(function(x){x.setAttribute("aria-pressed",x.dataset.s==="0.0166667");});ev("Court","reset to live","");results={};secResults={};toasts={O:null,P:null};attacked=false;live=false;head="000000";$("ledger").textContent="ledger head ------ · chain intact ✓";undim();renderCourt();};
+document.querySelectorAll(".speed button").forEach(function(b){b.onclick=function(){speed=+b.dataset.s;document.querySelectorAll(".speed button").forEach(function(x){x.setAttribute("aria-pressed",x===b);});};});
+$("runTests").onclick=function(){
+  results={};renderCourt();undim();
+  TESTS.forEach(function(t,i){setTimeout(function(){var r=trial(t);results[t.id]=r;ledger({kind:"claim",ref:t.id,match:r.match,flaky:r.flaky});ev("Court",t.id+" "+(r.match?"MATCH":"MISMATCH")+" · ledger "+head.slice(0,6),r.match?"ok":"bad");renderCourt();announce(t.t+": "+(r.flaky?"UNSWORN":r.match?"MATCH":"MISMATCH"));},350*(i+1));});
+};
+function undim(){["ctrl","patch","court","strip"].forEach(function(id){$(id).classList.remove("dim");});}
+function attack(kind){
+  undim();["ctrl","court","strip"].forEach(function(id){$(id).classList.add("dim");});
+  var a=kind==="sp"?O.writeSetpoint(25):O.writeDefrost(480),b=kind==="sp"?Pt.writeSetpoint(25):Pt.writeDefrost(480);
+  var src="185.220.101.47 (external)",fc=kind==="sp"?"Modbus FC06 write hr1=250":"Modbus FC06 write defrost_len=480";
+  ev("Attack",fc+" from "+src,"bad");ev("Dairy walk-in · ORIGINAL",a.msg,"bad");ev("Dairy walk-in · PATCHED",b.msg,"ok");
+  if(kind==="df"){var nx=O.min-(O.min%360)+359;O.min=Pt.min=nx;}
+  toasts.O=a;toasts.P=b;attacked=true;
+  var t=SEC.filter(function(s){return s.id===(kind==="sp"?"sec-setpoint":"sec-defrost");})[0],r=trial(t);secResults[t.id]=r;ledger({kind:"attack",ref:t.id,original:r.original,revival:r.revival});
+  announce("Attack: original "+(a.ok?"accepted":"rejected")+", patched "+(b.ok?"accepted":"rejected"));
+  if(!playing){$("play").click();}speed=10;document.querySelectorAll(".speed button").forEach(function(x){x.setAttribute("aria-pressed",x.dataset.s==="10");});ev("Court","fast-forward 600x to show the next hours","");
+  renderCourt();setTimeout(undim,6000);
+}
+$("atkSp").onclick=function(){attack("sp");};
+$("atkDf").onclick=function(){attack("df");};
+$("theme").onclick=function(){document.body.classList.toggle("dark");this.textContent=document.body.classList.contains("dark")?"Light mode":"Dark mode";render();};
+$("files").onchange=function(e){
+  Array.prototype.forEach.call(e.target.files,function(f){var rd=new FileReader();rd.onload=function(){try{
+    if(/ledger/i.test(f.name)){var lines=rd.result.trim().split(/\n/);var last=JSON.parse(lines[lines.length-1]);$("ledger").textContent="ledger head "+String(last.hash||"").slice(0,6)+"… · "+lines.length+" events";}
+    else if(/verdict/i.test(f.name)){var v=JSON.parse(rd.result);(Array.isArray(v)?v:v.verdicts||[]).forEach(function(x){var r={ref:x.ref,original:x.original,revival:x.revival,match:!!x.match,flaky:!!x.flaky};if(/^sec-/.test(x.ref))secResults[x.ref]=r;else{results[x.ref]=r;if(!TESTS.some(function(t){return t.id===x.ref;}))TESTS.push({id:x.ref,t:x.ref,s:(x.shrunk_steps||[]).join(" · ")||"from court",run:function(){return "";}});}});live=true;}
+    renderCourt();announce("Court files loaded");}catch(err){announce("Could not read "+f.name);}};rd.readAsText(f);});
+};
+ev("Store BMS","connected · 11 controllers online","ok");ev("Rooftop compressor rack","4/4 compressors online","ok");ev("Frozen aisle F2","defrost ended (scheduled)","");
+renderStore();requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

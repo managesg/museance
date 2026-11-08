@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Snarkr (2014)</title>
+<style>
+body{margin:0;font-family:Helvetica,Arial,sans-serif;background:#1b1622;color:#f3ecdf}
+header{padding:18px 24px;background:#2a2133;display:flex;align-items:baseline;gap:14px}
+h1{margin:0;font-size:30px;color:#ff7a59}h1+small{color:#a99cb8}
+main{max-width:640px;margin:20px auto;padding:0 16px}
+textarea{width:100%;height:70px;background:#2a2133;color:#f3ecdf;border:1px solid #4a3d59;border-radius:8px;padding:10px;font-size:16px;box-sizing:border-box}
+.row{display:flex;gap:8px;align-items:center;margin:8px 0}
+button{background:#ff7a59;border:0;color:#1b1622;font-weight:700;padding:7px 14px;border-radius:16px;cursor:pointer}
+button:disabled{opacity:.4}button.ghost{background:#3a2f47;color:#f3ecdf;font-weight:400}
+#count.over{color:#ff5470;font-weight:700}#error{color:#ff5470;min-height:20px}
+.post{background:#2a2133;border-radius:10px;padding:12px 14px;margin:10px 0}
+.badge{background:#7ee0b0;color:#1b1622;font-size:11px;padding:2px 7px;border-radius:9px;margin-left:6px}
+.tag{color:#7ab8ff;cursor:pointer}.reply{margin:6px 0 0 18px;color:#a99cb8}
+input{background:#2a2133;color:#f3ecdf;border:1px solid #4a3d59;border-radius:6px;padding:6px}
+</style></head><body>
+<header><h1>Snarkr</h1><small>the social network where everyone is right, apparently</small></header>
+<main>
+<textarea id="composer" placeholder="Share your hot take. We're sure it's original."></textarea>
+<div class="row"><button id="post">Snark</button><span id="count">140</span><span id="error"></span></div>
+<div class="row"><button id="sort-new" class="ghost">New</button><button id="sort-hot" class="ghost">Hot</button>
+<input id="mute" placeholder="mute a word"><span id="muted-count"></span>
+<span id="filter"></span><button id="clear-filter" class="ghost" style="display:none">clear</button></div>
+<div id="feed"></div>
+</main>
+<script>
+// Snarkr original. Deterministic: no random, no network. Ids are stable selectors for the court.
+var MAX=140, KEY="snarkr.posts", seq=0;
+var posts=JSON.parse(localStorage.getItem(KEY)||"[]"); posts.forEach(function(p){seq=Math.max(seq,p.id)});
+var sort="new", tag=null;
+function $(id){return document.getElementById(id)}
+function save(){localStorage.setItem(KEY,JSON.stringify(posts))}
+function plural(n,one,many){return n+" "+(n===1?one:many)}
+function esc(s){return s.replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function linkify(s){return esc(s).replace(/#(\w+)/g,'<span class="tag" data-tag="$1">#$1</span>')}
+function updateCount(){var left=MAX-$("composer").value.length;$("count").textContent=left;
+  $("count").className=left<0?"over":"";$("post").disabled=left<0}
+function addPost(){var raw=$("composer").value.trim();
+  if(!raw){$("error").textContent="Wow. Nothing. Bold.";return}
+  if(raw.length>MAX){return}
+  var sarcastic=/\s?\/s$/.test(raw); var text=raw.replace(/\s?\/s$/,"");
+  posts.push({id:++seq,text:text,sarcastic:sarcastic,claps:0,replies:[]});
+  $("composer").value="";$("error").textContent="";updateCount();save();render()}
+function render(){var mute=$("mute").value.trim().toLowerCase(),hidden=0;
+  var list=posts.slice().sort(function(a,b){return sort==="hot"?(b.claps-a.claps)||(b.id-a.id):b.id-a.id});
+  var html="";
+  list.forEach(function(p){
+    if(tag&&p.text.toLowerCase().indexOf("#"+tag.toLowerCase())<0)return;
+    if(mute&&p.text.toLowerCase().indexOf(mute)>=0){hidden++;return}
+    html+='<div class="post" id="post-'+p.id+'"><span class="text">'+linkify(p.text)+'</span>'+(p.sarcastic?'<span class="badge">sarcasm</span>':'')+
+      '<div class="row"><button class="clap ghost" data-id="'+p.id+'">👏</button><span class="claps">'+plural(p.claps,"slow clap","slow claps")+'</span>'+
+      '<button class="actually ghost" data-id="'+p.id+'">Well, actually</button><span class="replies-count">'+plural(p.replies.length,"reply","replies")+'</span>'+
+      '<button class="delete ghost" data-id="'+p.id+'">delete</button></div>'+
+      p.replies.map(function(r){return '<div class="reply">'+esc(r)+'</div>'}).join("")+'</div>'});
+  $("feed").innerHTML=html;
+  $("muted-count").textContent=hidden?plural(hidden,"post hidden","posts hidden"):"";
+  $("filter").textContent=tag?"#"+tag:"";$("clear-filter").style.display=tag?"":"none"}
+function find(id){return posts.filter(function(p){return p.id===+id})[0]}
+$("composer").addEventListener("input",updateCount);
+$("post").addEventListener("click",addPost);
+$("composer").addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();addPost()}});
+$("mute").addEventListener("input",render);
+$("sort-new").addEventListener("click",function(){sort="new";render()});
+$("sort-hot").addEventListener("click",function(){sort="hot";render()});
+$("clear-filter").addEventListener("click",function(){tag=null;render()});
+$("feed").addEventListener("click",function(e){var t=e.target,p;
+  if(t.dataset.tag){tag=t.dataset.tag;render();return}
+  if(!t.dataset.id)return;p=find(t.dataset.id);
+  if(t.classList.contains("clap"))p.claps++;
+  if(t.classList.contains("actually"))p.replies.push("Well, actually...");
+  if(t.classList.contains("delete"))posts=posts.filter(function(q){return q!==p});
+  save();render()});
+updateCount();render();
+</script></body></html>
