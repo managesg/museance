@@ -24,7 +24,7 @@ function steps(b: CaseBundle, s: StageState): Step[] {
   });
   const status = tally(s.cards, (k) => k.status);
   const repair = b.repairs[0];
-  const before = b.caseFile?.fidelity ?? fidelity(b.verdicts);
+  const before = b.after ? fidelity(b.verdicts) : (b.caseFile?.fidelity ?? fidelity(b.verdicts)); // once repaired the case file is the after result
   const after = b.after ? (b.after.caseFile?.fidelity ?? fidelity(b.after.verdicts)) : null;
   return [
     { name: 'Evidence dug', term: 'evidence', phase: 'dig', detail: () => `${b.evidence.length} items · ${(['A', 'B', 'C', 'D'] as const).map((t) => `${t} ${tiers[t] ?? 0}`).join(' · ')}` },

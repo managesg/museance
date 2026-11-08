@@ -388,7 +388,8 @@ export function CourtroomView() {
 
   const claim = claims.find((c) => c.id === called) ?? null;
   const tone = result ? TONE[result.word] : null;
-  const fBefore = b ? (b.caseFile?.fidelity ?? fidelity(b.verdicts)) : null;
+  // With a repaired revival the case file is the after result; the first rebuild's fidelity is its own verdicts.
+  const fBefore = b ? (b.after ? fidelity(b.verdicts) : (b.caseFile?.fidelity ?? fidelity(b.verdicts))) : null;
   const fAfter = b?.after ? (b.after.caseFile?.fidelity ?? fidelity(b.after.verdicts)) : null;
   const dBefore = b ? diffs(b.verdicts) : null;
   const dAfter = b?.after ? diffs(b.after.verdicts) : null;
