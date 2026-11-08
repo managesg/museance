@@ -302,11 +302,16 @@ def grammar_for(selectors: dict) -> str:
            f"type:<selector>:<text>, key:<key>, wait:<ms>. Selectors: {sels}."
 
 
+def _unquote(text) -> str:
+    """No test language needs double quotes, and the parser would keep them in the item ('""buy eggs""')."""
+    return " ".join(str(text or "").translate(str.maketrans("", "", '"“”')).split())
+
+
 def steps_for(text: str, selectors: dict, grammar: str = "") -> str:
     """Plain words -> an expression commands.to_steps(selectors, expr) accepts. Words the parser already takes come
     back as they are, with no call; else ASI-1 writes it, with one retry that shows it the parser's refusal.
     Raises ValueError in short plain words when the court can't try it."""
-    text = " ".join(str(text or "").split())
+    text = _unquote(text)
     if not text:
         raise ValueError("Tell the court what to try, Your Honor.")
     try:
@@ -322,7 +327,7 @@ def steps_for(text: str, selectors: dict, grammar: str = "") -> str:
         out = _ask(msgs, STEPS_SCHEMA, "court_test")
         if out is None:
             break
-        expr, why = str(out.get("steps") or "").strip(), str(out.get("why") or "")
+        expr, why = _unquote(out.get("steps")), str(out.get("why") or "")
         if not expr:
             break
         try:

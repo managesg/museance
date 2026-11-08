@@ -203,3 +203,9 @@ def test_live_asi1_understands_a_judge(monkeypatch):
     monkeypatch.setenv("ASI1_API_KEY", LIVE_KEY)
     r = brain.understand("cross_prompt", "what is 7 divided by 8", [], FACTS, CASES, (), brain.grammar_for(KEYPAD))
     assert r["action"] == "test" and commands.to_steps(KEYPAD, r["steps"]) == commands.to_steps(KEYPAD, "7/8=")
+
+
+def test_steps_lose_double_quotes():
+    from agents.mesh import brain
+    assert brain._unquote('add "buy eggs", complete') == "add buy eggs, complete"
+    assert brain._unquote("add “milk”") == "add milk"
