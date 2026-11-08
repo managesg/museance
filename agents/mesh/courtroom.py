@@ -171,7 +171,8 @@ class _Court:
         if act == 'leave':
             return _say(ADJOURN), None
         if act == 'ask':  # the ears' words, every number checked against the case file by brain.py
-            return _say(str(a.get('answer') or SAFE).split('\n') + self.next(state)), state or {'stage': 'lobby'}
+            said = str(a['answer']).split('\n') if a.get('answer') else _from_record(s)
+            return _say(said + self.next(state)), state or {'stage': 'lobby'}
         if not s:  # no case open
             if act == 'how':
                 return _say(HOW + self.choices('lobby')), {'stage': 'lobby'}
@@ -338,6 +339,15 @@ def _verdict(s):
             f"🐧 McClusky swore {s['claims']} claims. 🦉 Hoot attacked with {s['attacks']}.",
             f'🔍 {held}{busted}. The court {found} between the apps.',
             *evidence[:2], 'Your Honor, what now?', *VERDICT]
+
+
+def _from_record(s):
+    """No usable answer from the ears: the record's own lines, so a question never meets a dead end."""
+    if not s:
+        return [SAFE]
+    return ['From the record, Your Honor:',
+            f"🔍 {s['locked']} of {s['claims']} claims held. {_count(len(s['differences']), 'difference')} between the apps.",
+            *[f'🔨 Struck: {x}' for x in s['struck_examples'][:1]], *[_exhibit('❌', d) for d in s['differences'][:1]]]
 
 
 def _exhibit(mark, r):

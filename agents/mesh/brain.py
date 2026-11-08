@@ -179,13 +179,19 @@ def _brief(facts: dict | None) -> dict | None:
 
 def _speak(text, allowed: set[str]) -> str:
     """The Bailiff's words: at most MAX_LINES sentences of at most MAX_WORDS words, one per line; "" when a
-    number in them is not in `allowed` or they are not plain words. A long sentence is dropped, never cut (a cut
-    could end mid-number)."""
+    number in them is not in `allowed` or they are not plain words. A long sentence is cut at its last clause break
+    (never mid-number), else dropped."""
     text = " ".join(str(text or "").replace("*", "").replace("_", " ").split()).strip("\"' ")
     lines = []
     for s in re.split(r"(?<=[.!?])\s+", text) if text else []:
-        if len(s.split()) > MAX_WORDS or len(lines) == MAX_LINES:
+        if len(lines) == MAX_LINES:
             break
+        if len(s.split()) > MAX_WORDS:  # cut at its last clause break, never mid-number; else drop it
+            head = " ".join(s.split()[:MAX_WORDS])
+            cut = max(head.rfind(m) for m in (", ", "; ", ": ", " — ", " - "))
+            if cut <= 0 or len(head[:cut].split()) < 6:
+                break
+            s = head[:cut].rstrip() + "."
         lines.append(s)
     said = " ".join(lines)
     return "\n".join(lines) if said and not UNSAFE.search(said) and _numbers(said) <= allowed | GIVEN else ""

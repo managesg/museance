@@ -484,7 +484,7 @@ def test_ask_answers_then_shows_the_same_menu():
                                'Your Honor, what now?', *VERDICT]
     assert bare(after) == bare(state)
     reply, _ = turn(state, 'what is your favorite color?', understand=ears)
-    assert body(reply)[0] == SAFE
+    assert body(reply)[0] == 'From the record, Your Honor:' and 'claims held' in body(reply)[1]  # never a dead end
     _, prompt = play('1', '2')
     reply, after = turn(prompt, 'what is your favorite color?', understand=ears)
     assert reply.endswith('like "add milk".') and after['stage'] == 'cross_prompt'

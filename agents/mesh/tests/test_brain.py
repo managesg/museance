@@ -209,3 +209,11 @@ def test_steps_lose_double_quotes():
     from agents.mesh import brain
     assert brain._unquote('add "buy eggs", complete') == "add buy eggs, complete"
     assert brain._unquote("add “milk”") == "add milk"
+
+
+def test_a_long_answer_is_cut_at_a_clause_not_dropped(asi):
+    queue, _ = asi
+    queue += [{"answer": "McClusky swore an empty task can be created, but the original showed nothing at all when "
+                         "anyone tried it, so the court struck it."}]
+    assert brain.answer("why was one claim thrown out", FACTS) == \
+        "McClusky swore an empty task can be created, but the original showed nothing at all when anyone tried it."
