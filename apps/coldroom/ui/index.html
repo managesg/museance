@@ -4641,7 +4641,7 @@ function probe(first){
 }
 
 var _renderCourt=renderCourt;
-renderCourt=function(){_renderCourt();setChip();};
+renderCourt=function(){_renderCourt();setChip();var s=$("strip"),ids=TESTS.map(function(x){return x.id;}),sec=SEC.map(function(x){return x.id;});var allC=ids.every(function(i){return results[i]&&results[i].match&&!results[i].flaky;}),allS=sec.every(function(i){return secResults[i]&&!secResults[i].match&&!secResults[i].flaky;});if(s&&allC&&allS&&s.textContent.indexOf("VERDICT")<0)s.textContent="✅ VERDICT: patch approved · "+s.textContent;};
 
 var _frame=frame;
 frame=function(ts){
@@ -4712,6 +4712,7 @@ function liveAttack(kind){
       toasts.P={ok:!!b.ok,msg:b.ok?"write accepted: "+(b.msg||""):(b.msg||"write rejected")};
       attacked=true;
       var v=res.verdicts.filter(function(x){return x.ref===sid;})[0];
+      res.verdicts.filter(function(x){return x.kind==="attack";}).forEach(function(x){secResults[x.ref]=fromCourt(x);}); // the court judged both attacks: show the complete verdict
       if(v){secResults[sid]=fromCourt(v);ev("Court",sid+" "+(v.flaky?"UNSWORN":(!v.match?"PATCH WORKS":"PATCH FAILED"))+" · from the court run","ok");}
       announce("Attack: original "+(a.ok?"accepted":"rejected")+", patched "+(b.ok?"accepted":"rejected"));
       if(kind==="df"){var n=(359-(O.min%360)+360)%360;if(n>0)pendTicks+=n;}
