@@ -174,6 +174,11 @@ def _brief(facts: dict | None) -> dict | None:
     if not facts:
         return None
     f = {**facts, "differences_count": len(facts.get("differences") or [])}
+    if "fidelity" in f:  # a bare 'fidelity: 100' read as '100 tested behaviors'; say what each number is
+        f["match_score_out_of_100"] = f.pop("fidelity")
+        f["match_score_means"] = "how often the copy acted like the original, as a percent of the checks"
+    if "checks" in f:
+        f["checks_run_on_both_apps"] = f.pop("checks")
     return json.loads(CLAIM_ID.sub("a claim", json.dumps(f, ensure_ascii=False, default=str)))
 
 

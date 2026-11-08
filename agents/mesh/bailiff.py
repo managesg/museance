@@ -65,7 +65,7 @@ def summary(r: dict, runs=case.RUNS) -> dict:
     c = r["counts"]
     return {"app": r["app"], "claims": r["claims"],
             "locked": c["LOCKED"], "struck": c["STRUCK"], "unsworn": c["UNSWORN"], "fabricated": c["FABRICATED"],
-            "attacks": r["attacks"], "seconds": r["seconds"]["court"], "fidelity": r["fidelity"],
+            "attacks": r["attacks"], "seconds": r["seconds"]["court"], "fidelity": r["fidelity"], "checks": r["judged"],
             "differences": [exhibit(v) for v in live if not v["match"]], "examples": [exhibit(v) for v in held[:3]],
             "struck_examples": [struck(s) for s in r["struck"]],
             "credibility": [r["credibility_start"], r["credibility_end"]],

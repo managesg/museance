@@ -172,7 +172,8 @@ class _Court:
             return _say(ADJOURN), None
         if act == 'ask':  # the ears' words, every number checked against the case file by brain.py
             said = str(a['answer']).split('\n') if a.get('answer') else _from_record(s)
-            return _say(said + self.next(state)), state or {'stage': 'lobby'}
+            menu = self.next(state)
+            return _say([x for x in said if x not in menu] + menu), state or {'stage': 'lobby'}  # no echoed prompt
         if not s:  # no case open
             if act == 'how':
                 return _say(HOW + self.choices('lobby')), {'stage': 'lobby'}
