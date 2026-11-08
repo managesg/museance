@@ -17,7 +17,7 @@ cd court/ui && npm run dev                                          # stage on 5
 ```
 
 - `runs/` is gitignored. On this checkout `runs/todo/` holds verdicts, locks, attacks and ledger but **not** `evidence.json`, `sheet.json`, `claims.json`, `case.json` (the stage feed reads all of them, `court/ui/server/feed.ts` `fromRuns`). Copy P2's outputs in: `cp dig/out/todo/{evidence,sheet,claims}.json runs/todo/`. The case file exists only as `cases/todo.case.yml`; if the numbers bar shows dashes, write a `runs/todo/case.json` from it. **VERIFY.**
-- Tab 1: `http://localhost:5173/?source=runs&app=todo` (the todo case). Tab 2: `http://localhost:5173/` (default fixture = calculator `app1`, used only for the judge's bench input, see beat 7). Tab 3: `cases/BEFORE_AFTER.md` open in a viewer, scrolled to the `## todo` table.
+- Tab 1: `http://localhost:5173/?source=runs&app=todo&view=stage` (the todo case; phase keys 1-8 only work with `&view=stage`; the plain URL shows the courtroom view without credibility/Brier). Tab 2: `http://localhost:5173/` (default fixture = calculator `app1`, used only for the judge's bench input, see beat 7). Tab 3: `cases/BEFORE_AFTER.md` open in a viewer, scrolled to the `## todo` table.
 - Stage keys (`court/ui/src/stage/useKeyboard.ts`): Space play/pause, Left/Right step, **1-8** jump to a phase (dig, read, raise, swear, cross, repair, bench, sentence), **B** bench, **R** restart, **F** fullscreen, **+/-** speed.
 - Known gap (read this): for `source=runs` the stage has **no repair replay** (`repairs: []` in `feed.ts`; the repair phase replays only for the fixture bundle). So beat 6 shows the repair from the committed files, not from an animation. Do not say the stage "ran" the repair.
 - Fallback if the stage dies: terminal only: `python eval/p4_fixture.py` and `cat cases/BEFORE_AFTER.md`.
@@ -53,7 +53,7 @@ Cards are white on black, one idea each, no voiceover required. Only show what w
 | 0:06-0:14 | A dead todo app. 55 pieces of evidence dug up. 24 behaviors read. | dig/out/todo/evidence.json, sheet.json |
 | 0:14-0:22 | A revival built from the sheet alone. 16 claims sworn, each with a confidence and a bond. | dig/out/todo/claims.json |
 | 0:22-0:29 | A skeptic who never saw the claims. 105 attacks, hashed before the claims were revealed. | cases/todo/verdicts.json, cases/todo.commits.json |
-| 0:29-0:37 | The court has no model in it. 15 claims locked. 1 struck: PERJURY. The claim: an empty task can be created (issue #38). Bond lost: 198. | cases/todo.case.yml, dig/out/todo/claims.json |
+| 0:29-0:37 | The court has no model in it. 15 claims locked. 1 struck: PERJURY. The claim: an empty task can be created (issue #38). Bond lost: 198 (net credibility 1000 to 930, the stage shows -70). | cases/todo.case.yml, dig/out/todo/claims.json |
 | 0:37-0:47 | Repair. Attack mismatches 68 to 0. Fidelity 41 to 100 (measured, all 121 verdicts). Regression 19/20 to 20/20. | cases/before_after.json, cases/todo/v{1,2}-16claims/verdicts.json |
 | 0:47-0:53 | False strikes on good behavior: 0 of 12. | cases/METRICS.md |
 | 0:53-0:58 | Credibility 1000 to 930. Brier 0.071 over 16 claims. | cases/todo.case.yml |
@@ -72,7 +72,7 @@ All paths relative to the repo root. "Counted" means counted from the named file
 | Struck claim | c07, "An empty task can be created"; confidence 0.8906, bond 198; evidence e007 = issue #38 | `dig/out/todo/claims.json`, `dig/out/todo/evidence.json`, `cases/todo/locks.json` |
 | Attacks (sealed, blind to claims) | 105 | `cases/todo/verdicts.json` (kind attack), counted; hashes `cases/todo.commits.json` |
 | Court verdicts | 121 (16 claims + 105 attacks), all revival-matches-original on v2 | `cases/todo/verdicts.json`, counted |
-| Attack mismatches, v1 to v2 | 68 to 0 | `cases/before_after.json`, `cases/todo/repairs.jsonl` |
+| Attack mismatches, v1 to v2 | 68 to 0 (attacks only); the stage's "Differences" counter shows 71 to 0 = 68 attacks + 3 claims (c06, c14, c16) | `cases/before_after.json`, `cases/todo/repairs.jsonl` |
 | Fidelity, v1 to v2 | 41 to 100, MEASURED: CONTRACTS.md definition (100*matched/(matched+mismatched), flaky excluded) over all 121 verdicts (P2's 16 claims + the sealed 105 attacks). v1: 50 of 121 match (71 mismatches: 68 attacks + claims c06, c14, c16) = 41; v2: 121 of 121 = 100; 0 flaky. Re-run on the box (court.court, original vs `revive/out/todo/index.v1.html` and `index.html`; seal verified with `eval/seal.py --verify`) and committed as `cases/todo/v1-16claims/` and `cases/todo/v2-16claims/` (`verdicts.json`, `locks.json`); scored with `eval/score.py:fidelity`. Older, different denominators: attacks only 35 to 100 (`cases/before_after.json`, `repairs.jsonl`); `cases/todo/verdicts.json` at 9a5877c used P1's 8 claims and gives 36. | `cases/todo/v1-16claims/verdicts.json`, `cases/todo/v2-16claims/verdicts.json`, `cases/before_after.json` (`fidelity_all_verdicts`), `cases/BEFORE_AFTER.md` |
 | Regression, v1 to v2 | 19/20 to 20/20 | `cases/before_after.json`, `cases/METRICS.md` |
 | False strikes | 0/12 | `cases/METRICS.md`, `cases/todo.case.yml` |
@@ -116,3 +116,16 @@ Do not say: any latency, token count, cost, "N models", uptime, or accuracy figu
 ## Why it matters (impact line, checked by P1 against news reports)
 "In October and November 2026, attackers hit Danfoss refrigeration controllers at supermarkets across Europe and set them to defrost overnight: up to ~700 stores in France on 11 Oct, then a second wave across ~10 EU countries on 2 Nov (SecurityWeek, The Hacker News, NPR). Much of that legacy software can't be patched anymore; the fix is to rebuild it, but a rebuild you can't verify is a new risk. MUSÉANCE is the court that checks a rebuild against the original before you swap it in: claims the original contradicts are STRUCK; anything the court can't reproduce reliably is UNSWORN, never struck. Today we demo a dead todo app and 2048, not a controller."
 Do not name specific controller models (not confirmed for these attacks), and do not link Copeland's separate Frostbyte10 disclosure to them.
+
+
+## Demo laptop commands (verified by the P4 smoke test, 16:12 PT)
+Run from the repo root, one terminal each (`python` or `.venv/bin/python`); on macOS/Linux use `export VAR=...` instead of `set VAR=...`:
+```
+python -m http.server 8011 -b 127.0.0.1 -d apps/todo/original
+python -m http.server 8012 -b 127.0.0.1 -d revive/out/todo
+set COURT_BROWSER_CHANNEL=chrome && python -u -B -m court.feed --runs runs --port 8797
+cd court/ui && npm ci && npm run seed -- todo
+cd court/ui && set COURT_URL=http://127.0.0.1:8797 && node server/feed.ts
+cd court/ui && npm run dev
+```
+Open `http://localhost:5173/?source=runs&app=todo&view=stage`. Expected: fidelity 41 to 100, differences 71 to 0, 15 LOCKED / 1 STRUCK (c07), Brier 0.071, credibility 1000 to 930, false strikes 0 of 12. If a port is taken, set `PORT=` for the feed and point vite's `/api` proxy at it.
