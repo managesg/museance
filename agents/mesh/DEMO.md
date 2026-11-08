@@ -12,7 +12,7 @@ words. Numbers (1, 2, 3) always work too.
   2. The Bailiff's inspector, which shows the agents' messages to each other:
      https://agentverse.ai/inspect/?uri=http%3A//127.0.0.1%3A8781&address=agent1qw47zhtg9gj55676vy8myruj297339kqdjkj34e2n2xkt2mqewjn2ngyuw0
   3. The backup chat (both cases, public):
-     https://asi1.ai/shared-chat/f44701fa-ef7d-4ef8-9fdf-6d29c93d42d5
+     https://asi1.ai/shared-chat/5e74c8f6-5e2d-48d9-8734-baebd82e687b
 - Optional: open each case once a few minutes before. Within 5 minutes the verdict comes back at
   once, and the Bailiff says when the court ran it ("The court ran this case 3 minutes ago").
   "Run it again" runs it fresh.
