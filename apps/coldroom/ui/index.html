@@ -4644,7 +4644,7 @@ function nextUnit(){var ids=Object.keys(PROF),i=ids.indexOf(trialUnit),nx=ids[(i
   if(inSession)return;selected=nx;setTrial(nx);undim();renderCourt();window.scrollTo(0,0);announce(PROF[nx].n+" is on trial");}
 (function(){var nb=$("nextUnit");if(nb)nb.onclick=nextUnit;})();
 var _renderCourt=renderCourt;
-renderCourt=function(){_renderCourt();setChip();var s=$("strip"),ids=TESTS.map(function(x){return x.id;}),sec=SEC.map(function(x){return x.id;});var allC=ids.every(function(i){return results[i]&&results[i].match&&!results[i].flaky;}),allS=sec.every(function(i){return secResults[i]&&!secResults[i].match&&!secResults[i].flaky;});if(s&&allC&&allS&&s.textContent.indexOf("VERDICT")<0)s.textContent="✅ VERDICT: patch approved · "+s.textContent;};
+renderCourt=function(){_renderCourt();setChip();var s=$("strip"),ids=TESTS.map(function(x){return x.id;}),sec=SEC.map(function(x){return x.id;});var allC=ids.every(function(i){return results[i]&&results[i].match&&!results[i].flaky;}),allS=sec.every(function(i){return secResults[i]&&!secResults[i].match&&!secResults[i].flaky;});if(s&&allC&&allS&&s.textContent.indexOf("VERDICT")<0)s.textContent="✅ VERDICT: patch applied · "+s.textContent;};
 
 var _frame=frame;
 frame=function(ts){
