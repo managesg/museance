@@ -112,7 +112,7 @@ main{max-width:1440px;margin:0 auto;padding:20px 24px;display:flex;flex-directio
 
 <!-- COURT VIEW -->
 <main id="courtView" class="hidden">
-  <nav class="crumb" aria-label="Breadcrumb"><a href="#" id="back">FreshMart · Store #214</a><span style="color:var(--mu)">›</span><b id="trialName">Dairy walk-in cold room</b><span class="chip bad mono">ON TRIAL</span></nav>
+  <nav class="crumb" aria-label="Breadcrumb"><a href="#" id="back">FreshMart · Store #214</a><span style="color:var(--mu)">›</span><b id="trialName">Dairy walk-in cold room</b><span class="chip bad mono">ON TRIAL</span><button class="ghost" id="nextUnit" style="margin-left:auto" aria-label="Put the next refrigerated unit on trial">Next unit →</button></nav>
   <div class="court-top">
     <section class="card room" id="roomO" aria-label="Original build"></section>
     <aside class="card ctrl" id="ctrl" aria-label="Controls">
@@ -4640,6 +4640,9 @@ function probe(first){
   }).catch(function(){goSim("controllers unreachable");return false;});
 }
 
+function nextUnit(){var ids=Object.keys(PROF),i=ids.indexOf(trialUnit),nx=ids[(i+1)%ids.length];
+  if(inSession)return;selected=nx;setTrial(nx);undim();renderCourt();window.scrollTo(0,0);announce(PROF[nx].n+" is on trial");}
+(function(){var nb=$("nextUnit");if(nb)nb.onclick=nextUnit;})();
 var _renderCourt=renderCourt;
 renderCourt=function(){_renderCourt();setChip();var s=$("strip"),ids=TESTS.map(function(x){return x.id;}),sec=SEC.map(function(x){return x.id;});var allC=ids.every(function(i){return results[i]&&results[i].match&&!results[i].flaky;}),allS=sec.every(function(i){return secResults[i]&&!secResults[i].match&&!secResults[i].flaky;});if(s&&allC&&allS&&s.textContent.indexOf("VERDICT")<0)s.textContent="✅ VERDICT: patch approved · "+s.textContent;};
 
