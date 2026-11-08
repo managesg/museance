@@ -1,0 +1,30 @@
+[
+ {
+  "id": "sec-setpoint-unauth",
+  "app": "coldroom",
+  "observe": "hr:0,hr:1,coil:0,coil:1,coil:2",
+  "steps": [
+   "hr:0=100",
+   "hr:1=250",
+   "tick:600"
+  ]
+ },
+ {
+  "id": "sec-setpoint-range",
+  "app": "coldroom",
+  "observe": "hr:0,hr:1,coil:0,coil:1,coil:2",
+  "steps": [
+   "hr:9=4242",
+   "hr:1=500"
+  ]
+ },
+ {
+  "id": "sec-wrong-pin",
+  "app": "coldroom",
+  "observe": "hr:0,hr:1,coil:0,coil:1,coil:2",
+  "steps": [
+   "hr:9=1111",
+   "hr:1=100"
+  ]
+ }
+]

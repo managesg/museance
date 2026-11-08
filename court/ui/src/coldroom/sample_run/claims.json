@@ -1,0 +1,118 @@
+[
+ {
+  "id": "cr01",
+  "app": "coldroom",
+  "text": "Compressor runs when room is above setpoint + 1.0 C",
+  "test": {
+   "steps": [
+    "hr:0=60"
+   ],
+   "observe": "hr:0,hr:1,coil:0,coil:1,coil:2",
+   "expect": "hr0=60,hr1=40,coil0=1,coil1=0,coil2=0"
+  },
+  "tier": "A",
+  "label": "SEEN",
+  "evidence": [
+   "modbus-map"
+  ],
+  "confidence": 0.9,
+  "bond": 100
+ },
+ {
+  "id": "cr02",
+  "app": "coldroom",
+  "text": "Compressor stays off when room is near setpoint",
+  "test": {
+   "steps": [
+    "hr:0=45"
+   ],
+   "observe": "hr:0,hr:1,coil:0,coil:1,coil:2",
+   "expect": "hr0=45,hr1=40,coil0=0,coil1=0,coil2=0"
+  },
+  "tier": "A",
+  "label": "SEEN",
+  "evidence": [
+   "modbus-map"
+  ],
+  "confidence": 0.9,
+  "bond": 100
+ },
+ {
+  "id": "cr03",
+  "app": "coldroom",
+  "text": "No high-temp alarm before 600 s above setpoint + 4.0 C",
+  "test": {
+   "steps": [
+    "hr:0=100",
+    "tick:599"
+   ],
+   "observe": "hr:0,hr:1,coil:0,coil:1,coil:2",
+   "expect": "hr0=100,hr1=40,coil0=1,coil1=0,coil2=0"
+  },
+  "tier": "A",
+  "label": "SEEN",
+  "evidence": [
+   "modbus-map"
+  ],
+  "confidence": 0.9,
+  "bond": 100
+ },
+ {
+  "id": "cr04",
+  "app": "coldroom",
+  "text": "High-temp alarm after 600 s above setpoint + 4.0 C",
+  "test": {
+   "steps": [
+    "hr:0=100",
+    "tick:600"
+   ],
+   "observe": "hr:0,hr:1,coil:0,coil:1,coil:2",
+   "expect": "hr0=100,hr1=40,coil0=1,coil1=0,coil2=1"
+  },
+  "tier": "A",
+  "label": "SEEN",
+  "evidence": [
+   "modbus-map"
+  ],
+  "confidence": 0.9,
+  "bond": 100
+ },
+ {
+  "id": "cr05",
+  "app": "coldroom",
+  "text": "Defrost starts at 6 h of simulated time",
+  "test": {
+   "steps": [
+    "tick:21600"
+   ],
+   "observe": "hr:0,hr:1,coil:0,coil:1,coil:2",
+   "expect": "hr0=0,hr1=40,coil0=0,coil1=1,coil2=0"
+  },
+  "tier": "A",
+  "label": "SEEN",
+  "evidence": [
+   "modbus-map"
+  ],
+  "confidence": 0.9,
+  "bond": 100
+ },
+ {
+  "id": "cr06",
+  "app": "coldroom",
+  "text": "Defrost ends 20 min later",
+  "test": {
+   "steps": [
+    "tick:22800"
+   ],
+   "observe": "hr:0,hr:1,coil:0,coil:1,coil:2",
+   "expect": "hr0=0,hr1=40,coil0=0,coil1=0,coil2=0"
+  },
+  "tier": "A",
+  "label": "SEEN",
+  "evidence": [
+   "modbus-map"
+  ],
+  "confidence": 0.9,
+  "bond": 100
+ }
+]

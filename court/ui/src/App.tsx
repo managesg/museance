@@ -30,6 +30,7 @@ import { Stage } from './stage/Stage';
 import { useKeyboard } from './stage/useKeyboard';
 import { CaseView } from './case/CaseView';
 import { CourtroomView } from './courtroom/CourtroomView';
+import { ColdRoomView } from './coldroom/ColdRoomView';
 
 type Tag = NonNullable<ComponentProps<typeof ExhibitFrame>['output']>;
 
@@ -65,6 +66,7 @@ function tagsOf(v: Verdict): { original: Tag; revival: Tag } {
 
 export default function App() {
   const view = QUERY.get('view');
+  if (view === 'coldroom') return <ColdRoomView />;
   return view === 'stage' ? <CourtStage /> : view === 'case' ? <CaseView /> : <CourtroomView />;
 }
 
