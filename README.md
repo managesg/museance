@@ -2,7 +2,7 @@
 
 **A fidelity court for resurrected software.** AI proposes, the court decides. Built at the AIE Code Summit Hackathon, 2026-11-07.
 
-AI can rebuild a dead app or patch legacy software fast, but nobody can prove the result behaves like the original. MUSÉANCE puts the rebuild on trial: agents gather evidence, an AI swears how the original behaved with credits on the line, and a court with no AI in it checks every claim on both builds. Only what survives is locked into the record.
+AI can rebuild dead apps or patch legacy software fast, but nobody can prove the result behaves like the original. MUSÉANCE puts the rebuild on trial: an AI swears how the original behaved, with credits at stake, and a court with no AI checks every claim on both builds. Only what survives is locked.
 
 ## How it comes together
 
@@ -21,12 +21,12 @@ flowchart LR
 
 | Step | What happens | Where |
 | --- | --- | --- |
-| Evidence | Pages, issues, screenshots about the app, tiered A–D | `dig/` |
+| Evidence | Pages, issues, screenshots, tiered A–D | `dig/` |
 | Behavior sheet | What the app did, each line marked seen or guessed | `dig/` |
 | Claims | The medium swears each behavior with a test, a confidence and a bond | `agents/` |
-| Attacks | The skeptic writes tests without seeing the claims; they are hashed before claims are revealed | `eval/` |
+| Attacks | The skeptic's tests, written blind and hashed before claims are revealed | `eval/` |
 | Revival | A builder rebuilds the app from the sheet only, never the original code | `revive/` |
-| Court | Runs every test on original and revival, twice; same output = match, unstable = unsworn | `court/` |
+| Court | Runs every test on both builds, twice; unstable = unsworn | `court/` |
 | Record | LOCKED / STRUCK (perjury) per claim, every event in a hash-chained ledger | `runs/<app>/` |
 | Stage | Both apps side by side, one test at a time: SAME or DIFFERENT | `court/ui/` |
 
@@ -58,12 +58,4 @@ node server/feed.ts                                 # stage feed (MONGODB_AI_API
 npm run dev                                         # open http://localhost:5173/?source=runs&app=todo
 ```
 
-The full demo, including the cold-room controllers and the live court, is in `DEMO.md`. Lanes and rules: `AGENTS.md`; data contracts: `CONTRACTS.md`; credits and licenses: `CREDITS.md`.
-
-| Folder | What |
-| --- | --- |
-| `court/` | The court, Bailiff locks, ledger, Modbus bench |
-| `dig/`, `agents/` | Evidence, reader, medium, Fetch agents |
-| `revive/`, `eval/`, `cases/` | Builders, skeptic, scoring, case files |
-| `court/ui/` | Stage UI |
-| `apps/` | The original apps (oracles) |
+Full demo (cold-room controllers, live court): `DEMO.md`. Rules: `AGENTS.md`. Contracts: `CONTRACTS.md`. Licenses: `CREDITS.md`.
