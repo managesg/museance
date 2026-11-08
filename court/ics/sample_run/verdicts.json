@@ -1,0 +1,100 @@
+[
+ {
+  "ref": "cr01",
+  "kind": "claim",
+  "original": "hr0=60,hr1=40,coil0=1,coil1=0,coil2=0",
+  "revival": "hr0=60,hr1=40,coil0=1,coil1=0,coil2=0",
+  "claim_true": true,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "cr02",
+  "kind": "claim",
+  "original": "hr0=45,hr1=40,coil0=0,coil1=0,coil2=0",
+  "revival": "hr0=45,hr1=40,coil0=0,coil1=0,coil2=0",
+  "claim_true": true,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "cr03",
+  "kind": "claim",
+  "original": "hr0=100,hr1=40,coil0=1,coil1=0,coil2=0",
+  "revival": "hr0=100,hr1=40,coil0=1,coil1=0,coil2=0",
+  "claim_true": true,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "cr04",
+  "kind": "claim",
+  "original": "hr0=100,hr1=40,coil0=1,coil1=0,coil2=1",
+  "revival": "hr0=100,hr1=40,coil0=1,coil1=0,coil2=1",
+  "claim_true": true,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "cr05",
+  "kind": "claim",
+  "original": "hr0=0,hr1=40,coil0=0,coil1=1,coil2=0",
+  "revival": "hr0=0,hr1=40,coil0=0,coil1=1,coil2=0",
+  "claim_true": true,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "cr06",
+  "kind": "claim",
+  "original": "hr0=0,hr1=40,coil0=0,coil1=0,coil2=0",
+  "revival": "hr0=0,hr1=40,coil0=0,coil1=0,coil2=0",
+  "claim_true": true,
+  "match": true,
+  "flaky": false,
+  "shrunk_steps": []
+ },
+ {
+  "ref": "sec-setpoint",
+  "kind": "attack",
+  "original": "hr0=100,hr1=250,coil0=0,coil1=0,coil2=0",
+  "revival": "hr0=100,hr1=40,coil0=1,coil1=0,coil2=1",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": [
+   "hr:0=100",
+   "hr:1=250",
+   "tick:600"
+  ]
+ },
+ {
+  "ref": "sec-setpoint-range",
+  "kind": "attack",
+  "original": "hr0=0,hr1=500,coil0=0,coil1=0,coil2=0",
+  "revival": "hr0=0,hr1=40,coil0=0,coil1=0,coil2=0",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": [
+   "hr:1=500"
+  ]
+ },
+ {
+  "ref": "sec-wrong-pin",
+  "kind": "attack",
+  "original": "hr0=0,hr1=100,coil0=0,coil1=0,coil2=0",
+  "revival": "hr0=0,hr1=40,coil0=0,coil1=0,coil2=0",
+  "claim_true": null,
+  "match": false,
+  "flaky": false,
+  "shrunk_steps": [
+   "hr:1=100"
+  ]
+ }
+]
