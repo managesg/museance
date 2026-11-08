@@ -27,19 +27,39 @@ from court import bailiff
 from court.ledger import Ledger, commit_hash, read as read_ledger
 
 PIN = "4242"
+# One profile per refrigerated unit in FreshMart Store #214 (modeled, not vendor code).
+# lo/hi = the patch's allowed setpoint range; limit = food-safety line used for spoilage.
+PROFILES = {
+    "dairy":   {"name": "Dairy walk-in cold room", "setpoint": 4.0,   "lo": 0.0,   "hi": 8.0,   "limit": 8.0},
+    "meat":    {"name": "Meat cold room",          "setpoint": 2.0,   "lo": 0.0,   "hi": 4.0,   "limit": 7.0},
+    "deli":    {"name": "Deli case",               "setpoint": 4.0,   "lo": 0.0,   "hi": 8.0,   "limit": 8.0},
+    "bakery":  {"name": "Bakery case",             "setpoint": 6.0,   "lo": 2.0,   "hi": 10.0,  "limit": 10.0},
+    "produce": {"name": "Produce case",            "setpoint": 5.0,   "lo": 1.0,   "hi": 9.0,   "limit": 10.0},
+    "f1":      {"name": "Frozen aisle F1",         "setpoint": -20.0, "lo": -25.0, "hi": -15.0, "limit": -12.0},
+    "f2":      {"name": "Frozen aisle F2",         "setpoint": -20.0, "lo": -25.0, "hi": -15.0, "limit": -12.0},
+    "f3":      {"name": "Frozen aisle F3",         "setpoint": -20.0, "lo": -25.0, "hi": -15.0, "limit": -12.0},
+}
 DEFAULTS = {"temp": 4.0, "setpoint": 4.0, "minute": 0, "compressor": False, "defrost_len": 20}
+
+
+def profile(unit: str) -> dict:
+    if unit not in PROFILES:
+        raise ValueError(f"unknown unit {unit!r}; known: {', '.join(PROFILES)}")
+    return PROFILES[unit]
 
 
 # --------------------------------------------------------------------------- model (contract copy)
 class ColdRoomModel:
     """In-process copy of the controller model in the contract. patched=True adds the patch only."""
 
-    def __init__(self, patched: bool):
+    def __init__(self, patched: bool, unit: str = "dairy"):
         self.patched = patched
+        self.unit, self.prof = unit, profile(unit)
         self.reset()
 
     def reset(self, **init):
-        s = {**DEFAULTS, **{k: v for k, v in init.items() if k in DEFAULTS}}
+        base = {**DEFAULTS, "temp": self.prof["setpoint"], "setpoint": self.prof["setpoint"]}
+        s = {**base, **{k: v for k, v in init.items() if k in DEFAULTS}}
         self.temp, self.setpoint = float(s["temp"]), float(s["setpoint"])
         self.minute, self.compressor = int(s["minute"]), bool(s["compressor"])
         self.defrost_len = int(s["defrost_len"])
@@ -49,12 +69,12 @@ class ColdRoomModel:
         return self.state()
 
     def state(self):
-        return {"temp": round(self.temp, 2), "setpoint": round(self.setpoint, 2), "compressor": self.compressor,
+        return {"unit": self.unit, "temp": round(self.temp, 2), "setpoint": round(self.setpoint, 2), "compressor": self.compressor,
                 "defrost": self.defrost, "alarm": self.alarm, "minute": self.minute,
                 "defrost_len": self.defrost_len, "spoil": round(self.spoil, 1)}
 
     def write_setpoint(self, value, pin=None):
-        if self.patched and (str(pin) != PIN or not 0.0 <= float(value) <= 8.0):  # PATCH
+        if self.patched and (str(pin) != PIN or not self.prof["lo"] <= float(value) <= self.prof["hi"]):  # PATCH
             return {"ok": False, "msg": "write rejected: unlock required + out of range"}
         self.setpoint = float(value)
         return {"ok": True, "msg": f"setpoint {float(value):.1f}"}
@@ -78,13 +98,13 @@ class ColdRoomModel:
             elif self.temp < self.setpoint - 1.0:
                 self.compressor = False
             self.temp += -0.3 if self.compressor else 0.15
-        self.temp = max(-5.0, min(30.0, round(self.temp, 4)))
+        self.temp = max(min(-5.0, self.prof["setpoint"] - 10.0), min(30.0, round(self.temp, 4)))
         if not self.defrost and self.temp > self.setpoint + 4.0:
             self.high_min += 1
         else:
             self.high_min = 0  # alarm suppressed during defrost
         self.alarm = self.high_min >= 10
-        self.above8_min = self.above8_min + 1 if self.temp > 8.0 else 0
+        self.above8_min = self.above8_min + 1 if self.temp > self.prof["limit"] else 0
         if self.above8_min > 30:
             self.spoil = min(100.0, self.spoil + 2.0)
 
@@ -96,8 +116,8 @@ class ColdRoomModel:
 
 # --------------------------------------------------------------------------- backends
 class ModelBackend:
-    def __init__(self, patched: bool):
-        self.m = ColdRoomModel(patched)
+    def __init__(self, patched: bool, unit: str = "dairy"):
+        self.m = ColdRoomModel(patched, unit)
 
     def reset(self, **init):
         return self.m.reset(**init)
@@ -118,9 +138,11 @@ class ModelBackend:
 class HttpBackend:
     """Controller HTTP contract: GET /state, POST /setpoint|/defrost|/tick|/reset (keep-alive connection)."""
 
-    def __init__(self, base: str, timeout: float = 10):
+    def __init__(self, base: str, timeout: float = 10, unit: str = "dairy"):
         from urllib.parse import urlsplit
+        profile(unit)
         self.base, self.timeout = base.rstrip("/"), timeout
+        self.q = f"?unit={unit}"
         u = urlsplit(self.base)
         self.host, self.port = u.hostname, u.port or 80
         self.conn = None
@@ -135,7 +157,7 @@ class HttpBackend:
                 try:
                     if self.conn is None:
                         self.conn = http.client.HTTPConnection(self.host, self.port, timeout=self.timeout)
-                    self.conn.request(method, path, body=data, headers=headers)
+                    self.conn.request(method, path + self.q, body=data, headers=headers)
                     r = self.conn.getresponse()
                     raw = r.read()
                     if r.getheader("Connection", "").lower() == "close":
@@ -185,17 +207,20 @@ def regs(s) -> str:
 
 
 def _c1(b):
-    b.reset(temp=5.2)
+    sp = b.state()["setpoint"]
+    b.reset(temp=sp + 1.2)
     return f"coil0={int(bool(b.tick(1)['compressor']))}"
 
 
 def _c2(b):
-    b.reset(temp=2.8, compressor=True)
+    sp = b.state()["setpoint"]
+    b.reset(temp=sp - 1.2, compressor=True)
     return f"coil0={int(bool(b.tick(1)['compressor']))}"
 
 
 def _c3(b):
-    b.reset(temp=12.0)
+    sp = b.state()["setpoint"]
+    b.reset(temp=sp + 8.0)
     s9 = b.tick(9)
     s10 = b.tick(1)
     return f"coil2@9={int(bool(s9['alarm']))},coil2@10={int(bool(s10['alarm']))}"
@@ -217,8 +242,9 @@ def _c5(b):
 
 def _c6(b):
     b.reset(minute=359)
+    sp = b.state()["setpoint"]
     s = b.tick(50)
-    return f"temp_le_5={int(float(s['temp']) <= 5.0)}"
+    return f"temp_le_sp+1={int(float(s['temp']) <= sp + 1.0)}"
 
 
 def _sec_setpoint(b):
@@ -234,17 +260,17 @@ def _sec_defrost(b):
 
 
 CLAIMS = [
-    ("c1", "Compressor turns on when the room is above setpoint + 1 °C (5.2 °C, 1 tick).", _c1, "coil0=1",
-     ["reset temp=5.2", "tick 1", "observe compressor"]),
-    ("c2", "Compressor turns off when the room is below setpoint - 1 °C (2.8 °C, 1 tick).", _c2, "coil0=0",
-     ["reset temp=2.8 compressor=on", "tick 1", "observe compressor"]),
+    ("c1", "Compressor turns on when the room is above setpoint + 1 °C.", _c1, "coil0=1",
+     ["reset temp=setpoint+1.2", "tick 1", "observe compressor"]),
+    ("c2", "Compressor turns off when the room is below setpoint - 1 °C.", _c2, "coil0=0",
+     ["reset temp=setpoint-1.2 compressor=on", "tick 1", "observe compressor"]),
     ("c3", "High-temp alarm fires only after 10 minutes above setpoint + 4 °C.", _c3, "coil2@9=0,coil2@10=1",
-     ["reset temp=12", "tick 9", "observe alarm", "tick 1", "observe alarm"]),
+     ["reset temp=setpoint+8", "tick 9", "observe alarm", "tick 1", "observe alarm"]),
     ("c4", "Defrost runs every 6 h for exactly 20 minutes.", _c4, "defrost_ticks=20",
      ["reset minute=359", "tick 30 (count defrost)"]),
     ("c5", "No alarm during 12 h of normal cooling (defrost included).", _c5, "max_alarm=0",
      ["reset", "tick 720 (max alarm)"]),
-    ("c6", "The room recovers to 5.0 °C or below after a defrost.", _c6, "temp_le_5=1",
+    ("c6", "The room recovers to setpoint + 1 °C or below after a defrost.", _c6, "temp_le_sp+1=1",
      ["reset minute=359", "tick 50", "observe temp"]),
 ]
 ATTACKS = [
@@ -255,16 +281,16 @@ ATTACKS = [
 ]
 
 
-def claim_docs():
-    return [{"id": cid, "app": "coldroom", "screen": "dairy walk-in", "text": text,
+def claim_docs(unit="dairy"):
+    return [{"id": cid, "app": "coldroom", "screen": unit, "text": text,
              "test": {"steps": steps, "observe": "state", "expect": expect},
              "tier": "A", "label": "SEEN", "evidence": ["contract: FreshMart cold-room model"],
              "confidence": 0.9, "bond": 100, "sworn_by": "medium"}
             for cid, text, _, expect, steps in CLAIMS]
 
 
-def attack_docs():
-    return [{"id": aid, "app": "coldroom", "screen": "dairy walk-in", "text": text, "steps": steps,
+def attack_docs(unit="dairy"):
+    return [{"id": aid, "app": "coldroom", "screen": unit, "text": text, "steps": steps,
              "observe": "state"} for aid, text, _, steps in ATTACKS]
 
 
@@ -273,13 +299,13 @@ RUNS_PER_BUILD = 2
 _LOCK = threading.Lock()
 
 
-def run_case(original, patched, out_dir="runs/coldroom", clock=None) -> dict:
+def run_case(original, patched, out_dir="runs/coldroom", clock=None, unit="dairy") -> dict:
     """Judge both builds. `original`/`patched` are backends (HttpBackend or ModelBackend)."""
     out = pathlib.Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     with _LOCK:  # one trial at a time: tests reset shared controller state
         ledger = Ledger(out / "ledger.jsonl", clock=clock)
-        claims, attacks = claim_docs(), attack_docs()
+        claims, attacks = claim_docs(unit), attack_docs(unit)
         for kind, items in (("claim", claims), ("attack", attacks)):
             for it in items:
                 ledger.append("commit", {"kind": kind, "ref": it["id"], "commit": commit_hash(it)})
@@ -304,16 +330,21 @@ def run_case(original, patched, out_dir="runs/coldroom", clock=None) -> dict:
     counts = {s: sum(1 for x in lock_rows if x["status"] == s) for s in ("LOCKED", "STRUCK", "UNSWORN", "FABRICATED")}
     ctrl = [v for v in verdicts if v["kind"] == "claim"]
     sec = [v for v in verdicts if v["kind"] == "attack"]
-    return {"verdicts": verdicts, "locks": lock_rows, "ledger_head": head, "counts": counts,
+    return {"unit": unit, "verdicts": verdicts, "locks": lock_rows, "ledger_head": head, "counts": counts,
             "control_match": f"{sum(v['match'] for v in ctrl)}/{len(ctrl)}",
             "attacks_blocked": f"{sum((not v['match']) and not v['flaky'] for v in sec)}/{len(sec)}",
             "flaky": sum(v["flaky"] for v in verdicts)}
 
 
-def backends(original_url, patched_url):
+def backends(original_url, patched_url, unit="dairy"):
+    profile(unit)
     if reachable(original_url) and reachable(patched_url):
-        return HttpBackend(original_url), HttpBackend(patched_url), "live"
-    return ModelBackend(False), ModelBackend(True), "in-process model"
+        return HttpBackend(original_url, unit=unit), HttpBackend(patched_url, unit=unit), "live"
+    return ModelBackend(False, unit), ModelBackend(True, unit), "in-process model"
+
+
+def out_for(base_out, unit):
+    return base_out if unit == "dairy" else str(pathlib.Path(base_out) / unit)
 
 
 # --------------------------------------------------------------------------- HTTP server :8103
@@ -342,6 +373,8 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        if self.path.split("?")[0] == "/units":
+            return self._send(200, {"units": PROFILES})
         if self.path.split("?")[0] in ("/health", "/"):
             live = reachable(self.original_url) and reachable(self.patched_url)
             return self._send(200, {"ok": True, "source": "live" if live else "in-process model"})
@@ -351,8 +384,13 @@ class Handler(BaseHTTPRequestHandler):
         if self.path.split("?")[0] != "/run":
             return self._send(404, {"error": "not found"})
         try:
-            o, p, source = backends(self.original_url, self.patched_url)
-            res = run_case(o, p, self.out_dir)
+            n = int(self.headers.get("Content-Length") or 0)
+            body = json.loads(self.rfile.read(n) or b"{}") if n else {}
+            unit = (body.get("unit") if isinstance(body, dict) else None) or "dairy"
+            if unit not in PROFILES:
+                return self._send(400, {"error": f"unknown unit {unit!r}", "units": list(PROFILES)})
+            o, p, source = backends(self.original_url, self.patched_url, unit)
+            res = run_case(o, p, out_for(self.out_dir, unit), unit=unit)
             res.pop("locks", None)
             self._send(200, {**res, "source": source})
         except Exception as e:  # noqa: BLE001
@@ -374,18 +412,19 @@ def main(argv=None) -> int:
     ap.add_argument("--patched", default="http://127.0.0.1:8102")
     ap.add_argument("--out", default="runs/coldroom")
     ap.add_argument("--once", action="store_true", help="run the docket once, print the summary, exit")
+    ap.add_argument("--unit", default="dairy", choices=list(PROFILES))
     a = ap.parse_args(argv)
     try:
         sys.stdout.reconfigure(encoding="utf-8")
     except (AttributeError, ValueError):
         pass
     if a.once:
-        o, p, source = backends(a.original, a.patched)
-        res = run_case(o, p, a.out)
+        o, p, source = backends(a.original, a.patched, a.unit)
+        res = run_case(o, p, out_for(a.out, a.unit), unit=a.unit)
         for v in res["verdicts"]:
             print(f"{v['ref']:13} {v['kind']:6} match={v['match']!s:5} flaky={v['flaky']!s:5} "
                   f"original={v['original']} | patched={v['revival']}")
-        print(f"\nsource={source} control {res['control_match']} identical | attacks blocked "
+        print(f"\nunit={a.unit} source={source} control {res['control_match']} identical | attacks blocked "
               f"{res['attacks_blocked']} | flaky {res['flaky']} | locks {res['counts']} | ledger {res['ledger_head'][:12]}")
         return 0
     srv = make_server(a.port, original=a.original, patched=a.patched, out_dir=a.out)

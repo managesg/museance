@@ -111,7 +111,7 @@ main{max-width:1440px;margin:0 auto;padding:20px 24px;display:flex;flex-directio
 
 <!-- COURT VIEW -->
 <main id="courtView" class="hidden">
-  <nav class="crumb" aria-label="Breadcrumb"><a href="#" id="back">FreshMart · Store #214</a><span style="color:var(--mu)">›</span><b>Dairy walk-in cold room</b><span class="chip bad mono">ON TRIAL</span></nav>
+  <nav class="crumb" aria-label="Breadcrumb"><a href="#" id="back">FreshMart · Store #214</a><span style="color:var(--mu)">›</span><b id="trialName">Dairy walk-in cold room</b><span class="chip bad mono">ON TRIAL</span></nav>
   <div class="court-top">
     <section class="card room" id="roomO" aria-label="Original build"></section>
     <aside class="card ctrl" id="ctrl" aria-label="Controls">
@@ -4375,8 +4375,10 @@ void main() {
 "use strict";
 var PIN="2604";
 // ---------- controller model (shared by both builds) ----------
-function Controller(patched){this.patched=patched;this.reset();}
-Controller.prototype.reset=function(){this.temp=4.0;this.sp=4.0;this.comp=false;this.def=false;this.alarm=false;this.high=0;this.min=0;this.defLen=20;this.spoil=0;this.over8=0;this.hist=[];};
+var PROF={dairy:{n:"Dairy walk-in cold room",sp:4,lo:0,hi:8,limit:8},meat:{n:"Meat cold room",sp:2,lo:0,hi:4,limit:7},deli:{n:"Deli case",sp:4,lo:0,hi:8,limit:8},bakery:{n:"Bakery case",sp:6,lo:2,hi:10,limit:10},produce:{n:"Produce case",sp:5,lo:1,hi:9,limit:10},f1:{n:"Frozen aisle F1",sp:-20,lo:-25,hi:-15,limit:-12},f2:{n:"Frozen aisle F2",sp:-20,lo:-25,hi:-15,limit:-12},f3:{n:"Frozen aisle F3",sp:-20,lo:-25,hi:-15,limit:-12}};
+var trialUnit="dairy";
+function Controller(patched,unit){this.patched=patched;this.unit=unit||"dairy";this.prof=PROF[this.unit]||PROF.dairy;this.reset();}
+Controller.prototype.reset=function(){this.temp=this.prof.sp;this.sp=this.prof.sp;this.comp=false;this.def=false;this.alarm=false;this.high=0;this.min=0;this.defLen=20;this.spoil=0;this.over8=0;this.hist=[];};
 Controller.prototype.tick=function(){
   this.min+=1;
   var m=this.min%360; this.def=this.min>=360&&m<this.defLen; // defrost window starts 06:00, every 6 h
@@ -4385,11 +4387,11 @@ Controller.prototype.tick=function(){
   else if(this.temp>this.sp+1){this.comp=true;}
   else if(this.temp<this.sp-1){this.comp=false;}
   this.temp+=this.def?0.25:(this.comp?-0.3:0.15);
-  this.temp=Math.max(-5,Math.min(30,Math.round(this.temp*100)/100));
+  this.temp=Math.max(Math.min(-5,this.prof.sp-10),Math.min(30,Math.round(this.temp*100)/100));
   if(this.def){this.high=0;this.alarm=false;} // alarm is suppressed during defrost (as on real controllers)
   else if(this.temp>this.sp+4){this.high+=1;if(this.high>=10)this.alarm=true;}
   else{this.high=0;this.alarm=false;}
-  if(this.temp>8){this.over8+=1;if(this.over8>30)this.spoil=Math.min(100,this.spoil+2);}else this.over8=0; // spoilage counts after 30 min above 8 °C
+  if(this.temp>this.prof.limit){this.over8+=1;if(this.over8>30)this.spoil=Math.min(100,this.spoil+2);}else this.over8=0; // spoilage counts after 30 min above 8 °C
   this.hist.push(this.temp);if(this.hist.length>360)this.hist.shift();
 };
 Controller.prototype.tickLogged=function(name){var c0=this.comp,d0=this.def,a0=this.alarm;this.tick();
@@ -4397,7 +4399,7 @@ Controller.prototype.tickLogged=function(name){var c0=this.comp,d0=this.def,a0=t
   if(this.def!==d0)ev(name,this.def?"defrost started ("+this.defLen+" min)":"defrost ended",this.def?"warn":"");
   if(this.alarm!==a0)ev(name,this.alarm?"HIGH TEMP ALARM":"alarm cleared",this.alarm?"bad":"ok");};
 Controller.prototype.writeSetpoint=function(v,pin){
-  if(this.patched){var why=[];if(pin!==PIN)why.push("unlock required");if(!(v>=0&&v<=8))why.push("out of range");if(why.length)return {ok:false,msg:"write rejected: "+why.join(" + ")};}
+  if(this.patched){var why=[];if(pin!==PIN)why.push("unlock required");if(!(v>=this.prof.lo&&v<=this.prof.hi))why.push("out of range");if(why.length)return {ok:false,msg:"write rejected: "+why.join(" + ")};}
   this.sp=v;return {ok:true,msg:"write accepted: setpoint → "+v.toFixed(1)+(this.patched?"":" (no auth)")};
 };
 Controller.prototype.writeDefrost=function(mins,pin){
@@ -4408,12 +4410,12 @@ Controller.prototype.regs=function(){return "hr0="+Math.round(this.temp*10)+",hr
 
 // ---------- court tests (pure, fresh controller each run) ----------
 var TESTS=[
- {id:"c1",t:"Compressor on above setpoint + 1",s:"hr1=40 · hr0=52 · tick:1 · observe coil0",run:function(c){c.temp=5.2;c.tick();return "coil0="+(+c.comp);}},
- {id:"c2",t:"Compressor off below setpoint - 1",s:"hr1=40 · hr0=28 · coil0=1 · tick:1 · observe coil0",run:function(c){c.temp=2.8;c.comp=true;c.tick();return "coil0="+(+c.comp);}},
- {id:"c3",t:"Alarm only after 10 min high",s:"hr1=40 · hr0=120 · tick:9, tick:1 · observe coil2",run:function(c){c.temp=12;for(var i=0;i<9;i++)c.tick();var a=+c.alarm;c.tick();return "coil2="+a+" → "+(+c.alarm);}},
+ {id:"c1",t:"Compressor on above setpoint + 1",s:"temp = setpoint + 1.2 · tick:1 · observe coil0",run:function(c){c.temp=c.sp+1.2;c.tick();return "coil0="+(+c.comp);}},
+ {id:"c2",t:"Compressor off below setpoint - 1",s:"temp = setpoint - 1.2 · coil0=1 · tick:1 · observe coil0",run:function(c){c.temp=c.sp-1.2;c.comp=true;c.tick();return "coil0="+(+c.comp);}},
+ {id:"c3",t:"Alarm only after 10 min high",s:"temp = setpoint + 8 · tick:9, tick:1 · observe coil2",run:function(c){c.temp=c.sp+8;for(var i=0;i<9;i++)c.tick();var a=+c.alarm;c.tick();return "coil2="+a+" → "+(+c.alarm);}},
  {id:"c4",t:"Defrost every 6 h for 20 min",s:"clock=05:59 · tick:30 · count coil1",run:function(c){c.min=359;var n=0;for(var i=0;i<30;i++){c.tick();n+=c.def;}return "coil1=1 ×"+n;}},
- {id:"c5",t:"No alarm during normal cooling",s:"hr1=40 · tick:720 · observe max coil2",run:function(c){var mx=0;for(var i=0;i<720;i++){c.tick();mx=Math.max(mx,+c.alarm);}return "coil2 max="+mx;}},
- {id:"c6",t:"Temp recovers after defrost",s:"clock=06:00 · tick:50 · observe hr0 ≤ 50",run:function(c){c.min=359;for(var i=0;i<50;i++)c.tick();return "hr0="+Math.round(c.temp*10)+(c.temp<=5?" ✓":" ✗");}}
+ {id:"c5",t:"No alarm during normal cooling",s:"tick:720 · observe max coil2",run:function(c){var mx=0;for(var i=0;i<720;i++){c.tick();mx=Math.max(mx,+c.alarm);}return "coil2 max="+mx;}},
+ {id:"c6",t:"Temp recovers after defrost",s:"clock=05:59 · tick:50 · observe temp ≤ setpoint + 1",run:function(c){c.min=359;for(var i=0;i<50;i++)c.tick();return "hr0="+Math.round(c.temp*10)+(c.temp<=c.sp+1?" ✓":" ✗");}}
 ];
 var SEC=[
  {id:"sec-setpoint",t:"Setpoint write → 25.0 °C, no auth",s:"write hr1=250 · no PIN · tick:60 · observe hr1",run:function(c){var r=c.writeSetpoint(25);for(var i=0;i<60;i++)c.tick();return (r.ok?"accepted":"rejected")+" · setpoint "+c.sp.toFixed(1);}},
@@ -4433,13 +4435,13 @@ function ledger(ev){head=fnv(head+JSON.stringify(ev));$("ledger").textContent="l
 // ---------- state ----------
 var O=new Controller(false),Pt=new Controller(true);
 var now0=new Date(),START=now0.getHours()*60+now0.getMinutes();
-function seed(){O.reset();Pt.reset();O.min=Pt.min=START;O.temp=Pt.temp=3.6;O.comp=Pt.comp=false;}
+function seed(){O.reset();Pt.reset();O.min=Pt.min=START;O.temp=Pt.temp=O.prof.sp-0.4;O.comp=Pt.comp=false;}
 seed();
 var EV=[],lastPoll=Date.now(),simAhead=false;
 var IPS=["10.0.4.22 (store BMS)","10.0.4.22 (store BMS)","10.0.9.3 (service laptop)"];
 function hhmmss(){var d=new Date();if(simAhead){var m=O.min%1440;return pad(Math.floor(m/60))+":"+pad(m%60)+":"+pad(d.getSeconds());}return pad(d.getHours())+":"+pad(d.getMinutes())+":"+pad(d.getSeconds());}
 function ev(unit,msg,lvl){EV.unshift({ts:hhmmss(),u:unit,m:msg,l:lvl||""});if(EV.length>60)EV.pop();renderLogs();}
-function renderLogs(){var h=EV.slice(0,40).map(function(e){return '<li><span class="ts">'+e.ts+'</span><span><b>'+e.u+'</b> <span class="'+e.l+'">'+e.m+'</span></span></li>';}).join("");var a=$("logStore"),b=$("logCourt");if(a)a.innerHTML=h;if(b)b.innerHTML=EV.filter(function(e){return /Dairy|Court|Attack/.test(e.u);}).slice(0,25).map(function(e){return '<li><span class="ts">'+e.ts+'</span><span><b>'+e.u+'</b> <span class="'+e.l+'">'+e.m+'</span></span></li>';}).join("");}
+function renderLogs(){var h=EV.slice(0,40).map(function(e){return '<li><span class="ts">'+e.ts+'</span><span><b>'+e.u+'</b> <span class="'+e.l+'">'+e.m+'</span></span></li>';}).join("");var a=$("logStore"),b=$("logCourt");if(a)a.innerHTML=h;if(b)b.innerHTML=EV.filter(function(e){return (e.u.indexOf(PROF[trialUnit].n)===0||/Court|Attack|Backend/.test(e.u));}).slice(0,25).map(function(e){return '<li><span class="ts">'+e.ts+'</span><span><b>'+e.u+'</b> <span class="'+e.l+'">'+e.m+'</span></span></li>';}).join("");}
 function noise(){return (Math.random()-0.5)*0.08;}
 var playing=true,speed=1/60,results={},secResults={},live=false,attacked=false,lastT=0,acc=0;
 var toasts={O:null,P:null};
@@ -4467,7 +4469,7 @@ var selected="dairy",queued={},lastSideKey="";
 function icon(k,col,s){s=s||16;var p={snow:'<path d="M12 2v20M4 7l16 10M20 7L4 17"/>',fan:'<circle cx="12" cy="12" r="2"/><path d="M12 10c0-4 1-7 4-7 2 0 2 3-1 5M14 12c4 0 7 1 7 4 0 2-3 2-5-1M12 14c0 4-1 7-4 7-2 0-2-3 1-5M10 12c-4 0-7-1-7-4 0-2 3-2 5 1"/>',wind:'<path d="M3 8h11a3 3 0 10-3-3M3 12h15a3 3 0 11-3 3M3 16h7"/>',lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/>',open:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 017.5-2"/>',drip:'<path d="M12 3s6 7 6 11a6 6 0 01-12 0c0-4 6-11 6-11z"/>',bell:'<path d="M6 16V11a6 6 0 0112 0v5l2 2H4z"/><path d="M10 20a2 2 0 004 0"/>',shield:'<path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z"/>',bolt:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',crate:'<path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/>',check:'<path d="M5 12l5 5 9-10"/>'}[k];return '<svg aria-hidden="true" width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="'+col+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none">'+p+'</svg>';}
 function cssv(n){return getComputedStyle(document.body).getPropertyValue(n).trim();}
 function unitState(u){
-  if(u.id==="dairy"){var t=O.temp+noise();return {t:t,sp:O.sp,hot:attacked&&t>8,chip:attacked&&t>8?["bad","Too warm · setpoint changed remotely"]:(O.def?["warn","Defrosting"]:["info","On trial"])};}
+  if(u.id===trialUnit){var t=O.temp+noise();return {t:t,sp:O.sp,hot:attacked&&t>O.prof.limit,chip:attacked&&t>O.prof.limit?["bad","Too warm · setpoint changed remotely"]:(O.def?["warn","Defrosting"]:["info","On trial"])};}
   return {t:u.t,sp:u.sp,hot:false,chip:queued[u.id]?["muted","Queued for trial"]:["ok","Normal"]};
 }
 function unitHTML(u){
@@ -4486,33 +4488,33 @@ function renderStore(){
   h='<div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><b style="font-size:17px">'+u.n+'</b><span class="chip '+s.chip[0]+'">'+s.chip[1]+'</span></div>'+
     '<div style="display:flex;gap:14px;align-items:baseline"><span id="sideTemp" style="font-size:52px;font-weight:700;line-height:1">'+s.t.toFixed(1)+'</span><span class="sub">°C · setpoint '+s.sp.toFixed(1)+'</span></div>'+
     '<div class="kv"><span>Controller</span><span class="mono">'+(u.auth?"":"legacy ")+u.fw+'</span><span>Setpoint writes</span><span class="mono" style="color:'+(u.auth?"var(--gr)":"var(--rd)")+'">'+(u.auth?"auth required":"no auth")+'</span><span>Vendor patch</span><span class="mono">'+(u.auth?"supported":"end of life")+'</span></div>';
-  if(u.trial)h+='<button class="primary" id="toCourt">'+icon("shield",cssv("--onac"),20)+' Put on trial: original vs patched</button><p class="sub" style="margin:0;line-height:1.5">The court replays identical tests on the legacy controller and our patched rebuild before you swap it in.</p>';
+  if(u.k==="snow"&&PROF[u.id])h+='<button class="primary" id="toCourt">'+icon("shield",cssv("--onac"),20)+' Put on trial: original vs patched</button><p class="sub" style="margin:0;line-height:1.5">The court replays identical tests on the legacy controller and our patched rebuild before you swap it in.</p>';
   else h+='<p class="sub" style="margin:0">Not on today’s docket.</p><button class="ghost" id="queue">'+(queued[u.id]?"Queued for the next trial ✓":"Queue for trial")+'</button>';
   var key=selected+"|"+!!queued[selected]+"|"+s.chip.join()+"|"+s.sp;
   if(key===lastSideKey){$("sideTemp").textContent=s.t.toFixed(1);}else{lastSideKey=key;$("sidePanel").innerHTML=h;}
   var tc=$("toCourt");if(tc)tc.onclick=openCourt;
   var q=$("queue");if(q)q.onclick=function(){queued[selected]=true;renderStore();announce(u.n+" queued for trial");};
-  var anyHot=attacked&&O.temp>8;
+  var anyHot=attacked&&O.temp>O.prof.limit;
   $("siteStatus").className="chip "+(anyHot?"bad":"ok");$("siteStatus").textContent=anyHot?"1 unit out of range":"All systems normal";
 }
 document.addEventListener("click",function(e){var b=e.target.closest("[data-u]");if(b){selected=b.getAttribute("data-u");renderStore();}});
 
 // ---------- court rendering ----------
 function arcPath(cx,cy,r,a0,a1){function pt(a){a=a*Math.PI/180;return [cx+r*Math.cos(a),cy+r*Math.sin(a)];}var p0=pt(a0),p1=pt(a1);return "M"+p0[0].toFixed(1)+" "+p0[1].toFixed(1)+" A"+r+" "+r+" 0 "+(a1-a0>180?1:0)+" 1 "+p1[0].toFixed(1)+" "+p1[1].toFixed(1);}
-function ang(v){return 135+(Math.max(-5,Math.min(30,v))+5)/35*270;}
+function ang(v){return 135+(Math.max(-30,Math.min(30,v))+30)/60*270;}
 function roomHTML(c,name){
-  var orig=!c.patched,t=c.temp+noise(),col=t>8?"var(--rd)":(t>c.sp+1?"var(--am)":"var(--ac)");
+  var orig=!c.patched,t=c.temp+noise(),col=t>c.prof.limit?"var(--rd)":(t>c.sp+1?"var(--am)":"var(--ac)");
   var mk=(function(){var a=ang(c.sp)*Math.PI/180;return [130+104*Math.cos(a),130+104*Math.sin(a)];})();
   var sp=c.spoil,fl=sp<30?["Fresh","var(--gr)"]:(sp<70?["At risk","var(--am)"]:["Spoiled","var(--rd)"]);
-  var h=c.hist.slice(-360),pts="";if(h.length<2)h=[t,t];for(var i=0;i<h.length;i++){pts+=(i*420/(h.length-1)).toFixed(0)+","+(70-(h[i]+5)/35*70).toFixed(0)+" ";}
+  var h=c.hist.slice(-360),pts="";if(h.length<2)h=[t,t];for(var i=0;i<h.length;i++){pts+=(i*420/(h.length-1)).toFixed(0)+","+(70-(h[i]+30)/60*70).toFixed(0)+" ";}
   var tst=toasts[orig?"O":"P"];
   var out='<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><h2>'+name+'</h2><span class="chip '+(orig?"bad":"ok")+'">'+icon(orig?"open":"lock",orig?cssv("--rd"):cssv("--gr"),15)+(orig?"no auth":"auth + range check")+'</span></div>';
   if(tst)out+='<div class="toast '+(tst.ok?"bad":"ok")+'" role="status">'+icon(tst.ok?"bolt":"shield",tst.ok?cssv("--rd"):cssv("--gr"),20)+'<span class="mono">'+tst.msg+'</span></div>';
   out+='<div style="display:flex;justify-content:center"><svg role="img" aria-label="'+name+' temperature '+t.toFixed(1)+' degrees, setpoint '+c.sp.toFixed(1)+'" width="260" height="225" viewBox="0 0 260 225"><path d="'+arcPath(130,130,104,135,405)+'" stroke="var(--dial)" stroke-width="16" fill="none" stroke-linecap="round"/><path d="'+arcPath(130,130,104,135,Math.max(136,ang(t)))+'" stroke="'+col+'" stroke-width="16" fill="none" stroke-linecap="round"/><circle cx="'+mk[0].toFixed(1)+'" cy="'+mk[1].toFixed(1)+'" r="11" fill="var(--pn)" stroke="var(--tx)" stroke-width="3"/><text x="130" y="138" text-anchor="middle" font-size="64" font-weight="700" fill="var(--tx)" font-family="Inter,system-ui">'+t.toFixed(1)+'</text><text x="130" y="166" text-anchor="middle" font-size="15" fill="var(--mu)" font-family="Inter,system-ui">°C · setpoint '+c.sp.toFixed(1)+'</text></svg></div>';
-  if(orig&&c.sp>8)out+='<p style="margin:0;color:var(--rd);font-weight:600;font-size:14px">Alarm stays silent: it fires at setpoint + 4.0 = '+(c.sp+4).toFixed(1)+' °C.</p>';
+  if(orig&&c.sp>c.prof.hi)out+='<p style="margin:0;color:var(--rd);font-weight:600;font-size:14px">Alarm stays silent: it fires at setpoint + 4.0 = '+(c.sp+4).toFixed(1)+' °C.</p>';
   if(orig&&c.defLen>20)out+='<p style="margin:0;color:var(--rd);font-weight:600;font-size:14px">Defrost stretched to '+(c.defLen/60)+' h: heaters on, alarm suppressed.</p>';
   out+='<div class="tiles"><div class="tile'+(c.comp?" on":"")+'">'+icon("fan",c.comp?cssv("--ac"):cssv("--mu"),22).replace('style="flex:none"','style="flex:none" class="'+(c.comp&&playing?"spin":"")+'"')+'<div><small>Compressor</small><b>'+(c.comp?"ON":"OFF")+'</b></div></div><div class="tile'+(c.def?" def":"")+'">'+icon("drip",c.def?cssv("--am"):cssv("--mu"),22)+'<div><small>Defrost</small><b>'+(c.def?"ON":"OFF")+'</b></div></div><div class="tile'+(c.alarm?" alarm":"")+'">'+icon("bell",c.alarm?cssv("--rd"):cssv("--mu"),22)+'<div><small>Alarm</small><b>'+(c.alarm?"ALARM":"quiet")+'</b></div></div></div>';
-  out+='<div><span class="sub" style="font-size:12px">Last 6 h · dashed line = 8 °C food limit</span><svg aria-hidden="true" width="100%" height="70" viewBox="0 0 420 70" preserveAspectRatio="none"><line x1="0" x2="420" y1="'+(70-13/35*70).toFixed(0)+'" y2="'+(70-13/35*70).toFixed(0)+'" stroke="var(--am)" stroke-dasharray="4 4"/><polyline points="'+pts+'" fill="none" stroke="'+col+'" stroke-width="2.5" vector-effect="non-scaling-stroke"/></svg></div>';
+  out+='<div><span class="sub" style="font-size:12px">Last 6 h · dashed line = '+c.prof.limit+' °C food limit</span><svg aria-hidden="true" width="100%" height="70" viewBox="0 0 420 70" preserveAspectRatio="none"><line x1="0" x2="420" y1="'+(70-(c.prof.limit+30)/60*70).toFixed(0)+'" y2="'+(70-(c.prof.limit+30)/60*70).toFixed(0)+'" stroke="var(--am)" stroke-dasharray="4 4"/><polyline points="'+pts+'" fill="none" stroke="'+col+'" stroke-width="2.5" vector-effect="non-scaling-stroke"/></svg></div>';
   out+='<div class="food">'+icon("crate",fl[1].indexOf("gr")>0?cssv("--gr"):fl[1].indexOf("am")>0?cssv("--am"):cssv("--rd"),28)+'<div style="flex:1;display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between"><b style="color:'+fl[1]+'">'+fl[0]+'</b><span class="mono" style="font-size:13px">'+sp+'% spoiled</span></div><div class="bar"><div style="width:'+Math.max(2,sp)+'%;background:'+fl[1]+'"></div></div></div></div>';
   return out;
 }
@@ -4536,7 +4538,7 @@ function renderCourt(){
   else{var good=same===done.length&&blocked===sd.length;s.className="strip "+(good?"ok":"bad");s.style.border="1px solid "+(good?"var(--gr)":"var(--rd)");
     s.textContent=(done.length?same+"/"+ids.length+" control behaviors identical":"control tests not run")+" · "+(sd.length?blocked+"/"+sd.length+" attacks blocked on the patch":"attacks not yet run")+" · "+fl+" flaky · ledger intact";}
   $("clock").textContent=hhmmss();
-  var hot=attacked&&O.temp>8;$("siteStatus").className="chip "+(hot?"bad":"ok");$("siteStatus").textContent=hot?"1 unit out of range":"All systems normal";
+  var hot=attacked&&O.temp>O.prof.limit;$("siteStatus").className="chip "+(hot?"bad":"ok");$("siteStatus").textContent=hot?"1 unit out of range":"All systems normal";
   $("mode").textContent=live?"LIVE COURT DATA":"SIMULATION";$("mode").className="chip mono "+(live?"ok":"muted");
 }
 function pad(n){return (n<10?"0":"")+n;}
@@ -4544,20 +4546,20 @@ document.addEventListener("click",function(e){var c=e.target.closest(".vc");if(c
 
 // ---------- loop ----------
 function frame(ts){
-  if(playing){if(!lastT)lastT=ts;acc+=(ts-lastT)/1000*speed;lastT=ts;var n=Math.floor(acc);acc-=n;n=Math.min(n,120);for(var i=0;i<n;i++){O.tickLogged("Dairy walk-in");Pt.tick();}if(n>=1&&speed>0.1){simAhead=true;render();}}
+  if(playing){if(!lastT)lastT=ts;acc+=(ts-lastT)/1000*speed;lastT=ts;var n=Math.floor(acc);acc-=n;n=Math.min(n,120);for(var i=0;i<n;i++){O.tickLogged(PROF[trialUnit].n);Pt.tick();}if(n>=1&&speed>0.1){simAhead=true;render();}}
   else lastT=0;
   requestAnimationFrame(frame);
 }
 function render(){if(!$("courtView").classList.contains("hidden"))renderCourt();else renderStore();}
 setInterval(function(){lastPoll=Date.now();$("clock").textContent=hhmmss();$("poll").textContent="Live · polling 11 controllers · updated 0s ago";
   if(!$("courtView").classList.contains("hidden"))renderCourt();
-  var hot=attacked&&O.temp>8;$("banner").classList.toggle("hidden",!hot);if(hot)$("banner").textContent="⚠ Dairy walk-in cold room at "+O.temp.toFixed(1)+" °C · setpoint changed remotely to "+O.sp.toFixed(1)+" °C · no alarm raised by the controller";
-  if(Math.random()<0.18){var u=UNITS.filter(function(x){return x.n&&!x.trial;});u=u[Math.floor(Math.random()*u.length)];ev(u.n,Math.random()<0.5?"compressor cycle "+(8+Math.floor(Math.random()*9))+" min":"poll ok · "+u.t.toFixed(1)+" °C");}
+  var hot=attacked&&O.temp>O.prof.limit;$("banner").classList.toggle("hidden",!hot);if(hot)$("banner").textContent="⚠ "+PROF[trialUnit].n+" at "+O.temp.toFixed(1)+" °C · setpoint changed remotely to "+O.sp.toFixed(1)+" °C · no alarm raised by the controller";
+  if(Math.random()<0.18){var u=UNITS.filter(function(x){return x.n&&x.id!==trialUnit;});u=u[Math.floor(Math.random()*u.length)];ev(u.n,Math.random()<0.5?"compressor cycle "+(8+Math.floor(Math.random()*9))+" min":"poll ok · "+u.t.toFixed(1)+" °C");}
 },1000);
-setInterval(function(){UNITS.forEach(function(u){if(u.t!==undefined&&!u.trial)u.t=Math.round((u.sp+Math.sin(Date.now()/9000+u.n.length)*0.4)*10)/10;});if(!$("storeView").classList.contains("hidden"))renderStore();},2000);
+setInterval(function(){UNITS.forEach(function(u){if(u.t!==undefined&&u.id!==trialUnit)u.t=Math.round((u.sp+Math.sin(Date.now()/9000+u.n.length)*0.4)*10)/10;});if(!$("storeView").classList.contains("hidden"))renderStore();},2000);
 
 // ---------- controls ----------
-function openCourt(){$("storeView").classList.add("hidden");$("courtView").classList.remove("hidden");renderCourt();window.scrollTo(0,0);}
+function openCourt(){if(selected!==trialUnit&&PROF[selected])setTrial(selected);$("storeView").classList.add("hidden");$("courtView").classList.remove("hidden");renderCourt();window.scrollTo(0,0);}
 $("back").onclick=function(e){e.preventDefault();$("courtView").classList.add("hidden");$("storeView").classList.remove("hidden");document.body.querySelectorAll(".dim").forEach(function(x){x.classList.remove("dim");});renderStore();};
 $("play").onclick=function(){playing=!playing;this.textContent=playing?"⏸ Pause":"▶ Play";};
 $("reset").onclick=function(){seed();simAhead=false;speed=1/60;document.querySelectorAll(".speed button").forEach(function(x){x.setAttribute("aria-pressed",x.dataset.s==="0.0166667");});ev("Court","reset to live","");results={};secResults={};toasts={O:null,P:null};attacked=false;live=false;head="000000";$("ledger").textContent="ledger head ------ · chain intact ✓";undim();renderCourt();};
@@ -4571,7 +4573,7 @@ function attack(kind){
   undim();["ctrl","court","strip"].forEach(function(id){$(id).classList.add("dim");});
   var a=kind==="sp"?O.writeSetpoint(25):O.writeDefrost(480),b=kind==="sp"?Pt.writeSetpoint(25):Pt.writeDefrost(480);
   var src="185.220.101.47 (external)",fc=kind==="sp"?"Modbus FC06 write hr1=250":"Modbus FC06 write defrost_len=480";
-  ev("Attack",fc+" from "+src,"bad");ev("Dairy walk-in · ORIGINAL",a.msg,"bad");ev("Dairy walk-in · PATCHED",b.msg,"ok");
+  ev("Attack",fc+" from "+src,"bad");ev(PROF[trialUnit].n+" · ORIGINAL",a.msg,"bad");ev(PROF[trialUnit].n+" · PATCHED",b.msg,"ok");
   if(kind==="df"){var nx=O.min-(O.min%360)+359;O.min=Pt.min=nx;}
   toasts.O=a;toasts.P=b;attacked=true;
   var t=SEC.filter(function(s){return s.id===(kind==="sp"?"sec-setpoint":"sec-defrost");})[0],r=trial(t);secResults[t.id]=r;ledger({kind:"attack",ref:t.id,original:r.original,revival:r.revival});
@@ -4590,7 +4592,7 @@ $("files").onchange=function(e){
 };
 ev("Store BMS","connected · 11 controllers online","ok");ev("Rooftop compressor rack","4/4 compressors online","ok");ev("Frozen aisle F2","defrost ended (scheduled)","");
 var S3=null;
-try{if(window.Store3D)S3=Store3D.init($("view3d"),{units:UNITS,getState:function(id){var u=UNITS.filter(function(x){return x.id===id;})[0];if(!u)return {};var st=unitState(u);return {t:st.t,sp:st.sp,hot:st.hot,selected:id===selected,trial:!!u.trial,defrost:id==="dairy"&&O.def};},onPick:function(id){selected=id;renderStore();announce(id+" selected");}});}catch(err){S3=null;}
+try{if(window.Store3D)S3=Store3D.init($("view3d"),{units:UNITS,getState:function(id){var u=UNITS.filter(function(x){return x.id===id;})[0];if(!u)return {};var st=unitState(u);return {t:st.t,sp:st.sp,hot:st.hot,selected:id===selected,trial:id===trialUnit,defrost:id===trialUnit&&O.def};},onPick:function(id){selected=id;renderStore();announce(id+" selected");}});}catch(err){S3=null;}
 function setView(three){$("view3d").classList.toggle("hidden",!three||!S3);$("floor").classList.toggle("hidden",three&&!!S3);$("v3d").setAttribute("aria-pressed",String(three&&!!S3));$("v2d").setAttribute("aria-pressed",String(!(three&&S3)));}
 $("v3d").onclick=function(){setView(true);};$("v2d").onclick=function(){setView(false);renderStore();};$("vre").onclick=function(){if(S3)S3.recenter();};
 setView(true);
@@ -4598,6 +4600,8 @@ setView(true);
 // ---------- backend: LIVE BACKEND (controllers :8101/:8102, court :8103), auto fallback to SIMULATION ----------
 var API={o:"http://127.0.0.1:8101",p:"http://127.0.0.1:8102",c:"http://127.0.0.1:8103"};
 try{var qs=new URLSearchParams(location.search);["o","p","c"].forEach(function(k){if(qs.get(k))API[k]=qs.get(k);});var forceSim=qs.get("sim")==="1";}catch(e){var forceSim=false;}
+function uq(){return "?unit="+encodeURIComponent(trialUnit);}
+function setTrial(id){if(!PROF[id])return;trialUnit=id;O=new Controller(false,id);Pt=new Controller(true,id);seed();results={};secResults={};toasts={O:null,P:null};attacked=false;live=false;courtRun=null;head="000000";$("ledger").textContent="ledger head ------ · chain intact ✓";var tn=$("trialName");if(tn)tn.textContent=PROF[id].n;ev("Court",PROF[id].n+" put on trial","");if(backend)resetLive();}
 var backend=false,busy=false,pendTicks=0,courtRun=null,inSession=null; // inSession: the court owns the controllers; UI must not touch them
 function j(url,body){
   var opt=body===undefined?{}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)};
@@ -4605,6 +4609,7 @@ function j(url,body){
 }
 function apply(c,s,name){
   if(!s||s.temp===undefined)return;
+  if(s.unit&&s.unit!==c.unit)return; // a reply for a unit that is no longer on trial
   var c0=c.comp,d0=c.def,a0=c.alarm,m0=c.min;
   c.temp=+s.temp;c.sp=+s.setpoint;c.comp=!!s.compressor;c.def=!!s.defrost;c.alarm=!!s.alarm;
   c.min=+s.minute;c.defLen=+s.defrost_len;c.spoil=+s.spoil;
@@ -4619,17 +4624,17 @@ function setChip(){var mn=$("modeNote");if(mn)mn.textContent=backend?"live contr
 function goLive(){if(backend)return;backend=true;ev("Backend","LIVE BACKEND · original :8101 · patched :8102 · court :8103","ok");setChip();}
 function goSim(why){if(!backend)return;backend=false;busy=false;pendTicks=0;ev("Backend","switched to SIMULATION ("+why+")","warn");announce("Backend unreachable, running the built-in simulation");setChip();}
 function resetLive(){
-  var init={temp:3.6,minute:START};
-  return Promise.all([j(API.o+"/reset",init),j(API.p+"/reset",init)]).then(function(r){O.hist=[];Pt.hist=[];apply(O,r[0]);apply(Pt,r[1]);render();})
+  var init={temp:PROF[trialUnit].sp-0.4,minute:START};
+  return Promise.all([j(API.o+"/reset"+uq(),init),j(API.p+"/reset"+uq(),init)]).then(function(r){O.hist=[];Pt.hist=[];apply(O,r[0]);apply(Pt,r[1]);render();})
     .catch(function(){goSim("reset failed");});
 }
 function probe(first){
   if(forceSim)return Promise.resolve(false);
   if(inSession)return Promise.resolve(true);
-  return Promise.all([j(API.o+"/state"),j(API.p+"/state"),j(API.c+"/health")]).then(function(r){
+  return Promise.all([j(API.o+"/state"+uq()),j(API.p+"/state"+uq()),j(API.c+"/health")]).then(function(r){
     var was=backend;goLive();
     if(first||!was)return resetLive().then(function(){return true;});
-    if(!busy){apply(O,r[0],"Dairy walk-in");apply(Pt,r[1]);}
+    if(!busy){apply(O,r[0],PROF[trialUnit].n);apply(Pt,r[1]);}
     return true;
   }).catch(function(){goSim("controllers unreachable");return false;});
 }
@@ -4645,8 +4650,8 @@ frame=function(ts){
     if(!lastT)lastT=ts;acc+=(ts-lastT)/1000*speed;lastT=ts;var n=Math.floor(acc);acc-=n;pendTicks+=n;
     if(pendTicks>0&&!busy){
       var k=Math.min(pendTicks,720);pendTicks-=k;busy=true;
-      Promise.all([j(API.o+"/tick",{n:k}),j(API.p+"/tick",{n:k})]).then(function(r){
-        apply(O,r[0],"Dairy walk-in");apply(Pt,r[1]);busy=false;if(speed>0.1)simAhead=true;render();
+      Promise.all([j(API.o+"/tick"+uq(),{n:k}),j(API.p+"/tick"+uq(),{n:k})]).then(function(r){
+        apply(O,r[0],PROF[trialUnit].n);apply(Pt,r[1]);busy=false;if(speed>0.1)simAhead=true;render();
       }).catch(function(){goSim("tick failed");});
     }
   } else lastT=0;
@@ -4663,7 +4668,7 @@ function runCourt(){
   if(inSession)return inSession;               // one hearing at a time
   ev("Court","in session: POST :8103/run · every test twice per build on the real controllers","");
   pendTicks=0;
-  inSession=waitIdle().then(function(){return j(API.c+"/run",{});}).then(function(res){
+  inSession=waitIdle().then(function(){return j(API.c+"/run",{unit:trialUnit});}).then(function(res){
     if(!res||!res.verdicts)throw new Error("bad court reply");
     courtRun=res;live=true;showHead(res);
     ev("Court","verdict in: control "+res.control_match+" identical · attacks blocked "+res.attacks_blocked+" · flaky "+res.flaky,"ok");
@@ -4697,11 +4702,11 @@ function liveAttack(kind){
   var ready=courtRun?Promise.resolve(courtRun):runCourt();
   ready.then(function(res){
     var path=kind==="sp"?"/setpoint":"/defrost",body=kind==="sp"?{value:25}:{minutes:480};
-    return Promise.all([j(API.o+path,body),j(API.p+path,body)]).then(function(r){
+    return Promise.all([j(API.o+path+uq(),body),j(API.p+path+uq(),body)]).then(function(r){
       var a=r[0],b=r[1];
       ev("Attack",(kind==="sp"?"write setpoint 25.0 °C":"write defrost_len 480 min")+" · no PIN · sent to both builds","bad");
-      ev("Dairy walk-in · ORIGINAL",a.msg||(a.ok?"accepted":"rejected"),a.ok?"bad":"ok");
-      ev("Dairy walk-in · PATCHED",b.msg||(b.ok?"accepted":"rejected"),b.ok?"bad":"ok");
+      ev(PROF[trialUnit].n+" · ORIGINAL",a.msg||(a.ok?"accepted":"rejected"),a.ok?"bad":"ok");
+      ev(PROF[trialUnit].n+" · PATCHED",b.msg||(b.ok?"accepted":"rejected"),b.ok?"bad":"ok");
       toasts.O={ok:!!a.ok,msg:a.ok?"write accepted: "+(a.msg||"")+" (no auth)":(a.msg||"write rejected")};
       toasts.P={ok:!!b.ok,msg:b.ok?"write accepted: "+(b.msg||""):(b.msg||"write rejected")};
       attacked=true;

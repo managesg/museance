@@ -22,12 +22,21 @@ import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
-from court.coldroom import ColdRoomModel  # noqa: E402
+from urllib.parse import parse_qs, urlsplit  # noqa: E402
+
+from court.coldroom import PROFILES, ColdRoomModel  # noqa: E402
 
 
 def make_server(port: int, patched: bool, host: str = "127.0.0.1") -> ThreadingHTTPServer:
-    model = ColdRoomModel(patched)
+    models = {u: ColdRoomModel(patched, u) for u in PROFILES}  # every refrigerated unit in the store
     lock = threading.Lock()
+
+    def pick(path, body):
+        q = parse_qs(urlsplit(path).query)
+        unit = (q.get("unit") or [None])[0] or (body.get("unit") if isinstance(body, dict) else None) or "dairy"
+        if unit not in models:
+            raise ValueError(f"unknown unit {unit!r}")
+        return models[unit]
 
     class H(BaseHTTPRequestHandler):
         protocol_version = "HTTP/1.1"  # keep-alive: the court sends thousands of ticks
@@ -52,9 +61,16 @@ def make_server(port: int, patched: bool, host: str = "127.0.0.1") -> ThreadingH
             self.end_headers()
 
         def do_GET(self):
-            if self.path.split("?")[0] != "/state":
+            path = self.path.split("?")[0]
+            if path == "/units":
+                return self._send(200, {"units": PROFILES})
+            if path != "/state":
                 return self._send(404, {"error": "not found"})
             with lock:
+                try:
+                    model = pick(self.path, {})
+                except ValueError as e:
+                    return self._send(400, {"ok": False, "msg": str(e)})
                 self._send(200, {**model.state(), "build": "patched" if patched else "original"})
 
         def do_POST(self):
@@ -66,6 +82,7 @@ def make_server(port: int, patched: bool, host: str = "127.0.0.1") -> ThreadingH
             path = self.path.split("?")[0]
             with lock:
                 try:
+                    model = pick(self.path, body)
                     if path == "/state":
                         return self._send(200, model.state())
                     if path == "/reset":
