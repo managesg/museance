@@ -131,13 +131,9 @@ cd court/ui && npm run dev
 Open `http://localhost:5173/?source=runs&app=todo&view=stage`. Expected: fidelity 41 to 100, differences 71 to 0, 15 LOCKED / 1 STRUCK (c07), Brier 0.071, credibility 1000 to 930, false strikes 0 of 12. If a port is taken, set `PORT=` for the feed and point vite's `/api` proxy at it.
 
 ## FINAL demo order (16:30 PT, Cold Room leads per Alejandro)
-1. **Cold Room Court (fridge, ~60 s).** Same cold-room controller, two builds: `revive/out/coldroom/original.py` (port 5020, no auth) vs `patched.py` (port 5021, +3 lines in `PATCH.diff`). The court (P1, `court/ics`) starts a fresh controller per run and runs every check twice per build. Result (P1 gate, 16:28): **6/6 control behaviors identical** (compressor hysteresis, alarm after 10 min, defrost 6 h / 20 min), **3/3 attacks blocked on the patched build** (unauthenticated setpoint 25.0 °C, out-of-range, wrong PIN), 0 flaky, ledger intact. Say: "modeled on the Danfoss controllers in the Oct/Nov 2026 EU supermarket attacks, not vendor code."
+1. **Cold Room Court (fridge, ~60 s).** Same cold-room controller, two builds, modeled on the Danfoss controllers in the Oct/Nov 2026 EU supermarket attacks, **not vendor code**: ORIGINAL `:8101` (legacy, no auth on writes) vs PATCHED `:8102` (a **two-line patch** in `court/coldroom.py`: setpoint and defrost writes need the PIN and limits). The court (`:8103`, `POST /run`) runs every check twice per build. Result (P1 live run): **6/6 control behaviors identical**, **2/2 attacks blocked on the patched build** (unauthenticated setpoint write, unauthenticated defrost), 0 flaky, ledger verified. Say "two attacks blocked" and "a two-line patch", matching what is on screen. Alarm: say "in our model the alarm stays silent, because it compares against the hijacked setpoint"; do NOT claim alarms failed in the real attacks (no report says so).
+   Backup implementation (also on main, verified): `revive/out/coldroom/` Modbus builds on `:5020`/`:5021` with a three-line patch and 3 attacks (`court/ics/sample_run`). Use it only if the HTTP stack fails; then say "three attacks, a three-line patch".
 2. **Todo case (~75 s).** `?source=runs&app=todo&view=stage`: fidelity 41 → 100 (121 verdicts), differences 71 → 0, 15 of 16 claims locked, c07 PERJURY (empty task, issue #38), 0/12 false strikes, repaired independently by Codex and Meta Muse.
 3. **ASI:One live (~30 s).** `@thebailiff hello` → choose *The case of Todo* → the Fetch.ai agents run the real court.
 
-Cold Room commands (repo root, `pip install pymodbus`):
-```
-python revive/out/coldroom/original.py --port 5020
-python revive/out/coldroom/patched.py --port 5021
-```
-then P1's court per `court/ics/README.md`.
+Cold Room commands (repo root, no extra dependencies): `python apps/coldroom/run_all.py` starts ORIGINAL :8101, PATCHED :8102 and COURT :8103 (all 127.0.0.1); the stage reads them as-is. Backup: the Modbus builds (`pip install pymodbus`, `python revive/out/coldroom/original.py --port 5020`, `... patched.py --port 5021`, court per `court/ics/README.md`).
