@@ -129,6 +129,8 @@ def facts(r: dict) -> str:
     s = captions.top_strike(r)
     if s:
         text += f" His false claim: that {captions.plain(s['text'], 16)}; the real original {captions.observed(s['original'])}."
+        if not r["differ"]:  # else ASI-1 guesses the copy is the one at fault ('the copy lets you make an empty task')
+            text += " The revived copy did exactly what the original did on that test too, and on every other test."
     return text
 
 
