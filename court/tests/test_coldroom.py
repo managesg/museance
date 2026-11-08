@@ -32,6 +32,7 @@ def serve_model(patched: bool):
         def do_POST(self):
             n = int(self.headers.get("Content-Length") or 0)
             body = json.loads(self.rfile.read(n) or b"{}")
+            self.path = self.path.split("?")[0]  # the court sends ?unit=<id>
             if self.path == "/reset":
                 return self._send(m.reset(**body))
             if self.path == "/tick":
@@ -52,7 +53,7 @@ def check(res):
     v = {x["ref"]: x for x in res["verdicts"]}
     assert v["sec-setpoint"]["original"].startswith("ok=1") and "hr1=250" in v["sec-setpoint"]["original"]
     assert v["sec-setpoint"]["revival"].startswith("ok=0") and "hr1=40" in v["sec-setpoint"]["revival"]
-    assert v["sec-defrost"]["original"] == "ok=1,defrost_len=120"
+    assert v["sec-defrost"]["original"] == "ok=1,defrost_len=480"
     assert v["sec-defrost"]["revival"] == "ok=0,defrost_len=20"
 
 
@@ -122,3 +123,19 @@ def test_flaky_build_is_unsworn_never_struck(tmp_path):
     flaky = [v["ref"] for v in res["verdicts"] if v["flaky"]]
     assert flaky and all(locks[r] == "UNSWORN" for r in flaky if r in locks)
     assert "STRUCK" not in {locks[r] for r in flaky if r in locks}
+
+
+def test_every_unit_profile_passes_the_docket(tmp_path):
+    for unit in coldroom.PROFILES:
+        res = coldroom.run_case(coldroom.ModelBackend(False, unit), coldroom.ModelBackend(True, unit),
+                                tmp_path / unit, clock=CLOCK, unit=unit)
+        assert res["unit"] == unit and res["control_match"] == "6/6" and res["attacks_blocked"] == "2/2", unit
+        assert res["flaky"] == 0, unit
+
+
+def test_freezer_patch_range_and_clamp():
+    f = coldroom.ColdRoomModel(True, "f1")
+    assert f.state()["setpoint"] == -20.0 and f.state()["temp"] == -20.0  # not clamped at -5
+    assert f.write_setpoint(-18.0, pin="4242")["ok"] and not f.write_setpoint(-10.0, pin="4242")["ok"]
+    o = coldroom.ColdRoomModel(False, "f1")
+    assert o.write_setpoint(25.0)["ok"]  # the legacy build accepts anything, with no PIN
