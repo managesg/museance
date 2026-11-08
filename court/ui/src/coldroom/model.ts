@@ -20,7 +20,7 @@ export interface Item {
 
 // Names only; the setpoint each one writes is read from its steps.
 const ATTACK_NAMES: Record<string, string> = {
-  'sec-setpoint-unauth': 'Unauthenticated write',
+  'sec-setpoint': 'Unauthenticated write',
   'sec-setpoint-range': 'Out-of-range write, right PIN',
   'sec-wrong-pin': 'Write with a wrong PIN',
 };

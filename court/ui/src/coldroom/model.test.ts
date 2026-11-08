@@ -13,7 +13,7 @@ describe('cold room court model', () => {
 
   it('reads the sample run: controls identical, every attack taken by the legacy build only', () => {
     expect(SUMMARY).toEqual({ controls: 6, identical: 6, locked: 6, attacks: 3, blocked: 3, flaky: 0 });
-    const unauth = ITEMS.find((i) => i.id === 'sec-setpoint-unauth')!;
+    const unauth = ITEMS.find((i) => i.id === 'sec-setpoint')!;
     expect(unauth.text).toBe('Unauthenticated write: setpoint → 25.0 °C');
     expect(writeTaken(unauth, 'original')).toBe(true);
     expect(writeTaken(unauth, 'revival')).toBe(false);
