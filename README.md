@@ -1,83 +1,69 @@
-# aie-code
+# MUSÉANCE
 
-**SÉANCE**: a fidelity court for resurrected software. Built at the AIE Code Summit Hackathon, 2026-11-07.
+**A fidelity court for resurrected software.** AI proposes, the court decides. Built at the AIE Code Summit Hackathon, 2026-11-07.
 
-The dead app gets a lawyer, not a fan.
+AI can rebuild a dead app or patch legacy software fast, but nobody can prove the result behaves like the original. MUSÉANCE puts the rebuild on trial: agents gather evidence, an AI swears how the original behaved with credits on the line, and a court with no AI in it checks every claim on both builds. Only what survives is locked into the record.
 
-## What it is
+## How it comes together
 
-SÉANCE is a fidelity court for resurrected software: a dead app is revived from its observed behavior, then tried in an automated court.
-A Skeptic attacks the revival without seeing the claims, the court rules deterministically (no model in the verdict), and `eval/` scores every ruling.
-The stage UI in `court/ui/` plays the trial; the demo app is the archived `themaxsandelin/todo`.
-
-## Quick start
-
-```sh
-make check                          # validate fixtures against contracts (same as: python eval/check_fixtures.py)
-python eval/p4_fixture.py           # skeptic, revival check, score, case file
-python -m pytest -q eval revive dig # lane tests
-python -m court.court --app app1 --claims fixtures/claims.json --attacks fixtures/attacks.json     --original http://localhost:8001 --revival http://localhost:8002 --out runs/app1   # the court (needs Playwright)
+```mermaid
+flowchart LR
+  E[Evidence<br/>dig agents] --> S[Behavior sheet<br/>SubQ reader]
+  S --> M[Claims + bonds<br/>ASI-1 medium]
+  S --> R[Revival / patch<br/>Codex, Meta Muse]
+  K[Sealed attacks<br/>skeptic] --> C
+  M --> C{Court<br/>no AI, runs twice}
+  R --> C
+  O[Original] --> C
+  C --> L[Locks + hash-chained ledger]
+  L --> U[Stage UI<br/>MongoDB AI evidence]
 ```
 
-Serve the apps first: `make serve-fixture` (port 8001), `python -m http.server 8011 -d apps/todo/original`. Stage UI: see `court/ui/RUNBOOK.md`.
-
-## Repo map
-
-| Folder | Lane | What |
+| Step | What happens | Where |
 | --- | --- | --- |
-| `court/` | P1 | Court engine: serves apps, runs claims and attacks on original + revival, shrinker, Bailiff, ledger |
-| `apps/` | P1 | Vendored dead apps (oracles) |
-| `dig/` | P2 | Evidence piles, reader, behavior sheets |
-| `agents/` | P2 | LLM client and the Medium |
-| `court/ui/` | P3 | React stage UI, cast, live feed |
-| `revive/` | P4 | Builds and repairs the revival from a behavior sheet |
-| `eval/` | P4 | Skeptic, seal, scoring, regression |
-| `cases/` | P4 | Case files, commits, metrics |
-| `contracts/`, `fixtures/` | shared | JSON schemas and fixture data (`CONTRACTS.md`) |
+| Evidence | Pages, issues, screenshots about the app, tiered A–D | `dig/` |
+| Behavior sheet | What the app did, each line marked seen or guessed | `dig/` |
+| Claims | The medium swears each behavior with a test, a confidence and a bond | `agents/` |
+| Attacks | The skeptic writes tests without seeing the claims; they are hashed before claims are revealed | `eval/` |
+| Revival | A builder rebuilds the app from the sheet only, never the original code | `revive/` |
+| Court | Runs every test on original and revival, twice; same output = match, unstable = unsworn | `court/` |
+| Record | LOCKED / STRUCK (perjury) per claim, every event in a hash-chained ledger | `runs/<app>/` |
+| Stage | Both apps side by side, one test at a time: SAME or DIFFERENT | `court/ui/` |
 
-## Built today
+## The cases we ran
 
-All code in this repo was written on 2026-11-07 at the AIE Code Summit Hackathon. Third-party apps, libraries and assets are listed in `CREDITS.md`.
+**Cold Room Court (main demo).** A modeled supermarket cold-room controller, inspired by the Oct/Nov 2026 EU refrigeration attacks. *Modeled controller, not vendor code.* The legacy build accepts unauthenticated writes; the patched build adds three lines (`PATCH.diff`). The court talks Modbus TCP instead of a browser:
+- 6/6 control behaviors (cooling, hysteresis, high-temp alarm, defrost) identical and locked, 0 flaky.
+- 3/3 unauthorized configuration changes accepted by the legacy build, rejected by the patch, which keeps the room at its 4 °C setpoint.
+- Ledger: 24 events, chain intact.
 
-Start with `AGENTS.md` (lanes, rules, reporting) and `CONTRACTS.md` (data between lanes). `make check` validates the fixtures; `make serve-fixture` serves the fixture app on port 8001.
+**Todo (2016, themaxsandelin/todo).** A real abandoned app, rebuilt from evidence:
+- 121 checks (16 claims + 105 sealed attacks). Fidelity 41 → 100 after repair; differences 71 → 0.
+- 15 of 16 claims locked; 1 perjury (the medium swore empty tasks could be added; it lost its 198-credit bond).
+- 0 false strikes on 12 known-good behaviors. Codex and Meta Muse repaired it independently to the same verdict.
 
-## P4: Revival, Skeptic, Scoring
+**Calculator (`app1`).** A hand-written practice case used to test the pipeline.
 
-Lane P4 (`revive/`, `eval/`, `cases/`) builds the revival from a behavior sheet, attacks it with a
-Skeptic that never sees the claims, and scores the court's verdicts. Plan: `revive/P4_WORKPLAN.md`.
+All numbers are measured from committed run files: `cases/METRICS.md`, `cases/BEFORE_AFTER.md`, `court/ics/sample_run/`.
 
-**One-command fixture run** (skeptic attacks, revival check, score, case file, one summary block):
+## What the judges see
 
-```sh
-python eval/p4_fixture.py
-```
+The stage (`court/ui/`) shows the original and the revival as two live apps. Press **N** (or *Run the next test*): the same steps play in both, the court's verdict lands (SAME / DIFFERENT), and the AI's claim is marked true or perjury. *Test it yourself* records your clicks in the original and asks the court live. MongoDB's AI (voyage-3.5 embeddings) shows the evidence closest to each claim. Fetch.ai agents argue the case in ASI:One (`agents/mesh/`).
 
-**Seal and verify.** The regression set and the Skeptic's attacks are hashed and committed before the
-Medium's claims are revealed (`cases/<app>.commits.json`):
-
-```sh
-python eval/seal.py --app app1 --regression eval/regression/app1-fixture.json \
-  --attacks runs/app1/attacks.json --out cases/app1.commits.json          # seal
-python eval/seal.py --app app1 --regression eval/regression/app1-fixture.json \
-  --attacks runs/app1/attacks.json --out cases/app1.commits.json --verify  # verify
-```
-
-`--verify` checks content only (the files still hash to the seal). The "before reveal" part is the git history:
-`cases/todo.commits.json` was committed in 5a51fc4 (20:44 UTC), P2's todo claims in 63dc375 and 9bdd377 (21:00 and
-21:16 UTC), and the seal file has not changed since. Verify the todo seal with
-`python eval/seal.py --app todo --regression eval/regression/todo.json --attacks cases/todo/attacks.json --out cases/todo.commits.json --verify`.
-
-**Builders** (`revive/build.py --builder ...`): `codex`, `claude`, `glm`, and `muse`. Muse runs with no tools and
-cannot write files; it produced an independent repair of todo v1 (`cases/todo/repairs.jsonl`, `revive/out/todo/index.muse.html`).
-Details: `revive/README.md`.
-
-**Scoring.** Credibility, Brier and fidelity are pure functions in `eval/score.py`, defined in the
-"Scoring (P4)" section of `CONTRACTS.md`. There is no model in the court or in the scoring.
-Todo fidelity, all 121 verdicts (P2's 16 claims + 105 sealed attacks), MEASURED: 41 for revival v1 (`cases/todo/v1-16claims/verdicts.json`), 100 for v2 (`cases/todo/v2-16claims/verdicts.json`); `cases/BEFORE_AFTER.md`.
+## Run it
 
 ```sh
-python -m pytest -q eval revive dig      # lane tests
-python eval/metrics_report.py            # rewrite cases/METRICS.md from case files
+cd court/ui && npm ci && npm run seed -- todo      # committed todo results into runs/
+node server/feed.ts                                 # stage feed (MONGODB_AI_API_KEY optional)
+npm run dev                                         # open http://localhost:5173/?source=runs&app=todo
 ```
 
-Numbers: see `cases/METRICS.md` (measured only).
+The full demo, including the cold-room controllers and the live court, is in `DEMO.md`. Lanes and rules: `AGENTS.md`; data contracts: `CONTRACTS.md`; credits and licenses: `CREDITS.md`.
+
+| Folder | What |
+| --- | --- |
+| `court/` | The court, Bailiff locks, ledger, Modbus bench |
+| `dig/`, `agents/` | Evidence, reader, medium, Fetch agents |
+| `revive/`, `eval/`, `cases/` | Builders, skeptic, scoring, case files |
+| `court/ui/` | Stage UI |
+| `apps/` | The original apps (oracles) |
