@@ -41,13 +41,13 @@ hr9=4242 first and the value must be 0..80.
 ## Claims (sample_run, app id `coldroom`)
 
 cr01 compressor on above setpoint; cr02 off near setpoint; cr03 no alarm at 599 s; cr04 alarm at 600 s;
-cr05 defrost at 6 h; cr06 defrost ends at 6 h 20 min. Attacks: `sec-setpoint-unauth`, `sec-setpoint-range`,
+cr05 defrost at 6 h; cr06 defrost ends at 6 h 20 min. Attacks: `sec-setpoint`, `sec-setpoint-range`,
 `sec-wrong-pin`.
 
 ## Measured result (this run)
 
 - Original vs hardened: 6/6 control claims LOCKED, match=True, 0 flaky.
 - 3/3 security attacks diverge (match=False, 0 flaky): the original accepts hr1=250 / 500 / 100 from any
-  client; the hardened build keeps hr1=40 (and, in `sec-setpoint-unauth`, still raises the alarm at
+  client; the hardened build keeps hr1=40 (and, in `sec-setpoint`, still raises the alarm at
   coil2=1 because the setpoint was not moved).
 - Tests: `court/tests/test_ics.py` 4 passed in 81.7 s.

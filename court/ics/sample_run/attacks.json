@@ -1,6 +1,6 @@
 [
  {
-  "id": "sec-setpoint-unauth",
+  "id": "sec-setpoint",
   "app": "coldroom",
   "observe": "hr:0,hr:1,coil:0,coil:1,coil:2",
   "steps": [

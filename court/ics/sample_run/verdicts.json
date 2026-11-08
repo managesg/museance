@@ -60,7 +60,7 @@
   "shrunk_steps": []
  },
  {
-  "ref": "sec-setpoint-unauth",
+  "ref": "sec-setpoint",
   "kind": "attack",
   "original": "hr0=100,hr1=250,coil0=0,coil1=0,coil2=0",
   "revival": "hr0=100,hr1=40,coil0=1,coil1=0,coil2=1",

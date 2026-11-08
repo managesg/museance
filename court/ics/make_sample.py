@@ -32,7 +32,7 @@ CLAIMS = [
     claim("cr06", "Defrost ends 20 min later", ["tick:22800"], state(0, 40, 0, 0, 0)),
 ]
 ATTACKS = [
-    {"id": "sec-setpoint-unauth", "app": "coldroom", "observe": OBS,
+    {"id": "sec-setpoint", "app": "coldroom", "observe": OBS,
      "steps": ["hr:0=100", "hr:1=250", "tick:600"]},
     {"id": "sec-setpoint-range", "app": "coldroom", "observe": OBS, "steps": ["hr:9=4242", "hr:1=500"]},
     {"id": "sec-wrong-pin", "app": "coldroom", "observe": OBS, "steps": ["hr:9=1111", "hr:1=100"]},
