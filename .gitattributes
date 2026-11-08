@@ -1,0 +1,4 @@
+# Case files are parsed by the stage; CRLF from Windows checkouts breaks parsing. Keep data files LF everywhere.
+*.yml text eol=lf
+*.yaml text eol=lf
+*.jsonl text eol=lf
