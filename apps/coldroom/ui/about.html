@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How MUSÉANCE works</title>
+<style>
+:root{--bg:#EEF6FC;--pn:#fff;--st:#E3ECF4;--bd:#C9D6E2;--tx:#0F1E2C;--mu:#4A5D70;--rd:#C62828;--gr:#1B7F4B;--am:#9A5B00;--ac:#1F6FB2;
+  --rdbg:#FDECEC;--grbg:#E6F4EC;--ambg:#FFF3E0;--acbg:#E3F0FB;--code:#0B1620;--codetx:#E6F0F8}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0B1620;--pn:#132331;--st:#1A2E40;--bd:#264057;--tx:#E6F0F8;--mu:#9FB3C6;
+  --rd:#FF7A7A;--gr:#4CD38A;--am:#F0B44C;--ac:#6CB6FF;--rdbg:#3A1A1E;--grbg:#12301F;--ambg:#3A2A10;--acbg:#14304A;--code:#07101A}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.6 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:1040px;margin:0 auto;padding:24px 16px 80px}
+header.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 0 8px}
+.brand{display:flex;gap:12px;align-items:center;text-decoration:none;color:var(--tx)}
+.logo{width:40px;height:40px;border-radius:10px;background:var(--ac);display:grid;place-items:center;color:#fff;font-weight:800}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;border:1px solid var(--bd);background:var(--pn);color:var(--tx);text-decoration:none;font-weight:600}
+.btn.primary{background:var(--ac);border-color:var(--ac);color:#fff}
+.btn:focus-visible,a:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+h1{font-size:clamp(30px,5vw,46px);line-height:1.1;margin:28px 0 10px;letter-spacing:-.02em}
+h2{font-size:24px;margin:0 0 6px;letter-spacing:-.01em}
+h3{font-size:17px;margin:0 0 4px}
+.lead{font-size:19px;color:var(--mu);max-width:760px;margin:0}
+.badge{display:inline-block;font-size:13px;padding:4px 10px;border-radius:999px;background:var(--acbg);color:var(--ac);font-weight:600}
+section{background:var(--pn);border:1px solid var(--bd);border-radius:16px;padding:24px;margin-top:20px}
+section>p.sub{color:var(--mu);margin:0 0 16px}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.card{background:var(--st);border-radius:12px;padding:16px}
+.kpi{font-size:34px;font-weight:800;line-height:1.1}
+.ok{color:var(--gr)}.bad{color:var(--rd)}.warn{color:var(--am)}
+.chip{display:inline-block;font:600 12px/1 "JetBrains Mono",ui-monospace,monospace;padding:5px 8px;border-radius:6px}
+.chip.ok{background:var(--grbg)}.chip.bad{background:var(--rdbg)}.chip.warn{background:var(--ambg)}.chip.ac{background:var(--acbg);color:var(--ac)}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--bd);vertical-align:top}
+th{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu)}
+.tablewrap{overflow-x:auto}
+code,.mono{font-family:"JetBrains Mono",ui-monospace,Consolas,monospace;font-size:.92em}
+pre{background:var(--code);color:var(--codetx);border-radius:12px;padding:16px;overflow-x:auto;font-size:14px;line-height:1.55;margin:10px 0 0}
+pre .add{color:#7EE2A8}.pre-c{color:#8FA6BA}
+ol.steps{counter-reset:s;list-style:none;padding:0;margin:0;display:grid;gap:10px}
+ol.steps li{counter-increment:s;display:flex;gap:12px;align-items:flex-start}
+ol.steps li::before{content:counter(s);flex:none;width:28px;height:28px;border-radius:50%;background:var(--ac);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px}
+.diagram{width:100%;height:auto;display:block}
+.diagram .box{fill:var(--pn);stroke:var(--bd);stroke-width:1.5}
+.diagram .boxo{fill:var(--rdbg);stroke:var(--rd);stroke-width:1.5}
+.diagram .boxp{fill:var(--grbg);stroke:var(--gr);stroke-width:1.5}
+.diagram .boxc{fill:var(--acbg);stroke:var(--ac);stroke-width:1.5}
+.diagram text{fill:var(--tx);font:600 14px Inter,system-ui,sans-serif}
+.diagram .s{fill:var(--mu);font:500 12px Inter,system-ui,sans-serif}
+.diagram .ln{stroke:var(--mu);stroke-width:1.5;fill:none}
+.note{border-left:4px solid var(--am);background:var(--ambg);padding:12px 14px;border-radius:8px;margin-top:14px}
+footer{color:var(--mu);font-size:14px;margin-top:28px;text-align:center}
+@media (max-width:640px){section{padding:18px}.kpi{font-size:28px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <a class="brand" href="index.html" aria-label="Back to the store dashboard"><span class="logo" aria-hidden="true">✳</span>
+    <span><b>FreshMart · Store #214</b><br><span style="color:var(--mu);font-size:14px">MUSÉANCE court</span></span></a>
+  <a class="btn primary" href="index.html">← Back to the store</a>
+</header>
+
+<span class="badge">How it works</span>
+<h1>Prove the patch changes nothing but the hole.</h1>
+<p class="lead">MUSÉANCE puts a patched building controller on trial against the legacy one it replaces. A deterministic court, with no AI in it, replays identical tests on both. Cooling behavior must <b>match</b>. Attacks must <b>only work on the original</b>.</p>
+
+<section aria-labelledby="why">
+  <h2 id="why">Why this exists</h2>
+  <p class="sub">The problem is real, and the hard part is trust, not code.</p>
+  <div class="grid g2">
+    <div class="card"><h3>The attacks</h3><p style="margin:0">On 11 Oct 2026, refrigeration controllers at up to about 700 French supermarkets were switched into defrost overnight. A second wave on 2 Nov reached about 10 more European countries. Food was thrown out. Danfoss said its products were involved.</p></div>
+    <div class="card"><h3>The trap</h3><p style="margin:0">Much of this controller software is end of life: no vendor patches, write commands with no authentication. You can rebuild or patch it yourself, but an unverified patch is a new risk. Did you just change how the fridge cools?</p></div>
+    <div class="card"><h3>The answer</h3><p style="margin:0">Run the old controller and the patched one side by side on identical inputs, compare what they do, and keep a tamper-evident record. Only measured results count.</p></div>
+  </div>
+</section>
+
+<section aria-labelledby="parts">
+  <h2 id="parts">The pieces</h2>
+  <p class="sub">Everything runs on one laptop, on 127.0.0.1, started with one command.</p>
+  <svg class="diagram" viewBox="0 0 960 330" role="img" aria-labelledby="dgt">
+    <title id="dgt">The UI talks to two controllers and the court. The court drives both controllers and writes the ledger.</title>
+    <rect class="box" x="20" y="125" width="190" height="80" rx="12"/><text x="40" y="158">Store dashboard</text><text class="s" x="40" y="180">UI · :8100</text>
+    <rect class="boxo" x="385" y="20" width="200" height="86" rx="12"/><text x="405" y="52">ORIGINAL controller</text><text class="s" x="405" y="74">:8101 · legacy · no auth</text><text class="s" x="405" y="92">accepts any write</text>
+    <rect class="boxp" x="385" y="224" width="200" height="86" rx="12"/><text x="405" y="256">PATCHED controller</text><text class="s" x="405" y="278">:8102 · same logic</text><text class="s" x="405" y="296">+ PIN and range check</text>
+    <rect class="boxc" x="745" y="110" width="195" height="110" rx="12"/><text x="765" y="144">The court</text><text class="s" x="765" y="166">:8103 · POST /run</text><text class="s" x="765" y="186">deterministic, no AI</text><text class="s" x="765" y="204">writes the sha256 ledger</text>
+    <path class="ln" d="M210 150 C 300 120, 300 70, 385 63"/><path class="ln" d="M210 180 C 300 210, 300 260, 385 267"/>
+    <path class="ln" d="M210 165 L 745 165" stroke-dasharray="6 5"/>
+    <path class="ln" d="M745 140 C 680 120, 650 70, 585 63"/><path class="ln" d="M745 190 C 680 210, 650 260, 585 267"/>
+    <text class="s" x="232" y="112">GET /state · /tick · /reset</text><text class="s" x="232" y="244">attacks go to both builds</text>
+    <text class="s" x="430" y="157">Run test suite → verdicts + ledger head</text>
+    <text class="s" x="610" y="112">same steps, twice per build</text>
+  </svg>
+  <div class="grid g3" style="margin-top:8px">
+    <div class="card"><h3>Controllers</h3><p style="margin:0"><code>apps/coldroom/controller.py</code>. One model, a <code>--patched</code> flag. HTTP contract: <code>GET /state</code>, <code>POST /setpoint</code>, <code>/defrost</code>, <code>/tick</code>, <code>/reset</code>. Simulated time, 1 tick = 60 s, no wall clock.</p></div>
+    <div class="card"><h3>Court</h3><p style="margin:0"><code>court/coldroom.py</code>. Replays the docket on both builds, decides every verdict by comparing text, locks results with the Bailiff, chains everything into <code>ledger.jsonl</code>.</p></div>
+    <div class="card"><h3>Dashboard</h3><p style="margin:0">Reads live state every second, runs the clock, sends attacks to both builds, flips court cards from real verdicts. Falls back to a built-in simulation if the backend is down, and says so.</p></div>
+  </div>
+</section>
+
+<section aria-labelledby="decide">
+  <h2 id="decide">How the court decides, without AI</h2>
+  <p class="sub">A claim is a test, not an opinion. The court runs it and reads the result.</p>
+  <ol class="steps">
+    <li><span><b>Reset both builds to the same starting state</b> (for example: room at setpoint + 1.2 °C).</span></li>
+    <li><span><b>Replay the exact same steps</b> on the ORIGINAL and the PATCHED controller: writes, ticks of simulated time, reads.</span></li>
+    <li><span><b>Do it twice per build.</b> Four readings per test.</span></li>
+    <li><span><b>Compare text.</b> That is the whole decision, so the same inputs always give the same verdict.</span></li>
+  </ol>
+  <div class="tablewrap" style="margin-top:16px"><table>
+    <thead><tr><th>Question</th><th>How it is checked</th><th>Result</th></tr></thead>
+    <tbody>
+      <tr><td>Did the two runs on one build agree?</td><td><code>run 1 == run 2</code></td><td><span class="chip warn">UNSWORN</span> if not. Never STRUCK: the court would rather say "unknown" than accuse.</td></tr>
+      <tr><td>Is the claim true on the original?</td><td><code>original == expected</code></td><td><span class="chip ok">LOCKED</span> if yes, <span class="chip bad">STRUCK</span> if no.</td></tr>
+      <tr><td>Does the patch behave the same?</td><td><code>original == patched</code></td><td><span class="chip ok">MATCH</span> for control tests. For attacks the builds must <b>differ</b>: <span class="chip ok">PATCH WORKS</span>.</td></tr>
+    </tbody></table></div>
+</section>
+
+<section aria-labelledby="docket">
+  <h2 id="docket">The docket: 6 behaviors and 2 attacks</h2>
+  <p class="sub">Tests are relative to each unit's setpoint, so the same docket works for a 4 °C dairy room and a -20 °C freezer.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Id</th><th>Behavior</th><th>Must</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">c1</td><td>Compressor turns on above setpoint + 1 °C</td><td><span class="chip ok">MATCH</span></td></tr>
+      <tr><td class="mono">c2</td><td>Compressor turns off below setpoint - 1 °C</td><td><span class="chip ok">MATCH</span></td></tr>
+      <tr><td class="mono">c3</td><td>High-temp alarm fires only after 10 minutes above setpoint + 4 °C</td><td><span class="chip ok">MATCH</span></td></tr>
+      <tr><td class="mono">c4</td><td>Defrost every 6 h for exactly 20 minutes (compressor off, alarm suppressed)</td><td><span class="chip ok">MATCH</span></td></tr>
+      <tr><td class="mono">c5</td><td>No alarm during 12 h of normal cooling</td><td><span class="chip ok">MATCH</span></td></tr>
+      <tr><td class="mono">c6</td><td>Room recovers to setpoint + 1 °C after a defrost</td><td><span class="chip ok">MATCH</span></td></tr>
+      <tr><td class="mono">sec-setpoint</td><td>Unauthenticated write: setpoint to 25.0 °C</td><td><span class="chip bad">DIFFER</span></td></tr>
+      <tr><td class="mono">sec-defrost</td><td>Unauthenticated write: defrost from 20 min to 8 h</td><td><span class="chip bad">DIFFER</span></td></tr>
+    </tbody></table></div>
+  <div class="note"><b>Why the alarm stays silent on the original.</b> The alarm compares against the setpoint. Once an attacker moves the setpoint to 25 °C, the alarm only fires at 29 °C, so the room warms with nothing complaining. Long defrost suppresses the alarm for hours. This is what our model shows; we do not claim the real attacks disabled alarms.</div>
+</section>
+
+<section aria-labelledby="patch">
+  <h2 id="patch">The patch, in full</h2>
+  <p class="sub">Two lines in <code>court/coldroom.py</code>. Nothing else changes, and the court proves it.</p>
+<pre><span class="pre-c"># write_setpoint</span>
+<span class="add">if self.patched and (str(pin) != PIN or not self.prof["lo"] &lt;= float(value) &lt;= self.prof["hi"]):  # PATCH</span>
+    return {"ok": False, "msg": "write rejected: unlock required + out of range"}
+<span class="pre-c"># write_defrost</span>
+<span class="add">if self.patched and (str(pin) != PIN or int(minutes) &gt; 20):  # PATCH</span>
+    return {"ok": False, "msg": "write rejected: unlock required + max 20 min"}</pre>
+</section>
+
+<section aria-labelledby="units">
+  <h2 id="units">Every refrigerated unit can go on trial</h2>
+  <p class="sub">Each unit has a profile: its setpoint, the range the patch allows, and its food-safety limit.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Unit</th><th>Setpoint</th><th>Patch allows</th><th>Food limit</th></tr></thead>
+    <tbody>
+      <tr><td>Dairy walk-in cold room</td><td>4 °C</td><td>0 to 8 °C</td><td>8 °C</td></tr>
+      <tr><td>Meat cold room</td><td>2 °C</td><td>0 to 4 °C</td><td>7 °C</td></tr>
+      <tr><td>Deli case</td><td>4 °C</td><td>0 to 8 °C</td><td>8 °C</td></tr>
+      <tr><td>Bakery case</td><td>6 °C</td><td>2 to 10 °C</td><td>10 °C</td></tr>
+      <tr><td>Produce case</td><td>5 °C</td><td>1 to 9 °C</td><td>10 °C</td></tr>
+      <tr><td>Frozen aisle F1, F2, F3</td><td>-20 °C</td><td>-25 to -15 °C</td><td>-12 °C</td></tr>
+    </tbody></table></div>
+</section>
+
+<section aria-labelledby="ledger">
+  <h2 id="ledger">A record nobody can quietly rewrite</h2>
+  <p class="sub">Every test is committed before the trial, every verdict after, each linked to the one before.</p>
+  <div class="grid g2">
+    <div class="card"><h3>Hash chain</h3><p style="margin:0">Each ledger event stores <code>hash = sha256(prev_hash + payload)</code>. Change one character anywhere and every later hash breaks. <code>python -m court.ledger verify runs/coldroom/ledger.jsonl</code> names the first broken link.</p></div>
+    <div class="card"><h3>Commit first</h3><p style="margin:0">The tests and attacks are hashed into the ledger <b>before</b> the court runs, so nobody can tune a test after seeing the result. The dashboard's ledger chip shows the head of this chain.</p></div>
+  </div>
+</section>
+
+<section aria-labelledby="numbers">
+  <h2 id="numbers">Measured today</h2>
+  <p class="sub">Only numbers the court actually produced.</p>
+  <div class="grid g3">
+    <div class="card"><div class="kpi ok">6/6</div>control behaviors identical, every unit</div>
+    <div class="card"><div class="kpi ok">2/2</div>attacks blocked on the patch, every unit</div>
+    <div class="card"><div class="kpi">0</div>flaky results on clean runs</div>
+    <div class="card"><div class="kpi">4.3 s</div>one full court run over HTTP (8 tests, each twice on both builds)</div>
+  </div>
+  <p style="margin:14px 0 0;color:var(--mu)">The same court method, run in a browser instead of over a controller protocol, judged a revived web app (a dead todo app): 16 sworn claims, 15 held, 1 struck as false; the first rebuild matched the original on 41% of 121 checks, 100% after repair, with 0 false strikes on 12 known-good behaviors.</p>
+</section>
+
+<section aria-labelledby="scope">
+  <h2 id="scope">Honest scope</h2>
+  <ul style="margin:0;padding-left:20px">
+    <li>The store and its controllers are <b>modeled</b>: fictional FreshMart, not vendor code, no real controller models named.</li>
+    <li>Time is simulated (1 tick = 60 s), so a 12-hour test runs in about a second and is fully reproducible.</li>
+    <li>The court proves equivalence to the original <i>model</i>. A real deployment needs a faithful emulator or test bench of the actual controller; never point the court at live equipment.</li>
+    <li>Next step: the real end-of-life PLC runtime OpenPLC_v3 (archived, default credentials), run in a sandbox.</li>
+  </ul>
+</section>
+
+<section aria-labelledby="run">
+  <h2 id="run">Run it yourself</h2>
+<pre>python apps/coldroom/run_all.py
+<span class="pre-c"># UI :8100 · ORIGINAL :8101 · PATCHED :8102 · COURT :8103 (all on 127.0.0.1)</span>
+curl -X POST http://127.0.0.1:8103/run -d '{"unit":"meat"}'
+python -m pytest -q court/tests/test_coldroom.py</pre>
+</section>
+
+<footer>MUSÉANCE · AIE Code Summit Hackathon, 7 Nov 2026 · modeled on the Oct/Nov 2026 EU supermarket refrigeration attacks · not vendor code</footer>
+</div>
+</body>
+</html>
