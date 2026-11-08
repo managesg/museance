@@ -297,26 +297,51 @@ def why_line(c: dict, lock: dict | None) -> str:
             f"at {c['confidence']:.0%}, bond {c['bond']}.\n\n{court}")
 
 
-# --- closing remarks (deterministic; McClusky's ASI-1 voice falls back to objection) ---------------------
+# --- closing remarks: the scripted lines behind the ASI-1 voices (voice.py), and the facts they share ---------
+def top_strike(r: dict) -> dict | None:
+    """The struck claim Dr. Hoot gloats about: the surest, then the biggest bet."""
+    return max(r.get("struck") or [], key=lambda s: (s["confidence"], s["bond"], s["id"]), default=None)
+
+
+def plain(text: str, n: int = 6) -> str:
+    """A claim in people's words: its first clause, selectors as words ('#add' -> 'add'), at most n words."""
+    head = text.split("(")[0].split(":")[0].strip() or text
+    words = [w[1:] if w[:1] in "#." and w[1:2].isalpha() else w for w in head.split()]
+    s = " ".join(words[:n]).rstrip(",;.") + ("…" if len(words) > n else "")
+    return s[:1].lower() + s[1:]
+
+
+def observed(text: str) -> str:
+    """What a build did, said after 'the original': court error strings never reach a person."""
+    t = str(text)
+    if t.startswith("ERROR:step"):
+        return "failed a step"
+    if t.startswith("ERROR:load"):
+        return "never loaded"
+    return "showed nothing" if t.startswith("ERROR:") or not t.strip() else f"showed \"{shown(t, 16)}\""
+
+
 def taunt(r: dict) -> str:
-    """Dr. Hoot's closing remark, at most 18 words, with the case's numbers."""
-    if r.get("struck"):
-        s = max(r["struck"], key=lambda s: (s["confidence"], s["bond"], s["id"]))
-        return (f"Struck! {s['id']}: you swore \"{shown(s['expect'], 14)}\", the original says "
-                f"\"{shown(s['original'], 14)}\". {s['bond']} points, counselor.")
+    """Dr. Hoot's opening remark when ASI-1 is out: under 20 words, no ids, every number from the ruling."""
+    s = top_strike(r)
+    if s:
+        return f"Caught you, counselor! You said {plain(s['text'])}, but the real app {observed(s['original'])}."
     if r.get("differ"):
-        return f"Hoo. {r['differ']} behaviors differ in the revival; fidelity {r['fidelity']}. Not impressed."
-    return f"Hoo. Zero strikes and fidelity {r['fidelity']}? I demand a recount, counselor."
+        return f"Hoo. Your copy acts differently from the original in {r['differ']} of {r['judged']} checks."
+    return "Hoo. Not one slip from the copy? I demand a recount, counselor."
 
 
 def rebuttal(r: dict) -> str:
-    """Dr. Hoot's answer to McClusky when ASI-1 is out: at most 18 words, every number from the ruling."""
+    """Dr. Hoot's answer to McClusky when ASI-1 is out: under 20 words, every number from the ruling."""
     c = r["counts"]
-    return f"Hoo. Pretty words, counselor. The record says {c['LOCKED']} locked, {c['STRUCK']} struck, {r['differ']} differ."
+    if c["STRUCK"]:
+        return f"Hoo. Pretty words. {c['STRUCK']} of your claims still proved false, counselor."
+    if r["differ"]:
+        return f"Hoo. Pretty words. Your copy still misbehaves in {r['differ']} of {r['judged']} checks."
+    return "Hoo. Pretty words. I will be watching you, counselor."
 
 
 def objection(r: dict) -> str:
-    """McClusky's line when ASI-1 is out: at most 18 words, every number from the ruling."""
+    """McClusky's line when ASI-1 is out: under 20 words, every number from the ruling."""
     c = r["counts"]
-    return (f"Objection! {c['LOCKED']} of {r['claims']} claims locked, fidelity {r['fidelity']}, credibility "
-            f"{r['credibility_end']}. My client rests in peace.")
+    return f"Objection! {c['LOCKED']} of my {r['claims']} claims held up. My client rests in peace."

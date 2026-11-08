@@ -1,4 +1,4 @@
-"""The Bailiff: clerk of the Seance court and orchestrator of every case. No model anywhere in this process.
+"""The Bailiff: clerk of the Seance court and orchestrator of every case. The court has no model; his ears do.
 
     agents/mesh/.venv/bin/python -m agents.mesh.bailiff [--mailbox]
 
@@ -7,8 +7,11 @@ runs it through Dr. Hoot and McClusky over the mesh (case.hear with MeshParties)
 attack checked against its seal and P4's), then judge() in this process, so during a case this process is the
 only writer of runs/<app>/ledger.jsonl. Each mesh event goes out as a Progress to the front door; at the end the
 Ruling (McClusky's final chat reply, rendered here without a model) goes to the front door and Dr. Hoot.
-Chat: the courtroom (courtroom.respond: the judge picks from three choices, the Bailiff answers in plain words), plus
-the old commands status [claim], transcript, apps, raise <app>, cross <expr>. Read-only REST: GET /case, /locks.
+Chat: the courtroom (courtroom.respond: the judge picks from three choices or just talks, the Bailiff answers in plain
+words), plus the old commands status [claim], transcript, apps, raise <app>, cross <expr>. Read-only REST: GET /case,
+/locks. The cases come from the files on disk (docket.py). ASI-1 is only in the Bailiff's ears (brain.py): it reads
+the judge's free text, words a test for the parser and answers questions from the case file. Verdicts and numbers
+come only from the deterministic court.
 """
 from __future__ import annotations
 
@@ -18,6 +21,7 @@ import json
 import os
 import pathlib
 import sys
+import threading
 import time
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -25,13 +29,12 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from uagents import Model  # noqa: E402
 
-from agents.mesh import base, captions, case, commands, courtroom  # noqa: E402
+from agents.mesh import base, brain, captions, case, commands, courtroom, docket  # noqa: E402
 from agents.mesh.models import (CallMedium, CallSkeptic, OpenCase, Progress, Remark, RemarkRequest,  # noqa: E402
                                 RequestReveal, RevealAttacks, Ruling, SealedAttacks, Testimony)
 
 SEAL_S, TESTIFY_S, REMARK_S = 60, 240, 60  # testimony may wait on P2's reader and Medium (180 s each, cached)
-TITLES = {"todo": "Todo", "app1": "the Calculator"}  # courtroom.CASES
-FRESH_S = 90  # a case another judge finished this recently is the same evidence: reuse it, don't queue a rerun
+FRESH_S = 300  # SEANCE_FRESH_S: a case finished this recently is the same evidence; reuse it, don't queue a rerun
 OPENING = "🔨 All rise. The court is testing the original and the revival now, Your Honor."
 ROUTED = {"raise", "cross", "transcript", "status", "case", "apps"}  # old commands that skip the courtroom
 
@@ -60,9 +63,9 @@ def summary(r: dict, runs=case.RUNS) -> dict:
         return f'"{s["text"].split("(")[0].split(":")[0].strip()}": McClusky swore it, the original shows {seen}.'
 
     c = r["counts"]
-    return {"app": r["app"], "title": TITLES.get(r["app"], r["app"]), "claims": r["claims"],
+    return {"app": r["app"], "claims": r["claims"],
             "locked": c["LOCKED"], "struck": c["STRUCK"], "unsworn": c["UNSWORN"], "fabricated": c["FABRICATED"],
-            "attacks": r["attacks"], "seconds": r["seconds"]["court"], "fidelity": r["fidelity"],
+            "attacks": r["attacks"], "seconds": r["seconds"]["court"], "fidelity": r["fidelity"], "checks": r["judged"],
             "differences": [exhibit(v) for v in live if not v["match"]], "examples": [exhibit(v) for v in held[:3]],
             "struck_examples": [struck(s) for s in r["struck"]],
             "credibility": [r["credibility_start"], r["credibility_end"]],
@@ -137,6 +140,7 @@ class Bailiff:
         self.judges: dict[str, dict | None] = {}  # courtroom state per judge (sender:session)
         self.turns: dict[str, asyncio.Lock] = {}  # one courtroom turn at a time per judge
         self.case_lock = asyncio.Lock()  # one courtroom case at a time across judges
+        self.cases: list[dict] = []  # the last docket read
 
     def last_app(self) -> str:
         if self.app:
@@ -208,7 +212,8 @@ class Bailiff:
         An optional app id comes first ("cross todo add Buy milk"). Logged as mesh.cross, never as a verdict."""
         apps = case.apps(self.runs)
         first, _, rest = text.partition(" ")
-        app, text = (first.lower(), rest) if first.lower() in apps else (self.last_app() or "todo", text)
+        ready = next((a for a, why in apps.items() if not why), "")
+        app, text = (first.lower(), rest) if first.lower() in apps else (self.last_app() or ready, text)
         try:
             inputs = case.load_inputs(app, self.runs)
             steps, _ = commands.to_steps(inputs["selectors"], text)  # refuse before the 10 s slot is taken
@@ -237,12 +242,10 @@ class Bailiff:
 
     # --- the courtroom: what judges see in ASI:One ------------------------------------------------------------
     def judge_cross(self, sender: str, app: str, raw: str) -> dict:
-        """courtroom's run_cross (worker thread): the judge's own test on both builds. ValueError = plain words."""
+        """courtroom's run_cross (worker thread): the judge's own test on both builds. Words the parser takes run as
+        typed; other words brain.steps_for turns into the app's test language (ASI-1). ValueError = plain words."""
         inputs = case.load_inputs(app, self.runs)
-        try:
-            commands.to_steps(inputs["selectors"], raw)
-        except commands.CrossError as ex:  # the parser's own words are for engineers
-            raise ValueError(f'The court can\'t try that. Try something like "{courtroom.EXAMPLES[app]}".') from ex
+        raw = brain.steps_for(raw, inputs["selectors"])  # refused before the 10 s slot is taken
         left = self.rate.wait(sender)
         if left:
             raise ValueError(f"One test every 10 seconds, Your Honor. Wait {round(left)} more.")
@@ -250,22 +253,28 @@ class Bailiff:
         return {"did": commands.human_steps(inputs["selectors"], x["steps"]),
                 "original": captions.shown(x["original"]), "revival": captions.shown(x["revival"])}
 
-    async def case_summary(self, ctx, sender: str, app: str) -> dict:
-        """courtroom's run_case: a real case on both builds, one at a time across judges. A judge who waited on
-        another judge's case of the same app gets that one (finished seconds ago, same evidence)."""
+    async def case_summary(self, ctx, sender: str, app: str, fresh: bool = False) -> dict:
+        """courtroom's run_case: a real case on both builds, one at a time across judges. A case that finished
+        without error less than SEANCE_FRESH_S seconds ago is the same evidence: the judge gets it, with its age in
+        minutes (ran_minutes_ago, from ruling.json's time on disk), unless they asked for a fresh run. So a judge who
+        waited on another judge's case of the same app gets that one."""
         ruling = self.runs / app / "ruling.json"
         async with self.case_lock:
-            if not (ruling.exists() and time.time() - ruling.stat().st_mtime < FRESH_S):
+            r = None if fresh or not ruling.exists() else case.last_case(app, self.runs)["ruling"]
+            age = time.time() - ruling.stat().st_mtime if r and not r.get("error") else None
+            if age is None or age >= float(os.environ.get("SEANCE_FRESH_S") or FRESH_S):
+                age = None
                 await base.send_text(ctx, sender, "bailiff", OPENING, cmd="court", app=app)
                 while self.live:  # a case McClusky opened is still in session
                     await asyncio.sleep(1)
                 text, data = await self.raise_case(ctx, app, sender, sender, chat=True, quiet=True)
                 if data.get("ok") is False:
                     raise case.CaseError(text)
-        r = case.last_case(app, self.runs)["ruling"]
+                r = case.last_case(app, self.runs)["ruling"]
         if not r or r.get("error"):
             raise case.CaseError((r or {}).get("error") or "The case file is missing.")
-        return summary(r, self.runs)
+        s = summary(r, self.runs)
+        return s if age is None else {**s, "ran_minutes_ago": int(age // 60)}
 
     async def debate(self, ctx, app: str) -> list[dict]:
         """Hear them argue, live over the mesh: Hoot taunts, McClusky answers him (ASI-1), Hoot rebuts (ASI-1).
@@ -280,12 +289,41 @@ class Bailiff:
                 p = {"from": who, "text": answer}
                 sink("remark", {**p, "agent": who, "caption": captions.caption("remark", p)})
         c = r["counts"]
-        return said + [{"who": "bailiff", "line": f"{c['LOCKED']} locked, {c['STRUCK']} struck, {r['differ']} "
-                                                  f"differences. The Bailiff has no opinion."}]
+        return said + [{"who": "bailiff", "line": f"For the record: {c['LOCKED']} of {r['claims']} claims held up; the "
+                                                  f"copy matched {r['judged'] - r['differ']} of {r['judged']} checks. No opinion."}]
+
+    def docket_rows(self) -> list[dict]:
+        """docket.cases (blocking: ASI-1 writes a card the first time an app or its sources change); the last good
+        docket while a file is mid-write."""
+        try:
+            self.cases = docket.cases(self.runs)
+        except Exception as ex:  # noqa: BLE001 - e.g. a half-written JSON file while a case runs
+            base.log.warning("docket unreadable (%s); using the last one", type(ex).__name__)
+        return self.cases
+
+    def selectors(self, app: str) -> dict:
+        try:
+            return case.load_inputs(app, self.runs)["selectors"] if app else {}
+        except case.MissingInput:
+            return {}
+
+    def parses(self, app: str, text: str) -> bool:
+        """courtroom's parses: the app's test language takes the text as typed (commands.to_steps, no model)."""
+        try:
+            return bool(commands.to_steps(self.selectors(app), text))
+        except Exception:  # noqa: BLE001 - any refusal
+            return False
+
+    def ears(self, stage: str, text: str, menu: list[str], facts, cases: list[dict], history) -> dict:
+        """courtroom's understand: brain.understand (ASI-1, blocking) told the open case's test language."""
+        app = (facts or {}).get("app")
+        return brain.understand(stage, text, menu, facts, cases, history,
+                                brain.grammar_for(self.selectors(app)) if app else "")
 
     async def court_chat(self, ctx, sender: str, text: str):
         """The chat judges get: courtroom.respond (at most three choices, plain words). respond is plain code, so
-        it runs in a worker thread and reaches the mesh (cases, debates) back on this loop."""
+        it runs in a worker thread (with the docket read and the ears' ASI-1 calls) and reaches the mesh (cases,
+        debates) back on this loop."""
         if text.split()[:1] and text.split()[0].lower() in ROUTED:
             return await self.chat(ctx, sender, text)
         key, loop = f"{sender}:{ctx.session}", asyncio.get_running_loop()
@@ -293,12 +331,15 @@ class Bailiff:
         def on_loop(coro):
             return asyncio.run_coroutine_threadsafe(coro, loop).result(timeout=300)
 
-        async with self.turns.setdefault(key, asyncio.Lock()):
-            reply, state = await asyncio.to_thread(
-                courtroom.respond, self.judges.get(key), text,
-                run_case=lambda app: on_loop(self.case_summary(ctx, sender, app)),
+        def turn(state):
+            return courtroom.respond(
+                state, text, cases=self.docket_rows(),
+                run_case=lambda app, fresh: on_loop(self.case_summary(ctx, sender, app, fresh)),
                 run_cross=lambda app, raw: self.judge_cross(sender, app, raw),
-                run_argue=lambda app: on_loop(self.debate(ctx, app)))
+                run_argue=lambda app: on_loop(self.debate(ctx, app)), understand=self.ears, parses=self.parses)
+
+        async with self.turns.setdefault(key, asyncio.Lock()):
+            reply, state = await asyncio.to_thread(turn, self.judges.get(key))
             self.judges[key] = state
         return reply, {"cmd": "court", "stage": (state or {}).get("stage", "adjourned")}
 
@@ -357,7 +398,7 @@ def build(runs=case.RUNS, clock=None):
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="The Bailiff: clerk of the Seance court. No model.")
+    ap = argparse.ArgumentParser(description="The Bailiff: clerk of the Seance court. No model in the court.")
     ap.add_argument("--mailbox", action="store_true", help="reach Agentverse and ASI:One (same as SEANCE_MAILBOX=1)")
     a = ap.parse_args(argv)
     base.load_env()
@@ -366,6 +407,7 @@ def main(argv=None):
     for role in ("hoot", "mcclusky"):
         base.address(role)  # a missing party seed fails here, not in the middle of a case
     agent = build()
+    threading.Thread(target=docket.warm, name="docket-warm", daemon=True).start()  # cards ready before judges come
     print(f"{base.NAMES['bailiff']} {agent.address} on :{base.PORTS['bailiff']}; read-only REST: GET /case, GET /locks",
           flush=True)
     agent.run()

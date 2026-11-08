@@ -366,8 +366,6 @@ class LocalParties:
         return self._attacks
 
     async def remark(self, speaker: str, case_id: str, app: str, r: dict, answer: str = "") -> str:
-        if speaker == "hoot" and not answer:
-            return captions.taunt(r)
         from agents.mesh import voice  # noqa: PLC0415 - the parties' ASI-1 voices, never the Bailiff's
         return await asyncio.to_thread(voice.hoot_line if speaker == "hoot" else voice.mcclusky_line, r, answer)
 
@@ -458,13 +456,15 @@ async def hear(app: str, parties=None, on_event=None, case_id: str | None = None
         remarks = {}
         for speaker in ("hoot", "mcclusky"):  # Hoot taunts first, McClusky answers him
             try:
-                text = await parties.remark(speaker, case_id, app, r, remarks.get("hoot", ""))
-            except Exception:  # noqa: BLE001 - after the ruling a silent party gets its canned line
+                text = " ".join(str(await parties.remark(speaker, case_id, app, r, remarks.get("hoot", ""))).split())
+                why = "" if 0 < len(text.split()) <= 30 else f"{len(text.split())} words"  # 30: voice.MAX
+            except Exception as ex:  # noqa: BLE001 - after the ruling a silent party gets its scripted line
+                why = base.redact(captions.short(f"{type(ex).__name__}: {ex}", 120))
+            if why:
+                base.log.warning("%s's remark (%s); using the scripted line", speaker, why)
                 text = captions.taunt(r) if speaker == "hoot" else captions.objection(r)
-            text = " ".join(str(text).split())
-            remarks[speaker] = text if len(text.split()) <= 18 else (
-                captions.taunt(r) if speaker == "hoot" else captions.objection(r))
-            await emit("remark", speaker, {"from": speaker, "text": remarks[speaker]})
+            remarks[speaker] = text
+            await emit("remark", speaker, {"from": speaker, "text": text})
         r.update(remarks=remarks, voice=remarks["mcclusky"])
         r["seconds"]["total"] = round(time.monotonic() - t0)
     except Exception as ex:  # noqa: BLE001 - the case adjourns on the record instead of crashing the Bailiff
