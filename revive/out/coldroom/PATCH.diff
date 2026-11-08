@@ -1,0 +1,31 @@
+diff --git original.py patched.py
+index fe58a6a..eb46204 100644
+--- original.py
++++ patched.py
+@@ -6,7 +6,7 @@ Coils: 0 compressor (temp > sp+10), 1 defrost (every 6 h of sim time for 20 min)
+ 2 high-temp alarm (temp > sp+40 for >= 600 simulated seconds).
+ Original: NO auth, any client may write the setpoint. --hardened: same control logic, but setpoint
+ writes need hr9=4242 first and the setpoint must be 0..80, else a Modbus exception.
+-Usage: python original.py  (ORIGINAL build: no auth, port 5020)
++Usage: python patched.py  (PATCHED build: setpoint needs PIN + range, port 5021)
+ """
+ import argparse
+ import asyncio
+@@ -66,6 +66,9 @@ class ColdRoom(ModbusServerContext):
+             return ExcCodes.ILLEGAL_ADDRESS  # outputs are controller-driven
+         for i, v in enumerate(values):
+             a = address + i
++            if a == 9: self.unlocked = (v == PIN); continue  # PATCH: PIN unlock register
++            if a == 1 and (not self.unlocked or not 0 <= v <= 80):  # PATCH: auth + range on setpoint
++                return ExcCodes.ILLEGAL_VALUE if self.unlocked else ExcCodes.DEVICE_FAILURE  # PATCH
+             self.hr[a] = v
+             if a == 2:
+                 self._advance(v)
+@@ -81,6 +84,6 @@ async def main(port, hardened):
+ 
+ if __name__ == "__main__":
+     ap = argparse.ArgumentParser()
+-    ap.add_argument("--port", type=int, default=5020)
++    ap.add_argument("--port", type=int, default=5021)
+     a = ap.parse_args()
+     asyncio.run(main(a.port, False))
