@@ -128,18 +128,29 @@ def test_cross_is_refused_in_session_and_logged_after(runs):
     assert asyncio.run(court.chat(ctx, USER, "cross app1 1/8="))[0].startswith("One cross per witness")
 
 
-def test_the_bailiff_imports_no_model_code():
-    for name in ("bailiff.py", "base.py", "case.py", "captions.py", "commands.py"):
+def test_the_court_has_no_model_only_the_bailiffs_ears_do(runs, monkeypatch):
+    """case, captions, commands and courtroom import no model code, and a whole case never asks ASI-1. bailiff.py may
+    import brain and docket (ASI-1 reads the judge's chat and writes docket cards), never the parties' voices."""
+    from agents.mesh import brain, docket
+    model = ("llm", "medium", "voice", "reader", "urllib")
+    for name in ("bailiff.py", "base.py", "case.py", "captions.py", "commands.py", "courtroom.py"):
         tree = ast.parse((MESH / name).read_text(encoding="utf-8"))
         top = [n for n in tree.body if isinstance(n, (ast.Import, ast.ImportFrom))]
         mods = [a.name for n in top if isinstance(n, ast.Import) for a in n.names]
         mods += [f"{n.module}.{a.name}" for n in top if isinstance(n, ast.ImportFrom) for a in n.names]
-        assert not [m for m in mods if any(w in m for w in ("llm", "medium", "voice", "reader", "urllib"))], name
+        banned = model if name == "bailiff.py" else model + ("brain", "docket")
+        assert not [m for m in mods if any(w in m for w in banned)], name
     code = ("import sys; sys.path.insert(0, sys.argv[1]); import agents.mesh.bailiff; "
             "print(sorted(m for m in sys.modules if m in ('llm', 'agents.llm', 'agents.medium', 'agents.mesh.voice',"
             " 'dig.reader')))")
     out = subprocess.run([sys.executable, "-c", code, str(MESH.parents[1])], capture_output=True, text=True, timeout=60)
     assert out.stdout.strip() == "[]", out.stdout + out.stderr
+    asked = []  # the verdict path: a whole case, as a judge opens it, with every way to ASI-1 watched
+    monkeypatch.setattr(brain, "_ask", lambda *a, **k: asked.append("brain"))
+    monkeypatch.setattr(docket, "_ask", lambda *a, **k: asked.append("docket") or {})
+    court, ctx = bailiff.Bailiff(runs, CLOCK), Mesh(runs)
+    s = asyncio.run(court.case_summary(ctx, USER, "app1"))
+    assert (s["locked"], s["struck"], s["ledger"]["intact"]) == (3, 1, True) and asked == []
 
 
 # --- McClusky ----------------------------------------------------------------------------------------------

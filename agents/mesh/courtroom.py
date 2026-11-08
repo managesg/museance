@@ -1,7 +1,10 @@
-"""Chat brain for 'Seance · The Bailiff', the court officer judges talk to inside ASI:One.
+"""Chat flow for 'Seance · The Bailiff', the court officer judges talk to inside ASI:One.
 
-The human is the Judge. The Bailiff has no model: every reply is a fixed template filled
-with what the court measured. respond() is the only entry point; state is a plain dict.
+The human is the Judge. respond() is the only entry point; state is a plain JSON dict. respond is pure: the docket,
+the court and the Bailiff's ears arrive as arguments. The court has no model: every verdict and every number comes
+from run_case and run_cross (the deterministic court). The ears may: understand() (brain.py, ASI-1) maps free text
+to one court action. Digits and menu words never reach it, and when it is unsure or down the keyword parser decides.
+Nothing app-specific lives here: the cases, their titles and their test examples are the docket's rows.
 
 Stages: lobby -> verdict -> (cross_prompt <-> cross_result | ruling_prompt) -> closed.
 Hearing the argument keeps stage 'verdict' (same choices). cross_result and case_error
@@ -9,28 +12,36 @@ exist because their numbered choices differ from every other stage.
 """
 import json
 import re
+from collections import Counter
 
-CASES = {'1': 'todo', '2': 'app1'}
-OTHER = {'1': '2', '2': '1'}
-EXAMPLES = {'todo': 'add milk', 'app1': '7 / 8 ='}
-MAX_WORDS = 20
+MAX_WORDS, SHOWN, HISTORY = 20, 3, 6  # words per line, numbered choices per reply, chat lines the ears remember
 
-LOBBY = ['1) The case of Todo', '2) The case of the Calculator', '3) How this court works']
 VERDICT = ['1) Hear them argue', '2) Test it yourself', '3) Deliver your ruling']
 CROSSED = ['1) Try another', '2) Back to the verdict', '3) Deliver your ruling']
 RULING = ['1) Faithful', '2) Forgery', '3) Needs repair']
 CLOSED = ['1) New case', '2) See the record', '3) Leave court']
 OOPS = ['1) Try again', '2) Other case', '3) How this court works']
-CHOICES = {'lobby': LOBBY, 'verdict': VERDICT, 'cross_result': CROSSED,
-           'ruling_prompt': RULING, 'closed': CLOSED, 'case_error': OOPS}
+HOW_ITEM = 'How this court works'  # the lobby's last choice while the docket has fewer than SHOWN cases
+CHOICES = {'verdict': VERDICT, 'cross_prompt': CROSSED, 'cross_result': CROSSED, 'ruling_prompt': RULING,
+           'closed': CLOSED, 'case_error': OOPS}  # the test prompt shows no numbers; the last menu still counts
+STAGES = {'lobby', *CHOICES}
+CROSS = ('cross_prompt', 'cross_result')
+ACTS = {'verdict': ('argue', 'test', 'rule'), 'cross_prompt': ('test', 'back', 'rule'),
+        'cross_result': ('test', 'back', 'rule'), 'ruling_prompt': ('rule',) * 3,
+        'closed': ('open_case', 'record', 'leave')}  # choice n -> the same action the ears can ask for
+RULINGS = ('faithful', 'forgery', 'repair')  # in RULING's order
+ACTIONS = {'open_case', 'test', 'rule', 'ask', 'argue', 'record', 'back', 'how', 'leave', 'greet'}
 
 GREETING = ['🔨 All rise! Your Honor, a dead app awaits your judgment.']
 HOW = ['🐧 McClusky, Esq., a penguin medium, brought a dead app back to life.',
        '🦉 Dr. Hoot, an owl skeptic, argues it is a fake.',
        '🔍 A court with rules and no AI tests the original and the revival side by side.',
+       '👂 Talk to me in plain words. ASI-1 helps me listen, never rule.',
        '⚖️ Then you rule, Your Honor. The Bailiff has no opinion.']
 ASK_RULING = ['⚖️ How do you rule, Your Honor?']
 UNKNOWN = ['Your Honor, please choose 1, 2, or 3.']
+SAFE = 'I can only speak to the record, Your Honor.'
+FIRST = '🔨 Pick a case first, Your Honor.'
 ADJOURN = ['🔨 Court adjourned. Thank you, Your Honor.', 'Type "all rise" to reopen court.']
 TRY_IT = '🔍 The court will try it on the original and the revival.'
 SAME = '🔨 Same on both apps, Your Honor. The Bailiff has no opinion.'
@@ -52,13 +63,11 @@ NEGATIONS = {'no', 'not', 'isnt', 'never', 'dont', 'cant', 'cannot', 'wasnt', 'd
              'wouldnt', 'shouldnt', 'arent', 'aint', 'nope'}
 FILLER = {'the', 'a', 'number', 'option', 'choice', 'case', 'please', 'i', 'pick', 'choose', 'take', 'go',
           'with', 'lets', 'let', 'us', 'of', 'ok', 'okay', 'to', 'me', 'now', 'just', 'want', 'like'}
-BACK = {'back', 'cancel', 'go back'}
 HOW_WORDS = {'how', 'help', 'work', 'works', 'explain'}
-KEYWORDS = {
-    'lobby': {1: {'todo'}, 2: {'calculator', 'calc'}, 3: HOW_WORDS},
+KEYWORDS = {  # the lobby's come from the docket
     'verdict': {1: {'argue', 'argument', 'hear', 'debate'}, 2: {'test', 'try', 'yourself'},
                 3: {'rule', 'ruling', 'deliver', 'decide', 'verdict'}},
-    'cross_result': {1: {'another', 'again', 'try', 'more'}, 2: {'back', 'verdict', 'return'},
+    'cross_result': {1: {'another', 'again', 'try', 'more'}, 2: {'back', 'verdict', 'return', 'cancel'},
                      3: {'rule', 'ruling', 'deliver', 'decide'}},
     'ruling_prompt': {1: {'faithful', 'genuine', 'authentic'}, 2: {'forgery', 'forged', 'fake', 'fraud'},
                       3: {'repair', 'fix', 'broken'}},
@@ -66,52 +75,210 @@ KEYWORDS = {
                3: {'leave', 'exit', 'quit', 'bye', 'goodbye', 'adjourn', 'done'}},
     'case_error': {1: {'again', 'retry'}, 2: {'other', 'another', 'different'}, 3: HOW_WORDS},
 }
+KEYWORDS['cross_prompt'] = KEYWORDS['cross_result']
 _UNSAFE = str.maketrans('', '', '[]{}`')
 
 
-def respond(state, text, *, run_case, run_cross, run_argue=None):
-    """One chat turn. Returns (reply_text, new_state); state is None for a new judge.
-    run_argue(app) -> [{who, line}]: the parties argue live; without it (or if it fails) the argument on file."""
-    raw, norm = _clean(text)
-    stage = (state or {}).get('stage')
-    if stage == 'cross_prompt' and _menu(norm, 'cross_result') and not (
-            CASES[state['case']] == 'app1' and norm.isdigit()):  # Todo has no "3" to test; the Calculator does
-        stage = 'cross_result'  # "back", "rule", or a menu number: the judge is moving on
-    elif stage == 'cross_prompt' or (stage == 'cross_result' and raw and not _menu(norm, 'cross_result')):
-        return _cross(state, raw, norm, run_cross)  # after a test, anything but a menu choice is the next test
-    if stage not in CHOICES:  # a new judge, or a state this version does not know
-        stage, state = 'lobby', None
-    pick = _pick(norm, KEYWORDS[stage])
-    if pick is None:
-        if state is None:
-            return _say(GREETING + LOBBY), {'stage': 'lobby'}
-        return _say(UNKNOWN + CHOICES[stage]), state
-    if stage in ('lobby', 'case_error'):
-        if pick == 3:
-            return _say(HOW + LOBBY), {'stage': 'lobby'}
+def respond(state, text, *, cases, run_case, run_cross, run_argue=None, understand=None, parses=None):
+    """One chat turn -> (reply_text, new_state); state is None for a new judge and again once court adjourns.
+    cases: the docket, [{app, title, about, example}] in order. run_case(app, fresh) -> the case summary (fresh:
+    the judge asked for a new run). run_cross(app, text) -> {did, original, revival}; ValueError = plain words.
+    run_argue(app) -> [{who, line}]: the parties argue live; without it (or if it fails) the argument on file.
+    understand(stage, text, menu, facts, cases, history) -> one action, brain.understand's dict.
+    parses(app, text) -> True when that app's test language takes the text as typed."""
+    raw, _ = _clean(text)
+    reply, new = _Court(cases, run_case, run_cross, run_argue, understand, parses).turn(state, raw)
+    if new is not None and raw:
+        said = [['judge', raw], ['bailiff', ' '.join(reply.split()[:40])]]
+        new = {**new, 'history': (list((state or {}).get('history') or []) + said)[-HISTORY:]}
+    return reply, new
+
+
+class _Court:
+    """One turn: the docket and the callbacks respond() was given."""
+
+    def __init__(self, cases, run_case, run_cross, run_argue, understand, parses):
+        self.cases = [c for c in cases or [] if isinstance(c, dict) and c.get('app')]
+        self.run_case, self.run_cross, self.run_argue = run_case, run_cross, run_argue
+        self.understand, self.parses = understand, parses or (lambda app, text: False)
+
+    def turn(self, state, raw):
+        norm = _clean(raw)[1]
+        stage = (state or {}).get('stage')
+        if stage not in STAGES:  # a new judge, or a state this version does not know
+            stage, state = 'lobby', None
+        app = (state or {}).get('app')
+        if stage == 'cross_prompt' and not raw:
+            return _say(self.prompt(state)), state
+        menu = self.menu_only(norm, stage)
+        if stage in CROSS and (stage == 'cross_prompt' or not menu) and self.parses(app, raw):
+            return self.test(state, raw)  # the test language as typed: straight to the court, no model
+        if stage == 'verdict' and ({'run', 'again'} <= set(norm.split()) or 'rerun' in norm.split()):
+            return self.open(app, fresh=True)  # the verdict offers it when the run was reused
+        if menu:  # digits and menu words: the keywords decide, the ears are never asked
+            a = self.pick(stage, state, _pick(norm, self.keywords(stage)))
+        else:
+            a = self.hear(stage, state, raw) if raw else None
+            if a is None:  # unsure, down or no ears: in a test anything else is the next test, else keywords
+                a = ({'action': 'test', 'steps': raw} if stage in CROSS and raw
+                     else self.pick(stage, state, _pick(norm, self.keywords(stage))))
+        if a is None:
+            if state is None:
+                return _say(self.greeting()), {'stage': 'lobby'}
+            return _say(UNKNOWN + self.choices(stage)), state
+        return self.do(state, stage, a)
+
+    def hear(self, stage, state, raw):
+        """The ears' action for free text; None when they are unsure, down or broken."""
+        if not self.understand:
+            return None
+        st = state or {}
+        try:
+            a = self.understand(stage, raw, [] if stage == 'cross_prompt' else self.choices(stage), st.get('summary'),
+                                self.cases, st.get('history') or [])
+        except Exception:  # the ears must never break the court
+            return None
+        act = a.get('action') if isinstance(a, dict) else None
+        if act == 'choose':
+            return self.pick(stage, state, a.get('choice'))
+        if act not in ACTIONS:  # 'unclear', or nothing this court does
+            return None
+        if act == 'open_case' and a.get('app') not in {c['app'] for c in self.cases}:
+            a = {**a, 'app': None}  # never a case off the docket: show the docket
+        if act == 'test' and not a.get('steps') and stage in CROSS:
+            a = {**a, 'steps': raw}  # the court words it, or says why it can't
+        return a
+
+    def pick(self, stage, state, n):
+        """Choice n of this stage's menu as an action; None when the menu has no such choice."""
+        if isinstance(n, bool) or not isinstance(n, int) or not 1 <= n <= SHOWN:
+            return None
         if stage == 'lobby':
-            return _open(str(pick), run_case)
-        return _open(state['case'] if pick == 1 else OTHER[state['case']], run_case)
-    s = state['summary']
-    if stage == 'verdict':
-        if pick == 1:
-            return _say(_argue(_heard(s, state['case'], run_argue))), state
-        if pick == 2:
-            return _say(_cross_prompt(state)), {**state, 'stage': 'cross_prompt'}
-        return _say(ASK_RULING + RULING), {**state, 'stage': 'ruling_prompt'}
-    if stage == 'cross_result':
-        if pick == 1:
-            return _say(_cross_prompt(state)), {**state, 'stage': 'cross_prompt'}
-        if pick == 2:
+            shown = self.cases[:SHOWN]
+            return ({'action': 'open_case', 'app': shown[n - 1]['app']} if n <= len(shown)
+                    else {'action': 'how'} if n == len(shown) + 1 else None)
+        if stage == 'case_error':
+            return [{'action': 'open_case', 'app': state['app']},
+                    {'action': 'open_case', 'app': self.after(state['app'])}, {'action': 'how'}][n - 1]
+        return {'action': ACTS[stage][n - 1], 'ruling': RULINGS[n - 1] if stage == 'ruling_prompt' else None}
+
+    def do(self, state, stage, a):
+        act, s = a['action'], (state or {}).get('summary')
+        if act == 'open_case':
+            if a.get('app'):  # the case already open again: the judge wants a new run
+                return self.open(a['app'], fresh=a['app'] == (state or {}).get('app'))
+            return _say(self.greeting()), {'stage': 'lobby'}
+        if act == 'leave':
+            return _say(ADJOURN), None
+        if act == 'ask':  # the ears' words, every number checked against the case file by brain.py
+            return _say(str(a.get('answer') or SAFE).split('\n') + self.next(state)), state or {'stage': 'lobby'}
+        if not s:  # no case open
+            if act == 'how':
+                return _say(HOW + self.choices('lobby')), {'stage': 'lobby'}
+            return _say(self.greeting() if act == 'greet' else [FIRST, *self.choices('lobby')]), {'stage': 'lobby'}
+        if act in ('how', 'greet'):
+            return _say((HOW if act == 'how' else []) + self.next(state)), state
+        if act == 'back':
             return _say(_back(s)), {**state, 'stage': 'verdict'}
+        if act == 'argue':
+            return _say(_argue(_heard(s, state['app'], self.run_argue))), {**state, 'stage': 'verdict'}
+        if act == 'record':
+            return _say(_record(s) + (CLOSED if stage == 'closed' else self.next(state))), state
+        if act == 'test':
+            if a.get('steps'):
+                return self.test(state, a['steps'])
+            return _say(self.prompt(state)), {**state, 'stage': 'cross_prompt'}
+        n = RULINGS.index(a['ruling']) + 1 if a.get('ruling') in RULINGS else 0  # rule
+        if n:  # the evidence check in _rule is the court's, not the ears'
+            return _say(_rule(s, n)), {**state, 'stage': 'closed'}
         return _say(ASK_RULING + RULING), {**state, 'stage': 'ruling_prompt'}
-    if stage == 'ruling_prompt':
-        return _say(_rule(s, pick)), {**state, 'stage': 'closed'}
-    if pick == 1:  # closed
-        return _say(GREETING + LOBBY), {'stage': 'lobby'}
-    if pick == 2:
-        return _say(_record(s)), state
-    return _say(ADJOURN), None
+
+    # --- the docket -----------------------------------------------------------------------------------------
+    def row(self, app):
+        return next((c for c in self.cases if c['app'] == app), {})
+
+    def after(self, app):
+        """'Other case': the next case on the docket."""
+        apps = [c['app'] for c in self.cases] or [app]
+        return apps[(apps.index(app) + 1) % len(apps)] if app in apps else apps[0]
+
+    def choices(self, stage):
+        if stage != 'lobby':
+            return CHOICES[stage]
+        shown = [f"{n}) The case of {c.get('title') or c['app']}" for n, c in enumerate(self.cases[:SHOWN], 1)]
+        return shown + ([f'{len(shown) + 1}) {HOW_ITEM}'] if len(shown) < SHOWN else [])
+
+    def greeting(self):
+        return GREETING + [f"📜 {c['about']}" for c in self.cases[:SHOWN] if c.get('about')] + self.choices('lobby')
+
+    def keywords(self, stage):
+        """Choice -> its words. In the lobby: each case's title words and id, minus words two choices share."""
+        if stage != 'lobby':
+            return KEYWORDS[stage]
+        picks = {n: _words(f"{c.get('title') or ''} {c['app']}") for n, c in enumerate(self.cases[:SHOWN], 1)}
+        if len(picks) < SHOWN:
+            picks[len(picks) + 1] = HOW_WORDS
+        seen = Counter(w for ws in picks.values() for w in ws)
+        return {n: {w for w in ws if seen[w] == 1} - FILLER - set(NUMBERS) for n, ws in picks.items()}
+
+    def menu_only(self, norm, stage):
+        """The words are only a menu choice (numbers, keywords, the menu's own words, filler), not a test like
+        "1 / 0 =" or "add eggs" and not a sentence for the ears."""
+        words = set(norm.split())
+        shown = _words(' '.join(re.sub(r'^\d\) ', '', line) for line in self.choices(stage)))
+        return bool(words) and words <= FILLER | set(NUMBERS) | shown | set().union(*self.keywords(stage).values())
+
+    def next(self, state):
+        """The judge's next step, as the stage shows it."""
+        stage = (state or {}).get('stage', 'lobby')
+        if stage == 'cross_prompt':
+            return self.prompt(state)
+        if stage == 'ruling_prompt':
+            return ASK_RULING + RULING
+        return ['Your Honor, what now?', *self.choices(stage)]
+
+    # --- the court ------------------------------------------------------------------------------------------
+    def open(self, app, fresh=False):
+        try:
+            s = self.run_case(app, fresh)
+        except Exception as e:  # by contract the pipeline explains its failures in plain words
+            return self.oops(app, _reason(e))
+        try:  # state must survive the agent's storage
+            s = json.loads(json.dumps({**s, 'title': self.row(app).get('title') or s.get('title') or app}))
+            lines = _verdict(s)
+            _argue(s)
+            _record(s)  # fail now, not mid-case, if the case file has gaps
+        except Exception:
+            return self.oops(app, 'The case file is incomplete.')
+        return _say(lines), {'stage': 'verdict', 'app': app, 'summary': s}
+
+    def oops(self, app, reason):
+        lines = [f'🔨 The court could not open that case. {reason}', 'Your Honor, what now?', *OOPS]
+        return _say(lines), {'stage': 'case_error', 'app': app}
+
+    def prompt(self, state, first=TRY_IT):
+        example = self.row(state['app']).get('example')
+        return [first, 'Type "back" to return to the verdict.',
+                f'Your Honor, type something to try, like "{example}".' if example else
+                'Your Honor, type something to try.']
+
+    def test(self, state, steps):
+        try:
+            r = self.run_cross(state['app'], steps)
+            r = {k: str(r[k]) for k in ('did', 'original', 'revival')}
+        except ValueError as e:  # the court cannot map this action: say why, let the judge retry
+            return _say(self.prompt(state, f'🔍 {e}')), {**state, 'stage': 'cross_prompt'}
+        except Exception:  # court down or a malformed answer: same retry, plain words
+            return _say(self.prompt(state, '🔍 The court could not run that test just now.')), {
+                **state, 'stage': 'cross_prompt'}
+        same = r['original'].strip() == r['revival'].strip()
+        s = state['summary']
+        if not same and all(d['did'] != r['did'] for d in s['differences']):
+            s = {**s, 'differences': s['differences'] + [r]}  # what the judge finds is evidence too
+        lines = [f"🔍 Tried on both apps: {r['did']}",
+                 f"Original: {_seen(r['original'])} · Revival: {_seen(r['revival'])} {'✅' if same else '❌'}",
+                 SAME if same else DIFFERENT, *CROSSED]
+        return _say(lines), {**state, 'stage': 'cross_result', 'summary': s}
 
 
 def _clean(text):
@@ -121,6 +288,10 @@ def _clean(text):
         words.pop(0)
     raw = ' '.join(words)
     return raw, ' '.join(re.sub(r'[^\w\s]', '', raw.lower()).split())
+
+
+def _words(text):
+    return set(_clean(text)[1].split())
 
 
 def _pick(norm, keywords):
@@ -138,39 +309,13 @@ def _pick(norm, keywords):
     return picks.pop() if len(picks) == 1 else None
 
 
-def _menu(norm, stage):
-    """The words are only a menu choice (a number, a keyword, filler), not a test like "1 / 0 =" or "add eggs"."""
-    words = set(norm.split())
-    return bool(words) and words <= FILLER | set(NUMBERS) | set().union(*KEYWORDS[stage].values())
-
-
-def _heard(s, case, run_argue):
+def _heard(s, app, run_argue):
     """The summary with the argument heard live from the parties, else as it is (argument on file)."""
     try:
-        said = [{'who': str(a['who']), 'line': str(a['line'])} for a in run_argue(CASES[case])] if run_argue else []
+        said = [{'who': str(a['who']), 'line': str(a['line'])} for a in run_argue(app)] if run_argue else []
     except Exception:  # a party did not answer: the argument on file still stands
         said = []
     return {**s, 'argument': said} if said else s
-
-
-def _open(case, run_case):
-    try:
-        s = run_case(CASES[case])
-    except Exception as e:  # by contract the pipeline explains its failures in plain words
-        return _oops(case, _reason(e))
-    try:
-        s = json.loads(json.dumps(s))  # state must survive the agent's storage
-        lines = _verdict(s)
-        _argue(s)
-        _record(s)  # fail now, not mid-case, if the case file has gaps
-    except Exception:
-        return _oops(case, 'The case file is incomplete.')
-    return _say(lines), {'stage': 'verdict', 'case': case, 'summary': s}
-
-
-def _oops(case, reason):
-    lines = [f'🔨 The court could not open that case. {reason}', 'Your Honor, what now?', *OOPS]
-    return _say(lines), {'stage': 'case_error', 'case': case}
 
 
 def _reason(e):
@@ -186,14 +331,22 @@ def _verdict(s):
     found = f"found {_count(n, 'difference')}" if n else 'found no differences'
     evidence = ([_exhibit('❌', d) for d in s['differences']] + [_exhibit('✅', e) for e in s['examples'][:1]]
                 + [f'🔨 Struck from the record: {x}' for x in s['struck_examples']])
-    return [f"⚖️ The case of {s['title']}: is the revival the same app as the dead original?",
+    ago = s.get('ran_minutes_ago')  # the Bailiff reused a recent run: say so, honestly
+    again = [] if ago is None else [f"🕰️ The court ran this case {'moments' if ago < 1 else _count(ago, 'minute')} "
+                                    'ago. Say "run it again" for a fresh trial.']
+    return [f"⚖️ The case of {s['title']}: is the revival the same app as the dead original?", *again,
             f"🐧 McClusky swore {s['claims']} claims. 🦉 Hoot attacked with {s['attacks']}.",
             f'🔍 {held}{busted}. The court {found} between the apps.',
             *evidence[:2], 'Your Honor, what now?', *VERDICT]
 
 
 def _exhibit(mark, r):
-    return f"{mark} {r['did']} → Original: {r['original']} · Revival: {r['revival']}"
+    return f"{mark} {r['did']} → Original: {_seen(r['original'])} · Revival: {_seen(r['revival'])}"
+
+
+def _seen(shown):
+    """What a build showed; an empty page or list reads as nothing, not as a blank."""
+    return str(shown).strip() or 'nothing'
 
 
 def _count(n, word):
@@ -209,32 +362,6 @@ def _back(s):
     return [f"⚖️ Back to the case of {s['title']}.", 'Your Honor, what now?', *VERDICT]
 
 
-def _cross_prompt(state, first=TRY_IT):
-    example = EXAMPLES[CASES[state['case']]]
-    return [first, 'Type "back" to return to the verdict.', f'Your Honor, type something to try, like "{example}".']
-
-
-def _cross(state, raw, norm, run_cross):
-    if norm in BACK:
-        return _say(_back(state['summary'])), {**state, 'stage': 'verdict'}
-    if not raw:
-        return _say(_cross_prompt(state)), state
-    try:
-        r = run_cross(CASES[state['case']], raw)
-        r = {k: str(r[k]) for k in ('did', 'original', 'revival')}
-    except ValueError as e:  # the court cannot map this action: say why, let the judge retry
-        return _say(_cross_prompt(state, f'🔍 {e}')), state
-    except Exception:  # court down or a malformed answer: same retry, plain words
-        return _say(_cross_prompt(state, '🔍 The court could not run that test just now.')), state
-    same = r['original'].strip() == r['revival'].strip()
-    s = state['summary']
-    if not same and all(d['did'] != r['did'] for d in s['differences']):
-        s = {**s, 'differences': s['differences'] + [r]}  # what the judge finds is evidence too
-    lines = [f"🔍 {r['did']}", f"Original: {r['original']} · Revival: {r['revival']} {'✅' if same else '❌'}",
-             SAME if same else DIFFERENT, *CROSSED]
-    return _say(lines), {**state, 'stage': 'cross_result', 'summary': s}
-
-
 def _rule(s, pick):
     n = len(s['differences'])
     agrees = (pick == 1) == (n == 0)  # faithful iff no differences; forgery and repair both fit any
@@ -248,6 +375,7 @@ def _rule(s, pick):
 
 
 def _record(s):
+    """The record, without a menu: the caller adds the stage's."""
     start, end = s['credibility'][0], s['credibility'][-1]
     moved = (f'rose from {start} to {end}' if end > start
              else f'fell from {start} to {end}' if end < start else f'stayed at {end}')
@@ -255,11 +383,10 @@ def _record(s):
     found = f"{_count(n, 'difference')} found." if n else 'No differences found.'
     sealed = ('🔨 Every step is in a tamper-proof record. Nobody can rewrite it.' if s['ledger']['intact']
               else '🔨 Warning: this record failed its tamper check.')
-    return [f"📜 The record, Your Honor: {s['locked']} claims locked, {s['struck']} struck.",
+    return [f"📜 The record, Your Honor: {s['locked']} claims held up, {s['struck']} proved false.",
             f"🔍 Hoot attacked {s['attacks']} times. The court took {s['seconds']} seconds. {found}",
-            f"⚖️ Fidelity score: {s['fidelity']} out of 100.",
-            f"🐧 McClusky's credibility {moved}.",
-            sealed, *CLOSED]
+            f"⚖️ Match score: {s['fidelity']} out of 100, how often the copy acted like the original.",
+            f"🐧 McClusky's credibility {moved}.", sealed]
 
 
 def _say(lines):
@@ -267,6 +394,10 @@ def _say(lines):
     out = []
     for line in lines:
         words = line.translate(_UNSAFE).split()
-        out += [' '.join(words[i:i + MAX_WORDS]) for i in range(0, len(words), MAX_WORDS)]
+        while len(words) > MAX_WORDS:  # break after a sentence or clause end when one is near, so "0 of 36" stays whole
+            cut = next((i for i in range(MAX_WORDS, MAX_WORDS // 2, -1) if words[i - 1][-1] in '.,;:!?—'), MAX_WORDS)
+            out.append(' '.join(words[:cut]))
+            words = words[cut:]
+        out += [' '.join(words)] if words else []
     picks = [line for line in out if re.match(r'\d\) ', line)]  # ASI:One renders Markdown: single newlines collapse
     return '\n\n'.join([line for line in out if line not in picks] + (['\n'.join(picks)] if picks else []))

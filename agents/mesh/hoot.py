@@ -7,7 +7,7 @@ Peer messages, from the Bailiff only (anyone else is refused):
   CallSkeptic   -> SealedAttacks  commits and hashes; the steps stay in the envelope
   RequestReveal -> RevealAttacks  the attacks themselves, exactly as sealed
   Ruling        -> remembered     the case he gloats about
-  RemarkRequest -> Remark         captions.taunt: deterministic, with the numbers
+  RemarkRequest -> Remark         voice.hoot_line: his ASI-1 taunt or rebuttal, only the ruling's numbers
 Chat: help, attacks [app], seal [app], reveal [app] (only after a ruling); anything else is banter.
 
     agents/mesh/.venv/bin/python -m agents.mesh.hoot [--mailbox]      # port 8783
@@ -75,11 +75,10 @@ class Hoot:
             self.last_app = msg.app or self.last_app
 
     async def on_remark(self, ctx, sender: str, msg: RemarkRequest):
-        """The taunt is deterministic, the same words as --no-mesh (case.LocalParties); a rebuttal to McClusky's
-        answer (a live debate the Bailiff relays) is ASI-1."""
+        """His taunt after a ruling, or his rebuttal to McClusky's answer (a live debate the Bailiff relays): ASI-1
+        told only the ruling's facts, the scripted line when ASI-1 is out (voice.hoot_line, as in --no-mesh)."""
         if self._from_bailiff(ctx, sender, msg):
-            text = (await asyncio.to_thread(voice.hoot_line, msg.ruling, msg.answer) if msg.answer
-                    else captions.taunt(msg.ruling))
+            text = await asyncio.to_thread(voice.hoot_line, msg.ruling, msg.answer)
             await ctx.send(sender, Remark(case_id=msg.case_id, speaker="hoot", text=text))
 
     # --- chat ---------------------------------------------------------------------------------------------------
