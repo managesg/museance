@@ -52,7 +52,7 @@ def check(res):
     v = {x["ref"]: x for x in res["verdicts"]}
     assert v["sec-setpoint"]["original"].startswith("ok=1") and "hr1=250" in v["sec-setpoint"]["original"]
     assert v["sec-setpoint"]["revival"].startswith("ok=0") and "hr1=40" in v["sec-setpoint"]["revival"]
-    assert v["sec-defrost"]["original"] == "ok=1,defrost_len=120"
+    assert v["sec-defrost"]["original"] == "ok=1,defrost_len=480"
     assert v["sec-defrost"]["revival"] == "ok=0,defrost_len=20"
 
 

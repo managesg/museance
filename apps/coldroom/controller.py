@@ -30,6 +30,8 @@ def make_server(port: int, patched: bool, host: str = "127.0.0.1") -> ThreadingH
     lock = threading.Lock()
 
     class H(BaseHTTPRequestHandler):
+        protocol_version = "HTTP/1.1"  # keep-alive: the court sends thousands of ticks
+
         def log_message(self, *a):
             pass
 

@@ -116,23 +116,42 @@ class ModelBackend:
 
 
 class HttpBackend:
-    """Controller HTTP contract: GET /state, POST /setpoint|/defrost|/tick|/reset."""
+    """Controller HTTP contract: GET /state, POST /setpoint|/defrost|/tick|/reset (keep-alive connection)."""
 
     def __init__(self, base: str, timeout: float = 10):
+        from urllib.parse import urlsplit
         self.base, self.timeout = base.rstrip("/"), timeout
+        u = urlsplit(self.base)
+        self.host, self.port = u.hostname, u.port or 80
+        self.conn = None
+        self.lock = threading.Lock()
 
     def _call(self, method, path, body=None):
+        import http.client
         data = json.dumps(body).encode() if body is not None else None
-        req = urllib.request.Request(self.base + path, data=data, method=method,
-                                     headers={"Content-Type": "application/json"})
-        try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as r:
-                return json.loads(r.read() or b"{}")
-        except urllib.error.HTTPError as e:  # a rejected write is an observation, not a crash
-            try:
-                return json.loads(e.read() or b"{}") | {"ok": False}
-            except ValueError:
-                return {"ok": False, "msg": f"HTTP {e.code}"}
+        headers = {"Content-Type": "application/json"} if data is not None else {}
+        with self.lock:
+            for attempt in (1, 2):  # reconnect once if the keep-alive socket was closed
+                try:
+                    if self.conn is None:
+                        self.conn = http.client.HTTPConnection(self.host, self.port, timeout=self.timeout)
+                    self.conn.request(method, path, body=data, headers=headers)
+                    r = self.conn.getresponse()
+                    raw = r.read()
+                    if r.getheader("Connection", "").lower() == "close":
+                        self.conn.close()
+                        self.conn = None
+                    try:
+                        out = json.loads(raw or b"{}")
+                    except ValueError:
+                        out = {"ok": False, "msg": f"HTTP {r.status}"}
+                    return out if r.status < 400 else {**out, "ok": False}
+                except (ConnectionError, http.client.HTTPException, OSError):
+                    if self.conn is not None:
+                        self.conn.close()
+                    self.conn = None
+                    if attempt == 2:
+                        raise
 
     def reset(self, **init):
         return self._call("POST", "/reset", init or {})
@@ -210,7 +229,7 @@ def _sec_setpoint(b):
 
 def _sec_defrost(b):
     b.reset()
-    r = b.defrost(120)  # no PIN, longer than 20 min
+    r = b.defrost(480)  # no PIN, 8 h instead of 20 min
     return f"ok={int(bool(r.get('ok')))},defrost_len={b.state()['defrost_len']}"
 
 
@@ -231,8 +250,8 @@ CLAIMS = [
 ATTACKS = [
     ("sec-setpoint", "Unauthenticated setpoint write to 25.0 °C.", _sec_setpoint,
      ["reset", "POST /setpoint value=25.0 (no pin)", "observe ok + registers"]),
-    ("sec-defrost", "Unauthenticated defrost length change to 120 min.", _sec_defrost,
-     ["reset", "POST /defrost minutes=120 (no pin)", "observe ok + defrost_len"]),
+    ("sec-defrost", "Unauthenticated defrost length change to 480 min (8 h).", _sec_defrost,
+     ["reset", "POST /defrost minutes=480 (no pin)", "observe ok + defrost_len"]),
 ]
 
 
