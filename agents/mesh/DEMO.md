@@ -13,8 +13,8 @@ words. Numbers (1, 2, 3) always work too.
      https://agentverse.ai/inspect/?uri=http%3A//127.0.0.1%3A8781&address=agent1qw47zhtg9gj55676vy8myruj297339kqdjkj34e2n2xkt2mqewjn2ngyuw0
   3. The backup chat (both cases, public):
      https://asi1.ai/shared-chat/f44701fa-ef7d-4ef8-9fdf-6d29c93d42d5
-- Optional: open each case once a few minutes before. A judge who picks it again within
-  5 minutes gets the verdict at once, and the Bailiff says when the court ran it.
+- Optional: open each case once a few minutes before. Within 5 minutes the verdict comes back at
+  once, and the Bailiff says when the court ran it ("The court ran this case 3 minutes ago").
   "Run it again" runs it fresh.
 
 ## The pitch (20 seconds)
@@ -27,18 +27,18 @@ survive get locked. And you're the judge."
 
 ## The demo (about 3 minutes)
 
-| You type | You'll see | You say |
+| You type | You'll see (measured live at 17:15) | You say |
 |---|---|---|
-| `@thebailiff hello` | "All rise!" and the cases | "Three Fetch.ai agents on Agentverse. I'm the judge, chatting in ASI:One." |
-| `is the todo app really back from the dead?` | "The court is testing…", then the verdict after about 25 s | While it runs: "Hoot seals 20 attacks, McClusky swears 16 claims, and the court runs each one twice on both apps." |
-| (the verdict) | 15 of 16 claims held, 1 false, no differences | "The copy behaves exactly like the original. Even McClusky's own rumor got thrown out." |
-| `why was one claim thrown out?` | The Bailiff explains it from the record | "Every answer comes from the case file. The brain can't make up numbers." |
-| `let them fight` | Hoot vs McClusky, live, then the Bailiff | "Three separate agents messaging each other, with ASI-1 writing their lines." Flip to the inspector tab. |
-| `add buy eggs and tick it off` | Both apps run it: ✅ same | "My own test, live, on both apps." |
-| `it's the real deal` | "Your Honor rules: Faithful. The evidence agrees." | |
-| `now the calculator` | The verdict after about 75 s: 7 differences | Talk over the wait: "This one's a forgery." |
-| `what if I press 7 plus plus 8 equals?` | Original 15, copy 8 ❌ | "Caught live." |
-| `it's a fake` | "Your Honor rules: Forgery. The evidence agrees." | |
+| `hey bailiff` | "All rise!", one line about each case, three choices (4 s) | "Three Fetch.ai agents on Agentverse. I'm the judge, chatting in ASI:One." |
+| `is the todo app really back from the dead?` | "The court is testing…", then the verdict (22 s) | While it runs: "Hoot seals 20 attacks, McClusky swears 16 claims, and the court runs each one twice on both apps." |
+| (the verdict) | 15 of 16 claims held, 1 thrown out, no differences | "The copy behaves exactly like the original. Even McClusky's own rumor got thrown out." |
+| `why was one claim thrown out?` | "McClusky swore an empty task can be created, and the original shows nothing." (6 s) | "Every answer comes from the case file. The brain can't make up numbers." |
+| `let them fight` | Hoot vs McClusky in plain English, then the Bailiff's numbers (5 s) | "Three separate agents messaging each other, with ASI-1 writing their lines." Flip to the inspector tab. |
+| `add buy eggs and tick it off` | Both apps run it: same ✅ (7 s) | "My own words, turned into a test, run live on both apps." |
+| `it's the real deal` | "Your Honor rules: Faithful. The evidence agrees with Your Honor." | |
+| `now the calculator` | The verdict: all 11 claims held, but 7 differences (70 s) | Talk over the wait: "Here the medium was right about the old app, but the copy is off." |
+| `what if I press 7 plus plus 8 equals?` | Original 15, copy 8 ❌ "They differ, Your Honor." (20 s) | "Caught live, from a plain-English question." |
+| `it's a fake` | "Your Honor rules: Forgery. The evidence agrees with Your Honor." | |
 
 **Short slot (2 minutes):** do the Todo rows, then show the Calculator in the backup chat.
 
